@@ -11,6 +11,7 @@ import { useActiveWorkspaceId } from '@/hooks/useActiveWorkspaceId'
 import { useTaskBoard } from '@/lib/task-board-store'
 import { DEFAULT_TASK_COLORS, updateTaskCard } from '@/lib/task-board-api'
 import * as api from '../transport/api'
+import { exportIcs } from '../transport/export'
 import {
   noteCalendarRevision,
   refreshCalendars,
@@ -294,7 +295,7 @@ export default function CalendarPage() {
   const downloadIcs = async (calendarId?: string) => {
     setError('')
     try {
-      await api.exportIcs(calendarId)
+      await exportIcs(calendarId)
     } catch (e) {
       setError(
         e instanceof api.CalendarRequestError && e.detail
