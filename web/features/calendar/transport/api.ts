@@ -225,3 +225,45 @@ export function restoreEvent(token: string) {
 export function getTaskBlocks(signal?: AbortSignal) {
   return json<Record<string, number>>('/task-blocks', { signal })
 }
+
+function filenameFromDisposition(header: string | null, fallback: string): string {
+  if (!header) return fallback
+  const encoded = /filename\*=UTF-8''([^;]+)/i.exec(header)
+  if (encoded?.[1]) {
+    try {
+      return decodeURIComponent(encoded[1].trim())
+    } catch {
+      /* malformed percent-encoding — use the quoted form */
+    }
+  }
+  const plain = /filename="?([^";]+)"?/i.exec(header)
+  return plain?.[1]?.trim() || fallback
+}
+
+function saveBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = filename
+  anchor.click()
+  URL.revokeObjectURL(url)
+}
+
+export async function exportIcs(calendarId?: string): Promise<void> {
+  const response = await apiFetch(`${endpoint}/export.ics${query({ calendar_id: calendarId })}`, {
+    cache: 'no-store',
+  })
+  if (!response.ok) {
+    let detail = ''
+    try {
+      detail = String((await response.json())?.detail ?? '')
+    } catch {
+      /* no body */
+    }
+    throw new CalendarRequestError(response.status, detail)
+  }
+  saveBlob(
+    await response.blob(),
+    filenameFromDisposition(response.headers.get('content-disposition'), 'calendar.ics')
+  )
+}

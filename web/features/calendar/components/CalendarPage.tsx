@@ -291,6 +291,18 @@ export default function CalendarPage() {
         })
       )
   }
+  const downloadIcs = async (calendarId?: string) => {
+    setError('')
+    try {
+      await api.exportIcs(calendarId)
+    } catch (e) {
+      setError(
+        e instanceof api.CalendarRequestError && e.detail
+          ? e.detail
+          : t('Could not export the calendar.')
+      )
+    }
+  }
   const drop = (id: string, target: GridDraft) => {
     const card = board?.cards.find(c => c.id === id)
     if (!card || card.archived) return
@@ -502,6 +514,8 @@ export default function CalendarPage() {
             onDeleteCalendar={calendar =>
               setPanel({ kind: 'calendar-delete', calendar, anchor: center })
             }
+            onExportCalendar={calendar => void downloadIcs(calendar.id)}
+            onExportAll={() => void downloadIcs()}
             layers={toggles}
             onToggleLayer={key => setToggles(s => ({ ...s, [key]: !s[key] }))}
             notifications={permission}
