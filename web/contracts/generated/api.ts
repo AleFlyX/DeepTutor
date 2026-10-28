@@ -14371,7 +14371,7 @@ export interface components {
        * Language
        * @enum {string}
        */
-      readonly language: "en" | "zh" | "fr" | "de" | "uk" | "pl";
+      readonly language: "en" | "zh" | "fr" | "de" | "uk" | "pl" | "tr";
     };
     /** LearnerOverrideRequest */
     readonly LearnerOverrideRequest: {
@@ -17762,7 +17762,8 @@ export interface components {
       /** Code Block Wrap Long Lines */
       readonly code_block_wrap_long_lines?: boolean | null;
       /** Language */
-      readonly language?: ("en" | "zh" | "fr" | "de" | "uk" | "pl") | null;
+      readonly language?:
+        ("en" | "zh" | "fr" | "de" | "uk" | "pl" | "tr") | null;
       /** Response Language */
       readonly response_language?:
         | (
@@ -17781,6 +17782,7 @@ export interface components {
             | "pl"
             | "uk"
             | "ms"
+            | "tr"
           )
         | null;
       /** Sidebar Description */

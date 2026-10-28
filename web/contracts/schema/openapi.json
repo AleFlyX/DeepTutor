@@ -6012,7 +6012,8 @@
               "fr",
               "de",
               "uk",
-              "pl"
+              "pl",
+              "tr"
             ],
             "title": "Language",
             "type": "string"
@@ -13220,7 +13221,8 @@
                   "fr",
                   "de",
                   "uk",
-                  "pl"
+                  "pl",
+                  "tr"
                 ],
                 "type": "string"
               },
@@ -13248,7 +13250,8 @@
                   "ar",
                   "pl",
                   "uk",
-                  "ms"
+                  "ms",
+                  "tr"
                 ],
                 "type": "string"
               },

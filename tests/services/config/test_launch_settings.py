@@ -55,6 +55,8 @@ def test_launch_settings_reads_ports_from_system_json_and_ignores_env_json(
         ("polish", "pl"),
         ("polski", "pl"),
         ("pl-PL", "pl"),
+        ("turkish", "tr"),
+        ("tr-TR", "tr"),
     ],
 )
 def test_launch_settings_reads_supported_languages_from_interface_json(
