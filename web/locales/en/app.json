@@ -6218,5 +6218,15 @@
   "Could not load review strategies. Try again.": "Could not load review strategies. Try again.",
   "Could not save review strategy. Try again.": "Could not save review strategy. Try again.",
   "Could not duplicate review strategy. Try again.": "Could not duplicate review strategy. Try again.",
-  "Could not delete review strategy. Try again.": "Could not delete review strategy. Try again."
+  "Could not delete review strategy. Try again.": "Could not delete review strategy. Try again.",
+  "Choose a server folder": "Choose a server folder",
+  "Browse folders on the server and choose a project workspace.": "Browse folders on the server and choose a project workspace.",
+  "Select this folder": "Select this folder",
+  "Parent folder": "Parent folder",
+  "Current folder": "Current folder",
+  "Browse root": "Browse root",
+  "Filter folders": "Filter folders",
+  "Loading folders…": "Loading folders…",
+  "No subfolders": "No subfolders",
+  "Showing the first 500 folders. Open a subfolder to narrow the list.": "Showing the first 500 folders. Open a subfolder to narrow the list."
 }

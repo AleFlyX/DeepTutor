@@ -6372,5 +6372,15 @@
   "Could not load review strategies. Try again.": "Impossible de charger les stratégies de révision. Réessayez.",
   "Could not save review strategy. Try again.": "Impossible d’enregistrer la stratégie de révision. Réessayez.",
   "Could not duplicate review strategy. Try again.": "Impossible de dupliquer la stratégie de révision. Réessayez.",
-  "Could not delete review strategy. Try again.": "Impossible de supprimer la stratégie de révision. Réessayez."
+  "Could not delete review strategy. Try again.": "Impossible de supprimer la stratégie de révision. Réessayez.",
+  "Choose a server folder": "Choisir un dossier sur le serveur",
+  "Browse folders on the server and choose a project workspace.": "Parcourez les dossiers du serveur et choisissez un espace de travail de projet.",
+  "Select this folder": "Sélectionner ce dossier",
+  "Parent folder": "Dossier parent",
+  "Current folder": "Dossier actuel",
+  "Browse root": "Racine de navigation",
+  "Filter folders": "Filtrer les dossiers",
+  "Loading folders…": "Chargement des dossiers…",
+  "No subfolders": "Aucun sous-dossier",
+  "Showing the first 500 folders. Open a subfolder to narrow the list.": "Affichage des 500 premiers dossiers. Ouvrez un sous-dossier pour affiner la liste."
 }

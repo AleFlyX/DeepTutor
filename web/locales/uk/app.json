@@ -6240,5 +6240,15 @@
   "Could not load review strategies. Try again.": "Не вдалося завантажити стратегії повторень. Спробуйте ще раз.",
   "Could not save review strategy. Try again.": "Не вдалося зберегти стратегію повторень. Спробуйте ще раз.",
   "Could not duplicate review strategy. Try again.": "Не вдалося дублювати стратегію повторень. Спробуйте ще раз.",
-  "Could not delete review strategy. Try again.": "Не вдалося видалити стратегію повторень. Спробуйте ще раз."
+  "Could not delete review strategy. Try again.": "Не вдалося видалити стратегію повторень. Спробуйте ще раз.",
+  "Choose a server folder": "Вибрати папку на сервері",
+  "Browse folders on the server and choose a project workspace.": "Перегляньте папки на сервері та виберіть робочий простір проєкту.",
+  "Select this folder": "Вибрати цю папку",
+  "Parent folder": "Батьківська папка",
+  "Current folder": "Поточна папка",
+  "Browse root": "Коренева папка перегляду",
+  "Filter folders": "Фільтрувати папки",
+  "Loading folders…": "Завантаження папок…",
+  "No subfolders": "Немає вкладених папок",
+  "Showing the first 500 folders. Open a subfolder to narrow the list.": "Показано перші 500 папок. Відкрийте вкладену папку, щоб звузити список."
 }
