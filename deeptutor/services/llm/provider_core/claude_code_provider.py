@@ -14,6 +14,7 @@ from collections.abc import Awaitable, Callable
 from copy import deepcopy
 from dataclasses import dataclass, field
 import json
+import logging
 from types import ModuleType
 from typing import Any
 
@@ -32,6 +33,8 @@ DEFAULT_CLAUDE_CODE_MODEL = "claude-code/default"
 CLAUDE_CODE_MODELS = ("default", "sonnet", "opus", "haiku")
 _SESSION_POOL_MAXSIZE = 4
 _LABEL = "Claude Code"
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -435,14 +438,54 @@ def _friendly_error(exc: Exception) -> str:
     return f"Error calling Claude Code: {message}"
 
 
+async def fetch_claude_code_catalog() -> list[dict[str, str]]:
+    """Models the signed-in Claude Code account offers, with display names.
+
+    Read from the CLI's ``initialize`` handshake, so no model request is made.
+    The ``default`` entry is labelled generically: the CLI describes its own
+    default, but managed or user settings may pin a different model at run time.
+    Falls back to the bare aliases when the CLI cannot be started.
+    """
+    try:
+        sdk = _load_sdk()
+        client = sdk.ClaudeSDKClient(
+            options=sdk.ClaudeAgentOptions(tools=[], setting_sources=[], max_turns=1)
+        )
+        await client.connect()
+        try:
+            info = await client.get_server_info() or {}
+        finally:
+            await client.disconnect()
+        models = info.get("models") or []
+    except Exception as exc:
+        logger.warning("Claude Code model catalog unavailable (%s)", type(exc).__name__)
+        models = []
+
+    catalog: list[dict[str, str]] = []
+    for entry in models:
+        value = str(entry.get("value") or "").strip() if isinstance(entry, dict) else ""
+        if not value:
+            continue
+        name = (
+            "Default (account setting)"
+            if value == "default"
+            else str(entry.get("displayName") or value)
+        )
+        catalog.append({"id": f"claude-code/{value}", "name": name})
+    if not catalog:
+        catalog = [{"id": f"claude-code/{name}", "name": name} for name in CLAUDE_CODE_MODELS]
+    return catalog
+
+
 async def fetch_claude_code_models() -> list[str]:
-    """Model aliases the Claude Code CLI resolves for the signed-in account."""
-    return [f"claude-code/{name}" for name in CLAUDE_CODE_MODELS]
+    """Model ids the signed-in Claude Code account offers."""
+    return [model["id"] for model in await fetch_claude_code_catalog()]
 
 
 __all__ = [
     "CLAUDE_CODE_MODELS",
     "ClaudeCodeProvider",
     "DEFAULT_CLAUDE_CODE_MODEL",
+    "fetch_claude_code_catalog",
     "fetch_claude_code_models",
 ]

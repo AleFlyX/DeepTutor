@@ -226,3 +226,52 @@ def test_claude_code_registry_alias_and_factory() -> None:
     )
 
     assert isinstance(provider, ClaudeCodeProvider)
+
+
+@pytest.mark.asyncio
+async def test_model_catalog_comes_from_cli_handshake(monkeypatch) -> None:
+    from deeptutor.services.llm.provider_core.claude_code_provider import (
+        fetch_claude_code_catalog,
+        fetch_claude_code_models,
+    )
+
+    async def server_info(self):
+        return {
+            "models": [
+                {"value": "default", "displayName": "Default (recommended)"},
+                {"value": "opus", "displayName": "Opus 5.5"},
+                {"value": "", "displayName": "ignored"},
+            ]
+        }
+
+    monkeypatch.setattr(FakeClient, "get_server_info", server_info, raising=False)
+    _install_fake_sdk(monkeypatch)
+
+    assert await fetch_claude_code_catalog() == [
+        {"id": "claude-code/default", "name": "Default (account setting)"},
+        {"id": "claude-code/opus", "name": "Opus 5.5"},
+    ]
+    assert await fetch_claude_code_models() == ["claude-code/default", "claude-code/opus"]
+    assert FakeClient.instances[0].disconnected
+
+
+@pytest.mark.asyncio
+async def test_model_catalog_falls_back_to_aliases_when_cli_fails(monkeypatch) -> None:
+    from deeptutor.services.llm.provider_core.claude_code_provider import (
+        fetch_claude_code_catalog,
+    )
+
+    async def broken_connect(self):
+        raise RuntimeError("CLI not found")
+
+    monkeypatch.setattr(FakeClient, "connect", broken_connect)
+    _install_fake_sdk(monkeypatch)
+
+    catalog = await fetch_claude_code_catalog()
+
+    assert [model["id"] for model in catalog] == [
+        "claude-code/default",
+        "claude-code/sonnet",
+        "claude-code/opus",
+        "claude-code/haiku",
+    ]

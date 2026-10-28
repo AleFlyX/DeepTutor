@@ -2042,6 +2042,13 @@ async def fetch_models_from_provider(payload: FetchModelsPayload):
         if not api_format and profile:
             api_format = str(profile.get("api_format") or "")
 
+    if canonical == "claude_code":
+        from deeptutor.services.llm.provider_core.claude_code_provider import (
+            fetch_claude_code_catalog,
+        )
+
+        return {"models": await fetch_claude_code_catalog()}
+
     try:
         model_ids = await fetch_llm_models(binding, base_url, api_key, api_format or "auto")
     except Exception as exc:  # noqa: BLE001 — surface any provider error as 502
