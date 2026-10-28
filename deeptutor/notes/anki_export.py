@@ -24,10 +24,10 @@ ANKI_HEADERS: tuple[str, ...] = (
     "#guid column:5",
 )
 
-_FENCED_CODE = re.compile(r"```([\s\S]*?)```")
-_INLINE_CODE = re.compile(r"`([^`]+)`")
-_BLOCK_MATH = re.compile(r"\$\$(.+?)\$\$", re.DOTALL)
-_INLINE_MATH = re.compile(r"(?<!\$)\$(?!\$)([^$\n]+?)\$")
+_PROTECTED_SPANS = re.compile(
+    r"(?P<fence>```[\s\S]*?```)|(?P<code>`[^`]+`)|"
+    r"(?P<block_math>\$\$[\s\S]+?\$\$)|(?P<math>(?<!\$)\$(?!\$)[^$\n]+?\$)"
+)
 _BOLD = re.compile(r"\*\*(.+?)\*\*|__(.+?)__")
 _ITALIC = re.compile(
     r"(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)|(?<![A-Za-z0-9_])_(?!_)(.+?)(?<!_)_(?![A-Za-z0-9_])"
@@ -82,30 +82,27 @@ def markdown_to_anki_html(text: str) -> str:
     """
     if not text:
         return ""
-    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n").replace("\x00", "")
     slots: list[str] = []
 
     def stash(fragment: str) -> str:
         slots.append(fragment)
         return f"\x00{len(slots) - 1}\x00"
 
-    def fenced(match: re.Match[str]) -> str:
-        body = html.escape(match.group(1).strip("\n")).replace("\n", "<br>")
-        return stash(f"<pre><code>{body}</code></pre>")
+    def protect(match: re.Match[str]) -> str:
+        raw = match.group()
+        if match.lastgroup == "fence":
+            body = html.escape(raw[3:-3].strip("\n")).replace("\n", "<br>")
+            return stash(f"<pre><code>{body}</code></pre>")
+        if match.lastgroup == "code":
+            return stash(f"<code>{html.escape(raw[1:-1])}</code>")
+        if match.lastgroup == "block_math":
+            return stash(rf"\[{html.escape(raw[2:-2].strip())}\]")
+        return stash(rf"\({html.escape(raw[1:-1].strip())}\)")
 
-    def inline_code(match: re.Match[str]) -> str:
-        return stash(f"<code>{html.escape(match.group(1))}</code>")
-
-    def block_math(match: re.Match[str]) -> str:
-        return stash(rf"\[{html.escape(match.group(1).strip())}\]")
-
-    def inline_math(match: re.Match[str]) -> str:
-        return stash(rf"\({html.escape(match.group(1).strip())}\)")
-
-    protected = _FENCED_CODE.sub(fenced, normalized)
-    protected = _INLINE_CODE.sub(inline_code, protected)
-    protected = _BLOCK_MATH.sub(block_math, protected)
-    protected = _INLINE_MATH.sub(inline_math, protected)
+    # Match spans once: code inside math (or math inside code) is literal,
+    # never a nested placeholder. NUL is removed above before reserving slots.
+    protected = _PROTECTED_SPANS.sub(protect, normalized)
     escaped = html.escape(protected)
     marked = _BOLD.sub(lambda match: f"<b>{match.group(1) or match.group(2)}</b>", escaped)
     marked = _ITALIC.sub(lambda match: f"<i>{match.group(1) or match.group(2)}</i>", marked)

@@ -207,3 +207,12 @@ def test_storage_export_covers_every_note_in_the_workspace(tmp_path):
     text = render_anki_export(cards)
     assert "DeepTutor::Alpha" in text
     assert "DeepTutor::Beta" in text
+
+
+def test_protected_spans_do_not_nest_or_accept_user_placeholders():
+    rendered = markdown_to_anki_html("$a `b` c$ and `code $literal$`")
+    assert r"\(a `b` c\)" in rendered
+    assert "<code>code $literal$</code>" in rendered
+    assert "\x00" not in rendered
+    assert "99" in markdown_to_anki_html("literal \x0099\x00")
+    assert "<script>" not in markdown_to_anki_html("$<script>`x`</script>$")
