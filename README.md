@@ -242,6 +242,7 @@ DeepTutor is an agent-native learning workspace that connects tutoring, problem 
 
 - **One runtime for every mode** — Chat, Ask Questions, Quiz, Research, Visualize, Solve, Mastery Path, Immersive Reading, and Audio Overview share one capability runtime and session context while keeping purpose-built loops and pipelines.
 - **Task Board** — Track study tasks in To do, In progress, and Done, with notes, drag-and-drop or keyboard-accessible move buttons, and an archive you can restore from. Cards stay in the current workspace and follow the existing appearance and language settings; no model configuration is required.
+- **Calendar** — Keep study sessions on a personal calendar with repeating events and reminders, and download one calendar or all of them as an `.ics` file for Apple Calendar, Google Calendar, Outlook, and Thunderbird. Workspace overlays such as task due dates and reviews stay in DeepTutor.
 - **Connected learning context** — Knowledge bases, books, Learning notebook pages, Favorites, question banks, personas, and Memory can be reused across the workflows that support them, subject to account grants and learning policies.
 - **Immersive video learning** — add YouTube or Bilibili links to Reading for native playback, transcript search, timestamp-grounded tutoring, saved notes, and resumable progress; YouTube captions and browsing can use an administrator-configured Invidious instance.
 - **Subagents and Partners** — from Chat, consult a live agent harness (Claude Code, Codex, Grok CLI, Antigravity, Kimi, opencode, MiMo, Hermes, OpenClaw, or DeepSeek) or a Partner, import past conversations, and run persistent IM companions on the same brain.
@@ -270,6 +271,9 @@ with the access URL and the results of your checks.
 
 The [developer and agent handbook](docs-for-dev/README.md) is the documentation entry point for setup, architecture, extension development, testing, and troubleshooting. Its [Agent Setup guide](docs-for-dev/AGENT_SETUP.md) covers the full installation flow, including non-interactive CLI configuration. To install it yourself, choose one of the paths below.
 
+Claude Code connected-agent model Sync can use the optional `claude-code` extra for SDK-based model discovery. See [Claude model sync](docs-for-dev/CLAUDE_MODEL_SYNC.md)
+for versioned catalogs, CLI authentication, and the legacy fallback.
+
 DeepTutor ships four installation paths. They all share one runtime-home layout: private settings live in `data/user/settings/` under the directory you launch from (or under `DEEPTUTOR_HOME` / `deeptutor start --home` if you set one explicitly). See [Local Data Persistence](./docs-for-dev/DATA_STORAGE.md) for the complete storage layout, database support, and backup notes. For the full app, the recommended flow is **pick a runtime-home directory → install → `deeptutor init` → `deeptutor start`**.
 
 ### One-Command Docker Trial
@@ -286,6 +290,12 @@ docker run --rm --name deeptutor \
 Open [http://127.0.0.1:3782](http://127.0.0.1:3782), configure model providers in **Settings → Providers**, and press `Ctrl+C` when you are done. The named `deeptutor-data` volume keeps settings and local data for the next run.
 
 ### Content Workspace
+
+In a new conversation, open the workspace menu and **Choose a server folder**
+to browse into a project and select it without typing a path. The same picker
+is available in workspace settings. Remote deployments browse server folders;
+see the [server folder picker guide](docs-for-dev/SERVER_WORKSPACE_PICKER.md)
+for Docker mounts and configurable browsing roots.
 
 The **Content Workspace** is separate from DeepTutor's private runtime home. It
 is the folder agents may read, with generated files under
@@ -397,6 +407,19 @@ python scripts/install_extras.py edge-tts        # Optional free speech provider
 ```
 
 **Video Lesson:** choose Video Lesson in chat or run `deeptutor run video_lesson "Explain a concept"`. The backend needs Node.js 22+ and npm. First use downloads pinned Remotion packages and a WebAssembly JavaScript interpreter; Docker is not required. Frame checks run inside the interpreter with no host filesystem, credentials, network or process APIs, under memory and execution limits. Cancellation stops the build process. Local and container deployments use the same execution path, with no unsandboxed fallback. The resulting lesson plays in the browser, with captions when optional narration is unavailable.
+
+Generated Math Animator videos include an **Output files** panel below the player.
+It shows the saved server path and file size, supports copying the path, and can
+reveal the original file in Finder from a local macOS browser.
+**Clean render files** previews the reclaimable size and asks for confirmation
+before removing that generation's reproducible render directory. Final outputs,
+source code, and published playback snapshots are retained. Cleanup is blocked
+while conversations are running or the reviewed files have changed. In a remote
+deployment, the displayed path belongs to the server.
+
+Generated chat-tool file attachments also expose an **Output files** panel with
+the saved path, copy and Finder actions, and a confirmed option to remove the
+workspace copy. The immutable chat attachment remains available after removal.
 
 </details>
 
@@ -795,6 +818,8 @@ container; a CLI installed only on the browser's computer is not reachable.
 </div>
 
 The Learning notebook, formerly Co-Writer, organizes your own writing into pages, subpages, and blocks within the active workspace. Import Word documents, arrange a page tree, and insert original records from Favorites as evidence. Pages keep their save status visible and export as Markdown or Word; interactive content becomes static in Word.
+
+**Export flashcards to Anki.** Notebook pages can include Flash Cards. On a page that has them, open the page menu and choose **Export flashcards (Anki)**. From the notebook review queue, choose **Export all for Anki**. In Anki, use **File → Import** and select the downloaded `.txt` file. Cards land in a deck named `DeepTutor::<note title>` with front/back fields, tags, and math preserved. Re-importing the same file updates existing cards instead of duplicating them. DeepTutor's own review schedule is not included.
 
 <div align="center">
 <img src="assets/figs/web-dev/notebook-detail.png" alt="Learning notebook block editor and Dito" width="900">
