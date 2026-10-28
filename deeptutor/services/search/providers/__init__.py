@@ -184,6 +184,7 @@ def _register_builtin_providers() -> None:
         serper,
         serply,
         tavily,
+        youcom,
         zhipu,
     )
 
@@ -202,6 +203,7 @@ def _register_builtin_providers() -> None:
         serper,
         serply,
         tavily,
+        youcom,
         zhipu,
     )
 
