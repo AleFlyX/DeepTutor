@@ -5536,5 +5536,15 @@
   "Applies to Chat, Solve, Ask Questions, Guided Learning, Reading, Course Study and standard visualizations. Changes take effect on the next turn.": "Застосовується до чату, розв’язування, запитань, керованого навчання, читання, курсів і стандартних візуалізацій. Зміни діють із наступного ходу.",
   "Clear instructions": "Очистити інструкції",
   "{{used}} / {{limit}} characters": "{{used}} / {{limit}} символів",
-  "contextBudget.segment.workspace_instructions": "Інструкції робочого простору"
+  "contextBudget.segment.workspace_instructions": "Інструкції робочого простору",
+  "Choose a server folder": "Вибрати папку на сервері",
+  "Browse folders on the server and choose a project workspace.": "Перегляньте папки на сервері та виберіть робочий простір проєкту.",
+  "Select this folder": "Вибрати цю папку",
+  "Parent folder": "Батьківська папка",
+  "Current folder": "Поточна папка",
+  "Browse root": "Коренева папка перегляду",
+  "Filter folders": "Фільтрувати папки",
+  "Loading folders…": "Завантаження папок…",
+  "No subfolders": "Немає вкладених папок",
+  "Showing the first 500 folders. Open a subfolder to narrow the list.": "Показано перші 500 папок. Відкрийте вкладену папку, щоб звузити список."
 }
