@@ -74,6 +74,28 @@ _COPY: dict[str, dict[str, Any]] = {
         "chapter_index_title": "章节索引",
         "chapter_index_heading": "## 章节索引",
     },
+    "tr": {
+        "chapter_title": "Bu kitap nasıl okunur",
+        "chapter_summary": (
+            "Kitabın kavram grafiğinin ve bölüm dizininin otomatik oluşturulmuş özeti."
+        ),
+        "objectives": [
+            "Tüm bölüm haritasını tek bakışta görün",
+            "Kavramların birbirine nasıl bağlı olduğunu anlayın",
+            "Hedeflerinize uygun okuma yolunu seçin",
+        ],
+        "intro_title": "Bu kitap nasıl okunur",
+        "intro_body": (
+            "Aşağıdaki diyagram, bu kitaptaki {concepts} temel kavramı ve bunların "
+            "birbirine nasıl bağlı olduğunu gösterir. Ardından gelen bölüm dizini "
+            "{chapters} bölümün tamamını listeler; önerilen yol için yukarıdan aşağıya "
+            "okuyabilir ya da en çok merak ettiğiniz bölüme doğrudan geçebilirsiniz."
+        ),
+        "untitled_book": "Bu kitap",
+        "concept_map_title": "Kavram haritası",
+        "chapter_index_title": "Bölüm dizini",
+        "chapter_index_heading": "## Bölüm dizini",
+    },
 }
 
 
