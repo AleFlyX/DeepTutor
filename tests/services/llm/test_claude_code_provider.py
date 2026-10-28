@@ -68,6 +68,8 @@ class FakeClient:
         return None
 
     async def query(self, prompt):
+        if not isinstance(prompt, str):
+            prompt = [message async for message in prompt]
         self.prompts.append(prompt)
 
     async def receive_response(self):
@@ -275,3 +277,91 @@ async def test_model_catalog_falls_back_to_aliases_when_cli_fails(monkeypatch) -
         "claude-code/opus",
         "claude-code/haiku",
     ]
+
+
+IMAGE_URL = "data:image/png;base64,iVBORw0KGgo="
+
+
+@pytest.mark.asyncio
+async def test_text_only_turns_stay_plain_strings(monkeypatch) -> None:
+    captured: dict[str, object] = {}
+
+    async def fake_query(**kwargs):
+        captured.update(kwargs)
+        yield FakeResultMessage("ok")
+
+    _install_fake_sdk(monkeypatch, query=fake_query)
+
+    await ClaudeCodeProvider().chat(messages=[{"role": "user", "content": "hi"}])
+
+    assert captured["prompt"] == "User:\nhi"
+
+
+@pytest.mark.asyncio
+async def test_one_shot_sends_images_as_anthropic_blocks(monkeypatch) -> None:
+    captured: dict[str, object] = {}
+
+    async def fake_query(**kwargs):
+        captured["prompt"] = [message async for message in kwargs["prompt"]]
+        yield FakeAssistantMessage([FakeTextBlock("a red square")])
+        yield FakeResultMessage("a red square")
+
+    _install_fake_sdk(monkeypatch, query=fake_query)
+
+    response = await ClaudeCodeProvider().chat(
+        messages=[
+            {"role": "system", "content": "Be terse."},
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "Source evidence: fig-1."},
+                    {"type": "image_url", "image_url": {"url": IMAGE_URL}},
+                    {"type": "text", "text": "What is shown?"},
+                ],
+            },
+        ]
+    )
+
+    assert response.content == "a red square"
+    [message] = captured["prompt"]
+    assert message["type"] == "user"
+    assert message["message"]["content"] == [
+        {"type": "text", "text": "User:\nSource evidence: fig-1."},
+        {
+            "type": "image",
+            "source": {"type": "base64", "media_type": "image/png", "data": "iVBORw0KGgo="},
+        },
+        {"type": "text", "text": "What is shown?"},
+    ]
+
+
+@pytest.mark.asyncio
+async def test_session_sends_only_new_image_message_as_blocks(monkeypatch) -> None:
+    _install_fake_sdk(monkeypatch)
+    FakeClient.script = [
+        [FakeAssistantMessage([FakeTextBlock("first")]), FakeResultMessage("first")],
+        [FakeAssistantMessage([FakeTextBlock("it is red")]), FakeResultMessage("it is red")],
+    ]
+
+    provider = ClaudeCodeProvider()
+    messages = [{"role": "user", "content": "Look at figure 1."}]
+    await provider.chat(messages, deeptutor_session_id="s1")
+
+    messages += [
+        {"role": "assistant", "content": "first"},
+        {"role": "user", "content": [{"type": "image_url", "image_url": {"url": IMAGE_URL}}]},
+    ]
+    response = await provider.chat(messages, deeptutor_session_id="s1")
+
+    assert response.content == "it is red"
+    client = FakeClient.instances[0]
+    assert client.prompts[0] == "User:\nLook at figure 1."
+    [message] = client.prompts[1]
+    assert message["message"]["content"] == [
+        {"type": "text", "text": "User:"},
+        {
+            "type": "image",
+            "source": {"type": "base64", "media_type": "image/png", "data": "iVBORw0KGgo="},
+        },
+    ]
+    await provider.aclose()

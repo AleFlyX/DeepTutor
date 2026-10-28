@@ -10,11 +10,12 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
 from copy import deepcopy
 from dataclasses import dataclass, field
 import json
 import logging
+import re
 from types import ModuleType
 from typing import Any
 
@@ -23,8 +24,8 @@ from deeptutor.services.llm.provider_core.codebuddy_provider import (
     _MCP_SERVER_NAME,
     _MCP_TOOL_PREFIX,
     _consume_messages,
+    _content_part_text,
     _content_text,
-    _incremental_prompt,
     _messages_to_prompt,
     _reasoning_options,
 )
@@ -37,9 +38,13 @@ _LABEL = "Claude Code"
 logger = logging.getLogger(__name__)
 
 
+# A prompt is plain text, or Anthropic content blocks when it carries images.
+_Prompt = str | list[dict[str, Any]]
+
+
 @dataclass
 class _SessionTurn:
-    prompt: str
+    prompt: _Prompt
     on_content_delta: Callable[[str], Awaitable[None]] | None
     future: asyncio.Future[LLMResponse]
 
@@ -88,7 +93,7 @@ class _ClaudeCodeSession:
                 if turn is None:
                     break
                 try:
-                    await client.query(turn.prompt)
+                    await client.query(_sdk_prompt(turn.prompt))
                     # No real interrupt on a tool call: ``max_turns=1`` already
                     # ends the turn right after the placeholder tool result, and
                     # an interrupt would leave "[Request interrupted]" in the
@@ -117,7 +122,7 @@ class _ClaudeCodeSession:
 
     async def run_turn(
         self,
-        prompt: str,
+        prompt: _Prompt,
         on_content_delta: Callable[[str], Awaitable[None]] | None,
     ) -> LLMResponse:
         if not self.alive:
@@ -218,7 +223,7 @@ class ClaudeCodeProvider(LLMProvider):
                     on_content_delta,
                 )
             options = _build_options(sdk, model, system_prompt, reasoning_effort, tools)
-            stream = sdk.query(prompt=_messages_to_prompt(conversation), options=options)
+            stream = sdk.query(prompt=_sdk_prompt(_prompt_input(conversation)), options=options)
             try:
                 return await _consume_messages(
                     stream, on_content_delta=on_content_delta, label=_LABEL
@@ -247,7 +252,7 @@ class ClaudeCodeProvider(LLMProvider):
         )
         try:
             async with session.lock:
-                prompt = _incremental_prompt(session, conversation)  # type: ignore[arg-type]
+                prompt = _prompt_input(_incremental_messages(session, conversation))
                 session.messages = deepcopy(conversation)
                 response = await session.run_turn(prompt, on_content_delta)
                 session.last_response = response.content or ""
@@ -347,6 +352,110 @@ def _split_system(messages: list[dict[str, Any]]) -> tuple[str, list[dict[str, A
         else:
             conversation.append(message)
     return "\n\n".join(system_parts), conversation
+
+
+def _incremental_messages(
+    session: _ClaudeCodeSession,
+    messages: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """The tail of *messages* the session's CLI has not seen yet.
+
+    Mirrors ``codebuddy_provider._incremental_prompt`` but keeps the messages
+    themselves, so image parts survive into ``_prompt_input``.
+    """
+    previous = session.messages
+    if previous and len(messages) >= len(previous) and messages[: len(previous)] == previous:
+        delta = list(messages[len(previous) :])
+        if delta and session.last_response and delta[0].get("role") == "assistant":
+            if _content_text(delta[0].get("content")) == session.last_response:
+                delta.pop(0)
+        if _messages_to_prompt(delta) or any(_image_parts(m) for m in delta):
+            return delta
+    return messages
+
+
+def _image_parts(message: dict[str, Any]) -> list[dict[str, Any]]:
+    content = message.get("content")
+    if not isinstance(content, list):
+        return []
+    return [p for p in content if isinstance(p, dict) and p.get("type") == "image_url"]
+
+
+def _prompt_input(messages: list[dict[str, Any]]) -> _Prompt:
+    """Flatten *messages* for the CLI, keeping images as Anthropic image blocks.
+
+    Text-only turns stay a plain string. A turn carrying images (for example a
+    retrieved source figure) becomes content blocks in the original order, with
+    the same role headings ``_messages_to_prompt`` writes.
+    """
+    if not any(_image_parts(m) for m in messages):
+        return _messages_to_prompt(messages)
+
+    blocks: list[dict[str, Any]] = []
+    for message in messages:
+        role = str(message.get("role") or "user").strip() or "user"
+        if role == "assistant":
+            heading = "Assistant"
+        elif role == "tool":
+            heading = (
+                f"Tool result ({message.get('name') or message.get('tool_call_id') or 'tool'})"
+            )
+        else:
+            heading = "User"
+        content = message.get("content")
+        parts = content if isinstance(content, list) else [content]
+        texts: list[str] = []
+        message_blocks: list[dict[str, Any]] = []
+        for part in parts:
+            if isinstance(part, dict) and part.get("type") == "image_url":
+                if texts:
+                    message_blocks.append({"type": "text", "text": "\n".join(texts)})
+                    texts = []
+                image = _image_block(part)
+                if image:
+                    message_blocks.append(image)
+                continue
+            text = _content_part_text(part) if part is not None else ""
+            if text:
+                texts.append(text)
+        if texts:
+            message_blocks.append({"type": "text", "text": "\n".join(texts)})
+        if not message_blocks:
+            continue
+        if message_blocks[0]["type"] == "text":
+            message_blocks[0]["text"] = f"{heading}:\n{message_blocks[0]['text']}"
+        else:
+            message_blocks.insert(0, {"type": "text", "text": f"{heading}:"})
+        blocks.extend(message_blocks)
+    return blocks
+
+
+def _image_block(part: dict[str, Any]) -> dict[str, Any] | None:
+    url = str((part.get("image_url") or {}).get("url") or "")
+    if not url:
+        return None
+    match = re.match(r"data:(image/[\w.+-]+);base64,(.+)", url, re.DOTALL)
+    if match:
+        return {
+            "type": "image",
+            "source": {"type": "base64", "media_type": match.group(1), "data": match.group(2)},
+        }
+    return {"type": "image", "source": {"type": "url", "url": url}}
+
+
+def _sdk_prompt(prompt: _Prompt) -> str | AsyncIterator[dict[str, Any]]:
+    """Plain text goes as-is; content blocks go as one streamed user message."""
+    if isinstance(prompt, str):
+        return prompt
+
+    async def stream() -> AsyncIterator[dict[str, Any]]:
+        yield {
+            "type": "user",
+            "message": {"role": "user", "content": prompt},
+            "parent_tool_use_id": None,
+        }
+
+    return stream()
 
 
 def _build_options(
