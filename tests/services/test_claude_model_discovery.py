@@ -5,6 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from deeptutor.services.llm import claude_sdk
 from deeptutor.services.subagent import claude_models as module
 
 ROWS = [
@@ -24,7 +25,7 @@ ROWS = [
 
 
 def test_sdk_catalog_keeps_all_versions_and_context_variants():
-    models = module._parse_sdk_models([*ROWS, ROWS[1], {}, "invalid"])
+    models = claude_sdk.parse_models([*ROWS, ROWS[1], {}, "invalid"])
     assert [m["slug"] for m in models] == [
         "claude-opus-test",
         "claude-fable-test",
@@ -64,14 +65,14 @@ def sdk(monkeypatch):
         "claude_agent_sdk",
         SimpleNamespace(ClaudeSDKClient=Client, ClaudeAgentOptions=lambda **kw: kw),
     )
-    monkeypatch.setattr(module.shutil, "which", lambda command: "/native/claude")
+    monkeypatch.setattr(claude_sdk.shutil, "which", lambda command: "/native/claude")
     return state
 
 
 @pytest.mark.asyncio
 async def test_sdk_discovery_closes_in_owner_task_and_does_not_return_account_data(sdk):
     models = await module._discover_sdk_models()
-    assert models == module._parse_sdk_models(ROWS)
+    assert models == claude_sdk.parse_models(ROWS)
     assert sdk.closed
     assert sdk.options["cli_path"] == "/native/claude"
     assert sdk.options["tools"] == []
@@ -100,7 +101,7 @@ def cache(monkeypatch, tmp_path):
 @pytest.mark.asyncio
 async def test_sdk_sync_caches_results_without_starting_terminal_capture(monkeypatch, cache):
     async def discover():
-        return module._parse_sdk_models(ROWS)
+        return claude_sdk.parse_models(ROWS)
 
     monkeypatch.setattr(module, "_discover_sdk_models", discover)
     monkeypatch.setattr(

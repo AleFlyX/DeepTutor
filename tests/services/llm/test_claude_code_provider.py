@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import sys
 from types import SimpleNamespace
 
@@ -65,7 +66,14 @@ class FakeClient:
         FakeClient.instances.append(self)
 
     async def connect(self):
-        return None
+        self.owner = asyncio.current_task()
+
+    async def __aenter__(self):
+        await self.connect()
+        return self
+
+    async def __aexit__(self, *args):
+        await self.disconnect()
 
     async def query(self, prompt):
         if not isinstance(prompt, str):
@@ -80,6 +88,7 @@ class FakeClient:
         self.interrupts += 1
 
     async def disconnect(self):
+        assert self.owner is asyncio.current_task()
         self.disconnected = True
 
 
@@ -364,4 +373,47 @@ async def test_session_sends_only_new_image_message_as_blocks(monkeypatch) -> No
             "source": {"type": "base64", "media_type": "image/png", "data": "iVBORw0KGgo="},
         },
     ]
+    await provider.aclose()
+
+
+@pytest.mark.asyncio
+async def test_cancel_active_stream_closes_in_owner_task(monkeypatch):
+    entered = asyncio.Event()
+
+    async def blocked_response(self):
+        entered.set()
+        await asyncio.Event().wait()
+        yield FakeResultMessage("unreachable")
+
+    monkeypatch.setattr(FakeClient, "receive_response", blocked_response)
+    _install_fake_sdk(monkeypatch)
+    provider = ClaudeCodeProvider()
+    task = asyncio.create_task(
+        provider.chat(
+            [{"role": "user", "content": "Wait"}],
+            deeptutor_session_id="cancel",
+        )
+    )
+    await asyncio.wait_for(entered.wait(), 1)
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await asyncio.wait_for(task, 1)
+    assert FakeClient.instances[0].disconnected
+    assert not provider._sessions
+    await provider.aclose()
+
+
+@pytest.mark.asyncio
+async def test_regeneration_replaces_old_cli_transcript(monkeypatch):
+    _install_fake_sdk(monkeypatch)
+    FakeClient.script = [[FakeResultMessage("one")], [FakeResultMessage("two")]]
+    provider = ClaudeCodeProvider()
+    await provider.chat([{"role": "user", "content": "Original"}], deeptutor_session_id="branch")
+    await provider.chat([{"role": "user", "content": "Edited"}], deeptutor_session_id="branch")
+    assert len(FakeClient.instances) == 2
+    assert FakeClient.instances[0].disconnected
+    assert FakeClient.instances[1].prompts == ["User:\nEdited"]
+    options = FakeClient.instances[1].options.kwargs
+    assert options["permission_mode"] == "dontAsk"
+    assert options["extra_args"] == {"strict-mcp-config": None}
     await provider.aclose()

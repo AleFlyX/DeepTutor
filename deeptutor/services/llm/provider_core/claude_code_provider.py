@@ -11,16 +11,18 @@ from __future__ import annotations
 import asyncio
 from collections import OrderedDict
 from collections.abc import AsyncIterator, Awaitable, Callable
+from contextlib import suppress
 from copy import deepcopy
 from dataclasses import dataclass, field
 import json
 import logging
 import re
+import tempfile
 from types import ModuleType
 from typing import Any
 
 from deeptutor.services.llm.provider_core.base import LLMProvider, LLMResponse
-from deeptutor.services.llm.provider_core.codebuddy_provider import (
+from deeptutor.services.llm.provider_core.sdk_bridge import (
     _MCP_SERVER_NAME,
     _MCP_TOOL_PREFIX,
     _consume_messages,
@@ -75,7 +77,11 @@ class _ClaudeCodeSession:
             session._owner_loop(sdk, options, ready),
             name="claude-code-session-owner",
         )
-        await ready
+        try:
+            await ready
+        except BaseException:
+            await session.close()
+            raise
         return session
 
     @property
@@ -110,15 +116,19 @@ class _ClaudeCodeSession:
                 except BaseException as exc:
                     if not turn.future.done():
                         turn.future.set_exception(exc)
+                    raise
         except BaseException as exc:
             if not ready.done():
                 ready.set_exception(exc)
             raise
         finally:
-            try:
-                await client.disconnect()
-            except BaseException:
-                pass
+            while not self._ops.empty():
+                pending = self._ops.get_nowait()
+                if pending is not None and not pending.future.done():
+                    pending.future.cancel()
+            with suppress(Exception):
+                async with asyncio.timeout(5):
+                    await client.disconnect()
 
     async def run_turn(
         self,
@@ -139,11 +149,11 @@ class _ClaudeCodeSession:
             return
         self._owner = None
         if not owner.done():
-            await self._ops.put(None)
-        try:
+            owner.cancel()
+        # Cancellation reaches receive_response immediately; disconnect still
+        # runs in the task that entered the SDK's anyio scopes.
+        with suppress(asyncio.CancelledError, Exception):
             await owner
-        except Exception:
-            pass
 
 
 async def _no_interrupt() -> None:
@@ -165,6 +175,7 @@ class ClaudeCodeProvider(LLMProvider):
         self.default_model = default_model or DEFAULT_CLAUDE_CODE_MODEL
         self._sessions: OrderedDict[str, _ClaudeCodeSession] = OrderedDict()
         self._sessions_lock = asyncio.Lock()
+        self._workspace = tempfile.TemporaryDirectory(prefix="dt-claude-provider-")
 
     async def chat(
         self,
@@ -222,7 +233,9 @@ class ClaudeCodeProvider(LLMProvider):
                     reasoning_effort,
                     on_content_delta,
                 )
-            options = _build_options(sdk, model, system_prompt, reasoning_effort, tools)
+            options = _build_options(
+                sdk, model, system_prompt, reasoning_effort, tools, cwd=self._workspace.name
+            )
             stream = sdk.query(prompt=_sdk_prompt(_prompt_input(conversation)), options=options)
             try:
                 return await _consume_messages(
@@ -252,6 +265,23 @@ class ClaudeCodeProvider(LLMProvider):
         )
         try:
             async with session.lock:
+                if session.messages and (
+                    len(conversation) <= len(session.messages)
+                    or conversation[: len(session.messages)] != session.messages
+                ):
+                    # Edited/regenerated history must never append to the old
+                    # CLI transcript. Retire it before replaying the new branch.
+                    await self._drop_session(session_id, session)
+                    return await self._run_session(
+                        sdk,
+                        session_id,
+                        system_prompt,
+                        conversation,
+                        tools,
+                        model,
+                        reasoning_effort,
+                        on_content_delta,
+                    )
                 prompt = _prompt_input(_incremental_messages(session, conversation))
                 session.messages = deepcopy(conversation)
                 response = await session.run_turn(prompt, on_content_delta)
@@ -282,14 +312,25 @@ class ClaudeCodeProvider(LLMProvider):
                     self._sessions.pop(session_id, None)
                     to_close.append(existing)
 
-                options = _build_options(sdk, model, system_prompt, reasoning_effort, tools)
+                options = _build_options(
+                    sdk, model, system_prompt, reasoning_effort, tools, cwd=self._workspace.name
+                )
                 session = await _ClaudeCodeSession.start(
                     sdk=sdk, signature=signature, options=options
                 )
                 self._sessions[session_id] = session
                 while len(self._sessions) > _SESSION_POOL_MAXSIZE:
-                    _, evicted = self._sessions.popitem(last=False)
-                    to_close.append(evicted)
+                    idle_key = next(
+                        (
+                            key
+                            for key, item in self._sessions.items()
+                            if key != session_id and not item.lock.locked()
+                        ),
+                        None,
+                    )
+                    if idle_key is None:
+                        break
+                    to_close.append(self._sessions.pop(idle_key))
                 return session
         finally:
             for stale in to_close:
@@ -306,14 +347,8 @@ class ClaudeCodeProvider(LLMProvider):
             sessions = list(self._sessions.values())
             self._sessions.clear()
         for session in sessions:
-            try:
-                await session.close()
-            except asyncio.CancelledError:
-                task = asyncio.current_task()
-                if task is not None:
-                    task.uncancel()
-            except Exception:
-                pass
+            await session.close()
+        self._workspace.cleanup()
 
     def get_default_model(self) -> str:
         return self.default_model
@@ -325,7 +360,8 @@ def _load_sdk() -> ModuleType:
     except ImportError as exc:  # pragma: no cover - optional dependency
         raise RuntimeError(
             "claude-agent-sdk is not installed. Install it with "
-            "`python -m pip install claude-agent-sdk` or `pip install -e .[claude-code]`."
+            "`python scripts/install_extras.py claude-code` in a source checkout, "
+            'or `python -m pip install "deeptutor[claude-code]"` for a wheel installation.'
         ) from exc
     return claude_agent_sdk
 
@@ -464,6 +500,8 @@ def _build_options(
     system_prompt: str,
     reasoning_effort: str | None,
     tools: list[dict[str, Any]] | None,
+    *,
+    cwd: str,
 ) -> Any:
     stripped_model = _strip_model_prefix(model)
     return sdk.ClaudeAgentOptions(
@@ -471,6 +509,9 @@ def _build_options(
         system_prompt=system_prompt,
         # No built-in Claude Code tools and none of the operator's settings,
         # CLAUDE.md files, hooks or plugins: this is a plain model endpoint.
+        cwd=cwd,
+        permission_mode="dontAsk",
+        extra_args={"strict-mcp-config": None},
         tools=[],
         setting_sources=[],
         max_turns=1,
@@ -555,35 +596,21 @@ async def fetch_claude_code_catalog() -> list[dict[str, str]]:
     default, but managed or user settings may pin a different model at run time.
     Falls back to the bare aliases when the CLI cannot be started.
     """
+    from deeptutor.services.llm.claude_sdk import discover_models
+
     try:
-        sdk = _load_sdk()
-        client = sdk.ClaudeSDKClient(
-            options=sdk.ClaudeAgentOptions(tools=[], setting_sources=[], max_turns=1)
-        )
-        await client.connect()
-        try:
-            info = await client.get_server_info() or {}
-        finally:
-            await client.disconnect()
-        models = info.get("models") or []
+        models = await discover_models()
     except Exception as exc:
         logger.warning("Claude Code model catalog unavailable (%s)", type(exc).__name__)
         models = []
-
-    catalog: list[dict[str, str]] = []
-    for entry in models:
-        value = str(entry.get("value") or "").strip() if isinstance(entry, dict) else ""
-        if not value:
-            continue
-        name = (
-            "Default (account setting)"
-            if value == "default"
-            else str(entry.get("displayName") or value)
-        )
-        catalog.append({"id": f"claude-code/{value}", "name": name})
-    if not catalog:
-        catalog = [{"id": f"claude-code/{name}", "name": name} for name in CLAUDE_CODE_MODELS]
-    return catalog
+    if not models:
+        models = [
+            {"slug": name, "display_name": name} for name in CLAUDE_CODE_MODELS if name != "default"
+        ]
+    return [
+        {"id": "claude-code/default", "name": "Default (account setting)"},
+        *[{"id": f"claude-code/{row['slug']}", "name": row["display_name"]} for row in models],
+    ]
 
 
 async def fetch_claude_code_models() -> list[str]:

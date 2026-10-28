@@ -21,7 +21,6 @@ import shutil
 import signal
 import tempfile
 import time
-from typing import Any
 
 from deeptutor.services.path_service import get_path_service
 
@@ -99,47 +98,10 @@ async def sync_claude_models() -> tuple[list[dict[str, str]], str]:
     return models, fetched_at
 
 
-def _parse_sdk_models(rows: list) -> list[dict[str, str]]:
-    models = []
-    seen: set[str] = set()
-    for row in rows:
-        if not isinstance(row, dict):
-            continue
-        value = str(row.get("value") or "").strip()
-        if not value or value == "default" or row.get("disabled") or row.get("isDisabled"):
-            continue
-        if row.get("available") is False:
-            continue
-        slug = str(row.get("resolvedModel") or value).strip()
-        if value.endswith("[1m]") and not slug.endswith("[1m]"):
-            slug += "[1m]"
-        if not slug or slug in seen:
-            continue
-        seen.add(slug)
-        models.append({"slug": slug, "display_name": str(row.get("displayName") or slug)})
-    return models
-
-
 async def _discover_sdk_models() -> list[dict[str, str]]:
-    # Keep the SDK optional; CLI-only installs retain the existing fallback.
-    from claude_agent_sdk import ClaudeAgentOptions, ClaudeSDKClient
+    from deeptutor.services.llm.claude_sdk import discover_models
 
-    options: dict[str, Any] = {
-        "tools": [],
-        "setting_sources": [],
-        "permission_mode": "dontAsk",
-        "extra_args": {"strict-mcp-config": None},
-    }
-    cli = shutil.which("claude")
-    if cli:
-        options["cli_path"] = cli
-    # Do not discover project files, hooks, or MCP servers from the repo whose
-    # settings page initiated sync. Authentication stays CLI-managed.
-    with tempfile.TemporaryDirectory(prefix="dt-claude-model-sdk-") as directory:
-        options["cwd"] = directory
-        async with ClaudeSDKClient(options=ClaudeAgentOptions(**options)) as client:
-            info = await client.get_server_info() or {}
-            return _parse_sdk_models(info.get("models") or [])
+    return await discover_models()
 
 
 def _write_cache(models: list[dict[str, str]], fetched_at: str) -> None:
@@ -282,7 +244,6 @@ def _capture_model_screen() -> str | None:
 
 
 def _cleanup_dir(path: str) -> None:
-    import shutil
 
     shutil.rmtree(path, ignore_errors=True)
 
