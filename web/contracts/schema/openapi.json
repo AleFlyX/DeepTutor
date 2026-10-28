@@ -12013,6 +12013,7 @@
         "properties": {
           "theme": {
             "enum": [
+              "system",
               "light",
               "dark",
               "glass",
@@ -13063,6 +13064,7 @@
             "anyOf": [
               {
                 "enum": [
+                  "system",
                   "light",
                   "dark",
                   "glass",

@@ -712,6 +712,7 @@
   "Last 3 turns": "Ostatnie 3 rundy",
   "(empty message)": "(pusta wiadomość)",
   "System": "System",
+  "System follows the device's light or dark appearance.": "System podąża za jasnym lub ciemnym wyglądem urządzenia.",
   "Select Notebook Records": "Wybierz rekordy kolekcji",
   "Choose records across one or more notebooks to ground the next request.": "Wybierz wpisy z co najmniej jednego kolekcji, aby stanowiły kontekst dla następnego żądania.",
   "Notebook Reference": "Odnośnik do kolekcji",
