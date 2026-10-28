@@ -408,6 +408,19 @@ python scripts/install_extras.py edge-tts        # Optional free speech provider
 
 **Video Lesson:** choose Video Lesson in chat or run `deeptutor run video_lesson "Explain a concept"`. The backend needs Node.js 22+ and npm. First use downloads pinned Remotion packages and a WebAssembly JavaScript interpreter; Docker is not required. Frame checks run inside the interpreter with no host filesystem, credentials, network or process APIs, under memory and execution limits. Cancellation stops the build process. Local and container deployments use the same execution path, with no unsandboxed fallback. The resulting lesson plays in the browser, with captions when optional narration is unavailable.
 
+Generated Math Animator videos include an **Output files** panel below the player.
+It shows the saved server path and file size, supports copying the path, and can
+reveal the original file in Finder from a local macOS browser.
+**Clean render files** previews the reclaimable size and asks for confirmation
+before removing that generation's reproducible render directory. Final outputs,
+source code, and published playback snapshots are retained. Cleanup is blocked
+while conversations are running or the reviewed files have changed. In a remote
+deployment, the displayed path belongs to the server.
+
+Generated chat-tool file attachments also expose an **Output files** panel with
+the saved path, copy and Finder actions, and a confirmed option to remove the
+workspace copy. The immutable chat attachment remains available after removal.
+
 </details>
 
 <details>
