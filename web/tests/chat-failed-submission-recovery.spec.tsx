@@ -97,7 +97,13 @@ vi.mock("@/lib/session-api", () => ({
   },
   updateBranchSelection: async () => ({}),
   updateSessionTitle: async () => fixture.session ?? {},
-  updateSessionReplyLanguage: async () => fixture.session ?? {},
+  updateSessionReplyLanguage: async (
+    _sessionId: string,
+    language: string | null,
+  ) => ({
+    ...(fixture.session ?? {}),
+    preferences: { reply_language_override: language },
+  }),
 }));
 
 /** A server transcript: one completed user/assistant exchange. */
@@ -184,6 +190,11 @@ function Harness() {
         const draft = state.messages.find((message) => message.failedSubmission);
         if (typeof draft?.id === "number") void editMessage(draft.id, "Second edit");
       }}>Edit second version</button>
+      <button onClick={() => {
+        const saved = [...state.messages].reverse().find((message) =>
+          message.role === "user" && !message.failedSubmission && message.requestSnapshot);
+        if (typeof saved?.id === "number") void editMessage(saved.id, "Edited with new settings");
+      }}>Edit saved question</button>
       <button onClick={() => {
         const draft = state.messages.find((message) => message.failedSubmission);
         if (typeof draft?.id === "number") void retryFailedSubmission(draft.id);
@@ -873,6 +884,40 @@ it("retries a failed draft with its original settings after live settings change
   } finally {
     vi.useRealTimers();
   }
+});
+
+it("edits a saved question with the live model and reply language (#2106)", async () => {
+  fixture.session = {
+    ...completedServerSession(),
+    messages: [{
+      id: 7, session_id: "s1", role: "user", content: "Explain binary search",
+      events: [], attachments: [], created_at: 7, parent_message_id: null,
+      metadata: { request_snapshot: {
+        content: "Explain binary search", capability: "chat", language: "en",
+        enabledTools: ["reason"], knowledgeBases: ["kb-1"],
+        llmSelection: { model_id: "model-a", profile_id: "profile-a" },
+      } },
+    }],
+  };
+  fixture.connected = true;
+  render(<ChatStateAdapterProvider><Harness /></ChatStateAdapterProvider>);
+  await act(async () => { fireEvent.click(screen.getByText("Load")); });
+  await act(async () => { fireEvent.click(screen.getByText("Change live settings")); });
+  await act(async () => { fireEvent.click(screen.getByText("Edit saved question")); });
+  const sent = fixture.sent.at(-1) as Record<string, unknown>;
+  // The question's material context carries over to the new branch…
+  expect(sent).toMatchObject({
+    type: "start_turn", content: "Edited with new settings",
+    capability: "chat", tools: ["reason"], knowledge_bases: ["kb-1"],
+  });
+  // …but the model and reply language are the ones picked after it was saved.
+  expect(sent).toMatchObject({
+    llm_selection: { model_id: "other-model", profile_id: "other-profile" },
+    language: "zh",
+  });
+  // The session already carries its language as a server-side preference, so
+  // only the resolved answer language travels with the turn.
+  expect(sent).not.toHaveProperty("reply_language_override");
 });
 
 it("retries the original reading viewport after the live document changes", async () => {

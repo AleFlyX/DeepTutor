@@ -3955,7 +3955,15 @@ export function ChatStateAdapterProvider({
         { parentMessageId: parentId,
           requestSnapshotOverride: (local?.requestSnapshot ?? original.requestSnapshot)
             ? { ...(local?.requestSnapshot ?? original.requestSnapshot)!, content: trimmed,
-                replacesSubmissionId: undefined, replacementRequest: undefined } : undefined },
+                replacesSubmissionId: undefined, replacementRequest: undefined,
+                // An edited question opens a new branch, so it keeps the old turn's
+                // material context — but the model and reply language are whatever
+                // the learner has just picked in the composer. Carrying the snapshot's
+                // values silently ignores those two selectors (#2106).
+                llmSelection: session.llmSelection ?? null,
+                replyLanguageOverride: session.replyLanguageOverride ?? null,
+                language: session.replyLanguageOverride ?? readStoredResponseLanguage() }
+            : undefined },
         undefined,
         undefined,
         undefined,
