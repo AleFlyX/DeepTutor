@@ -175,8 +175,12 @@ export function OutputFileActions({ url, kind }: { url: string; kind: 'render' |
                 className={buttonClass}
                 onClick={async () => {
                   setMessage('')
+                  if (!render) {
+                    setConfirm(true)
+                    return
+                  }
                   const preview = await load()
-                  if (preview && (!render || (preview.cache_files ?? 0) > 0)) setConfirm(true)
+                  if (preview && (preview.cache_files ?? 0) > 0) setConfirm(true)
                 }}
               >
                 {render ? t('Clean render files') : t('Remove workspace file')}

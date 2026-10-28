@@ -158,7 +158,7 @@ export function ReviewTrail({
   };
 
   return (
-    <section className="dt-panel min-h-0 flex-col lg:max-h-[min(30vh,260px)] lg:shrink-0">
+    <section className="dt-panel min-h-0 flex-col lg:max-h-[min(34vh,300px)] lg:shrink-0">
       <div className="dt-panel-head flex-wrap justify-between gap-3">
         <Tooltip label={t("Scheduled by your forgetting curve")} as="div" side="top">
           <h2 tabIndex={0} className="text-[13px] font-semibold text-[var(--foreground)]">
