@@ -5960,7 +5960,7 @@
   "Delete calendar and its events?": "Supprimer le calendrier et ses événements ?",
   "Event deleted": "Événement supprimé",
   "Reschedule event": "Déplacer l’événement",
-  "Duplicate": "Duplicate",
+  "Duplicate": "Dupliquer",
   "All day": "Toute la journée",
   "Starts": "Début",
   "Ends": "Fin",
@@ -6360,5 +6360,17 @@
   "customize.learningHint": "Choisissez les méthodes d’apprentissage affichées. Vous pouvez rétablir les méthodes masquées à tout moment.",
   "customize.emptyLearning": "Préparez votre prochain objectif d’apprentissage",
   "customize.emptyLearningHint": "Personnalisez cette page pour afficher les méthodes. Consultez les modules indisponibles dans Paramètres → Exécution.",
-  "customize.learningFooter": "Vos choix sont enregistrés dans votre compte. Seules les méthodes disponibles sont affichées."
+  "customize.learningFooter": "Vos choix sont enregistrés dans votre compte. Seules les méthodes disponibles sont affichées.",
+  "Strategy": "Stratégie",
+  "rounds (days)": "rappel (jours)",
+  "Use 1-16 non-decreasing whole-day rounds from 0-365 in every row.": "Utilisez dans chaque ligne 1 à 16 rappels en jours entiers, non décroissants, entre 0 et 365.",
+  "Save as custom": "Enregistrer comme personnalisée",
+  "Delete and use default": "Supprimer et utiliser la valeur par défaut",
+  "Edit strategy": "Modifier la stratégie",
+  "No custom strategies yet": "Aucune stratégie personnalisée pour le moment",
+  "Close strategy editor": "Fermer l’éditeur de stratégie",
+  "Could not load review strategies. Try again.": "Impossible de charger les stratégies de révision. Réessayez.",
+  "Could not save review strategy. Try again.": "Impossible d’enregistrer la stratégie de révision. Réessayez.",
+  "Could not duplicate review strategy. Try again.": "Impossible de dupliquer la stratégie de révision. Réessayez.",
+  "Could not delete review strategy. Try again.": "Impossible de supprimer la stratégie de révision. Réessayez."
 }

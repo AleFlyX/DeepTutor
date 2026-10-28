@@ -5598,7 +5598,7 @@
   "Delete calendar and its events?": "Видалити календар і всі події?",
   "Event deleted": "Подію видалено",
   "Reschedule event": "Перенести подію",
-  "Duplicate": "Duplicate",
+  "Duplicate": "Дублювати",
   "All day": "Увесь день",
   "Starts": "Початок",
   "Ends": "Кінець",
@@ -6228,5 +6228,17 @@
   "customize.learningHint": "Виберіть методи навчання на цій сторінці. Приховані методи можна повернути будь-коли.",
   "customize.emptyLearning": "Підготуйтеся до наступної навчальної мети",
   "customize.emptyLearningHint": "Налаштуйте сторінку, щоб показати методи навчання. Недоступні модулі можна переглянути в Налаштування → Середовище виконання.",
-  "customize.learningFooter": "Ваш вибір зберігається в обліковому записі. Показано лише доступні методи навчання."
+  "customize.learningFooter": "Ваш вибір зберігається в обліковому записі. Показано лише доступні методи навчання.",
+  "Strategy": "Стратегія",
+  "rounds (days)": "раунди (дні)",
+  "Use 1-16 non-decreasing whole-day rounds from 0-365 in every row.": "У кожному рядку використовуйте 1-16 не спадних ціоденних раундів у межах 0-365.",
+  "Save as custom": "Зберегти як власну",
+  "Delete and use default": "Видалити та використати типову",
+  "Edit strategy": "Редагувати стратегію",
+  "No custom strategies yet": "Власних стратегій ще немає",
+  "Close strategy editor": "Закрити редактор стратегій",
+  "Could not load review strategies. Try again.": "Не вдалося завантажити стратегії повторень. Спробуйте ще раз.",
+  "Could not save review strategy. Try again.": "Не вдалося зберегти стратегію повторень. Спробуйте ще раз.",
+  "Could not duplicate review strategy. Try again.": "Не вдалося дублювати стратегію повторень. Спробуйте ще раз.",
+  "Could not delete review strategy. Try again.": "Не вдалося видалити стратегію повторень. Спробуйте ще раз."
 }

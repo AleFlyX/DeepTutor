@@ -5582,7 +5582,7 @@
   "Delete calendar and its events?": "Kalender samt Terminen löschen?",
   "Event deleted": "Termin gelöscht",
   "Reschedule event": "Termin verschieben",
-  "Duplicate": "Duplicate",
+  "Duplicate": "Duplizieren",
   "All day": "Ganztägig",
   "Starts": "Beginn",
   "Ends": "Ende",
@@ -6206,5 +6206,17 @@
   "customize.learningHint": "Wähle die Lernmethoden auf dieser Seite. Ausgeblendete Methoden lassen sich jederzeit wieder hinzufügen.",
   "customize.emptyLearning": "Bereite dein nächstes Lernziel vor",
   "customize.emptyLearningHint": "Passe diese Seite an, um Lernmethoden anzuzeigen. Nicht verfügbare Module findest du unter Einstellungen → Laufzeit.",
-  "customize.learningFooter": "Deine Auswahl wird in deinem Konto gespeichert. Es werden nur verfügbare Lernmethoden angezeigt."
+  "customize.learningFooter": "Deine Auswahl wird in deinem Konto gespeichert. Es werden nur verfügbare Lernmethoden angezeigt.",
+  "Strategy": "Strategie",
+  "rounds (days)": "Runden (Tage)",
+  "Use 1-16 non-decreasing whole-day rounds from 0-365 in every row.": "Verwende in jeder Zeile 1-16 nicht abnehmende ganztägige Runden von 0-365.",
+  "Save as custom": "Als benutzerdefiniert speichern",
+  "Delete and use default": "Löschen und Standard verwenden",
+  "Edit strategy": "Strategie bearbeiten",
+  "No custom strategies yet": "Noch keine benutzerdefinierten Strategien",
+  "Close strategy editor": "Strategie-Editor schließen",
+  "Could not load review strategies. Try again.": "Wiederholungsstrategien konnten nicht geladen werden. Versuche es erneut.",
+  "Could not save review strategy. Try again.": "Die Wiederholungsstrategie konnte nicht gespeichert werden. Versuche es erneut.",
+  "Could not duplicate review strategy. Try again.": "Die Wiederholungsstrategie konnte nicht dupliziert werden. Versuche es erneut.",
+  "Could not delete review strategy. Try again.": "Die Wiederholungsstrategie konnte nicht gelöscht werden. Versuche es erneut."
 }
