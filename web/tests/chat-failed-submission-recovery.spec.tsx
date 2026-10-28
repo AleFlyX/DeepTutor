@@ -1751,3 +1751,75 @@ it("preserves an original unsent draft when the backend lacks atomic replacement
   expect(readFailedSubmissions("s1")).toEqual(before);
   expect(readMessages().some(message => message.content === "Original unsupported draft")).toBe(true);
 });
+
+it("resends a saved failed turn with the model and reply language selected now", async () => {
+  fixture.session = {
+    ...completedServerSession(),
+    status: "failed",
+    messages: [{
+      id: 3,
+      session_id: "s1",
+      role: "user",
+      content: "B",
+      events: [],
+      attachments: [],
+      created_at: 3,
+      parent_message_id: null,
+      metadata: {
+        request_snapshot: {
+          content: "B",
+          capability: "chat",
+          language: "en",
+          llmSelection: { model_id: "model-a", profile_id: "profile-a" },
+        },
+      },
+    }, {
+      id: 4,
+      session_id: "s1",
+      role: "assistant",
+      content: "the turn failed",
+      events: [],
+      attachments: [],
+      created_at: 4,
+      parent_message_id: 3,
+    }],
+  };
+  fixture.connected = true;
+  render(<ChatStateAdapterProvider><Harness /></ChatStateAdapterProvider>);
+  await act(async () => { fireEvent.click(screen.getByText("Load")); });
+  // The server echoes the persisted reply-language preference.
+  (fixture.session.preferences as Record<string, unknown>).reply_language_override = "zh";
+  await act(async () => { fireEvent.click(screen.getByText("Change live settings")); });
+  await act(async () => { fireEvent.click(screen.getByText("Resend")); });
+  expect(fixture.sent.at(-1)).toMatchObject({
+    type: "regenerate",
+    session_id: "s1",
+    overrides: {
+      replay_snapshot: true,
+      llm_selection: { model_id: "other-model", profile_id: "other-profile" },
+      language: "zh",
+    },
+  });
+});
+
+it("keeps the original settings when an unsent message is edited", async () => {
+  fixture.session = completedServerSession();
+  fixture.connected = true;
+  storeFailedSubmission("s1", { submissionId: "original-edit", content: "Original", requestSnapshot: {
+    content: "Original", capability: "chat", language: "en",
+    llmSelection: { model_id: "model-a", profile_id: "profile-a" },
+    enabledTools: [], knowledgeBases: [],
+  } });
+  render(<ChatStateAdapterProvider><Harness /></ChatStateAdapterProvider>);
+  await act(async () => { fireEvent.click(screen.getByText("Load")); });
+  await act(async () => { fireEvent.click(screen.getByText("Change live settings")); });
+  await act(async () => { fireEvent.click(screen.getByText("Edit first unsent")); });
+  expect(fixture.replacementCalls).toHaveLength(1);
+  // An unsent submission keeps its own parameters: its submission id may
+  // already be reserved, and a changed request would no longer match it.
+  expect(fixture.replacementCalls[0].request).toMatchObject({
+    llm_selection: { model_id: "model-a", profile_id: "profile-a" },
+    language: "en",
+  });
+});
+
