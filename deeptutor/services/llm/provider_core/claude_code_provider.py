@@ -78,7 +78,8 @@ class _ClaudeCodeSession:
             name="claude-code-session-owner",
         )
         try:
-            await ready
+            async with asyncio.timeout(15):
+                await ready
         except BaseException:
             await session.close()
             raise

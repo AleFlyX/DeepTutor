@@ -1,36 +1,39 @@
 import { test, expect } from '@playwright/test'
-import { createElement } from 'react'
-import { renderToStaticMarkup } from 'react-dom/server'
-import { createInstance } from 'i18next'
-import { I18nextProvider } from 'react-i18next'
-import { SourcesStep } from '../components/space/learning/TopicWizardSteps'
+import { sourceModuleInventory } from './e2e/fixtures/modules'
 
-// Render the real picker with the production stylesheet. Browser wheel dispatch
-// must scroll the wizard, rather than a second scroll container inside the list.
 test('source picker wheel scrolls its parent wizard', async ({ page }) => {
-  const i18n = createInstance()
-  await i18n.init({ lng: 'en', resources: { en: { translation: {} } }, initImmediate: false })
-  const markup = renderToStaticMarkup(createElement(I18nextProvider, { i18n },
-    createElement(SourcesStep, {
-      library: {
-        knowledgeBases: Array.from({ length: 50 }, (_, index) => ({
-          key: `kb-${index}`, kind: 'knowledge_base' as const, sourceId: `kb-${index}`,
-          label: `Library ${index}`, detail: '', available: true,
-        })),
-        books: [], notebooks: [], chats: [], questionSets: [], drafts: [], partners: [], failures: [],
-      },
-      loading: false, selected: new Set<string>(), childLists: {}, onToggle: () => {}, onExpand: () => {},
-    }),
-  ))
-  await page.goto('/')
-  const styles = await page.locator('link[rel="stylesheet"]').evaluateAll(
-    elements => elements.map(element => (element as HTMLLinkElement).href),
-  )
-  expect(styles.length).toBeGreaterThan(0)
-  await page.setContent(`<div id="wizard" style="height:320px;width:640px;overflow:auto">${markup}<div style="height:200px">End</div></div>`)
-  for (const url of styles) await page.addStyleTag({ url })
-  const row = page.getByRole('button', { name: /Library 0/ }).first()
+  await page.addInitScript(() => localStorage.setItem('deeptutor-language', 'en'))
+  await page.route('**/api/**', route => {
+    const path = new URL(route.request().url()).pathname
+    if (path === '/api/modules') return route.fulfill({ json: sourceModuleInventory })
+    if (path === '/api/auth/status') {
+      return route.fulfill({ json: { enabled: false, authenticated: true, role: 'admin', is_admin: true } })
+    }
+    if (path === '/api/settings/ui') return route.fulfill({ json: { language: 'en' } })
+    if (path.startsWith('/api/dashboard/source-library/')) {
+      return route.fulfill({ json: {
+        items: path.endsWith('/knowledge') ? Array.from({ length: 50 }, (_, index) => ({
+          id: `kb-${index}`, name: `Library ${index}`, available: true,
+        })) : [],
+        unavailable_workspaces: [],
+      } })
+    }
+    if (path.startsWith('/api/dashboard/learning-library/')) {
+      return route.fulfill({ json: { items: [], unavailable_workspaces: [], can_create: true } })
+    }
+    if (path === '/api/partners' || path === '/api/partner-groups') {
+      return route.fulfill({ json: [] })
+    }
+    return route.fulfill({ status: 404, json: { detail: 'Unused audit endpoint' } })
+  })
+  await page.goto('/learning/mastery?create=1')
+  const dialog = page.getByRole('dialog')
+  await dialog.getByRole('textbox').fill('Learn linear algebra')
+  await dialog.getByRole('button', { name: 'Choose sources', exact: true }).click()
+  const row = dialog.getByRole('button', { name: /Library 0/ }).first()
   await row.hover()
+  const wizardScroller = dialog.locator(':scope > div.overflow-y-auto')
+  await expect(wizardScroller).toHaveCount(1)
   await page.mouse.wheel(0, 400)
-  await expect.poll(() => page.locator('#wizard').evaluate(element => element.scrollTop)).toBeGreaterThan(0)
+  await expect.poll(() => wizardScroller.evaluate(element => element.scrollTop)).toBeGreaterThan(0)
 })

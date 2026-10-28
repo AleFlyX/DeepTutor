@@ -2,7 +2,7 @@
 
 This is an evaluation-only starting point for [RFC #2057](https://github.com/HKUDS/DeepTutor/issues/2057). It compares recent raw history, a lexical top-two ablation, and supplied L3 snapshots. The snapshot adapter creates a temporary workspace, writes only the supplied artifacts through `MemoryStore.overwrite_doc`, and reads them through the same `read_l3_concat` facade used by memory tools. Each case gets new storage, and the memory-path override is restored even on failure.
 
-Snapshots in the sample are explicitly hand-authored synthetic development data. They test the evaluation contract, **not** the quality of L1â†’L2â†’L3 consolidation. No production settings, active user memory, or model configuration is changed. The lexical adapter is not the dense retrieval plus cross-encoder reranking baseline requested by the full RFC.
+Snapshots in the sample are explicitly hand-authored synthetic development data. They test the evaluation contract, **not** the quality of L1 → L2 → L3 consolidation. No production settings, active user memory, or model configuration is changed. The lexical adapter is not the dense retrieval plus cross-encoder reranking baseline requested by the full RFC.
 
 ## Install and run
 

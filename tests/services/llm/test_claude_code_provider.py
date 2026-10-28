@@ -417,3 +417,34 @@ async def test_regeneration_replaces_old_cli_transcript(monkeypatch):
     assert options["permission_mode"] == "dontAsk"
     assert options["extra_args"] == {"strict-mcp-config": None}
     await provider.aclose()
+
+
+@pytest.mark.asyncio
+async def test_cancel_during_sdk_connect_settles_owner(monkeypatch):
+    import anyio
+
+    from deeptutor.services.llm.provider_core.claude_code_provider import _ClaudeCodeSession
+
+    entered = asyncio.Event()
+
+    async def connect(self):
+        self.owner = asyncio.current_task()
+        self.group = anyio.create_task_group()
+        await self.group.__aenter__()
+        entered.set()
+        await asyncio.Event().wait()
+
+    async def disconnect(self):
+        assert self.owner is asyncio.current_task()
+        await self.group.__aexit__(None, None, None)
+        self.disconnected = True
+
+    monkeypatch.setattr(FakeClient, "connect", connect)
+    monkeypatch.setattr(FakeClient, "disconnect", disconnect)
+    sdk = _install_fake_sdk(monkeypatch)
+    task = asyncio.create_task(_ClaudeCodeSession.start(sdk=sdk, signature="test", options=None))
+    await asyncio.wait_for(entered.wait(), 1)
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await asyncio.wait_for(task, 1)
+    assert FakeClient.instances[0].disconnected
