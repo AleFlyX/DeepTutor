@@ -695,6 +695,7 @@
   "Last 3 turns": "Останні 3 ходи",
   "(empty message)": "(порожнє повідомлення)",
   "System": "Система",
+  "System follows the device's light or dark appearance.": "Система повторює світлий або темний вигляд пристрою.",
   "Select Notebook Records": "Вибрати записи колекції",
   "Choose records across one or more notebooks to ground the next request.": "Виберіть записи з одного або кількох колекціяів для обґрунтування наступного запиту.",
   "Notebook Reference": "Посилання на колекція",

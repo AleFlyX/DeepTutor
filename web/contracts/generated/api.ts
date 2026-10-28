@@ -16791,7 +16791,7 @@ export interface components {
        * Theme
        * @enum {string}
        */
-      readonly theme: "light" | "dark" | "glass" | "snow";
+      readonly theme: "system" | "light" | "dark" | "glass" | "snow";
     };
     /**
      * TikaRemoteTest
@@ -17324,7 +17324,7 @@ export interface components {
       readonly sidebar_nav_order?:
         components["schemas"]["SidebarNavOrder"] | null;
       /** Theme */
-      readonly theme?: ("light" | "dark" | "glass" | "snow") | null;
+      readonly theme?: ("system" | "light" | "dark" | "glass" | "snow") | null;
     };
     /** UnitText */
     readonly UnitText: {

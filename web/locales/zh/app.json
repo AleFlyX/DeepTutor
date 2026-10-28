@@ -727,6 +727,7 @@
   "Last 3 turns": "最近三轮",
   "(empty message)": "（空消息）",
   "System": "系统",
+  "System follows the device's light or dark appearance.": "系统跟随设备的浅色或深色外观。",
   "Select Notebook Records": "选择收藏夹记录",
   "Choose records across one or more notebooks to ground the next request.": "从一个或多个收藏夹中选择记录，作为下一轮请求的依据。",
   "Notebook Reference": "收藏夹引用",
