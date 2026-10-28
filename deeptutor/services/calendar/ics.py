@@ -2,7 +2,7 @@
 
 Timed events use local wall time with ``TZID`` and a ``VTIMEZONE`` per used
 zone. Offsets come from ``zoneinfo`` transitions in a window covering the
-exported events (padded by a year, capped at 40 years). UTC timed events use
+exported events (padded by a year; spans over 40 years are rejected). UTC timed events use
 the ``Z`` form and skip ``VTIMEZONE``. All-day events use ``VALUE=DATE`` with
 the store's exclusive end date.
 
@@ -259,16 +259,16 @@ def _fold(line: str) -> str:
 
 def _vtimezone(tzid: str, events: Sequence[CalendarEvent]) -> list[str]:
     tz = zone(tzid)
-    start, end = _tz_window(events)
+    start, end = _tz_window([event for event in events if event.tzid == tzid])
     lines = ["BEGIN:VTIMEZONE", f"TZID:{tzid}"]
-    initial_offset = tz.utcoffset(start) or timedelta(0)
+    initial_offset = start.astimezone(tz).utcoffset() or timedelta(0)
     lines.extend(
         _observance(
             start + initial_offset,
             initial_offset,
             initial_offset,
-            bool(tz.dst(start)),
-            tz.tzname(start) or "",
+            bool(start.astimezone(tz).dst()),
+            start.astimezone(tz).tzname() or "",
         )
     )
     for onset, from_off, to_off, is_dst, name in _transitions(tz, start, end):
@@ -311,20 +311,26 @@ def _tz_window(events: Sequence[CalendarEvent]) -> tuple[datetime, datetime]:
     years: list[int] = []
     unbounded = False
     for event in events:
-        years.append(int(event.start[:4]))
+        years.extend([int(event.start[:4]), int(event.end[:4])])
         if not event.rrule:
             continue
         until = _UNTIL_YEAR.search(event.rrule)
         if until:
             years.append(int(until.group(1)))
-        elif "COUNT=" not in event.rrule:
+        elif "COUNT=" in event.rrule:
+            timing = _timing(event)
+            # COUNT is validated and bounded by the calendar recurrence layer.
+            for occurrence in timing.starts():
+                years.append((occurrence + timing.duration).year)
+        else:
             unbounded = True
     now_year = datetime.now(timezone.utc).year
-    lo = min(years, default=now_year) - _TZ_PAD_YEARS
-    hi = max(years, default=now_year) + _TZ_PAD_YEARS
+    lo = max(1, min(years, default=now_year) - _TZ_PAD_YEARS)
+    hi = min(9999, max(years, default=now_year) + _TZ_PAD_YEARS + 1)
     if unbounded:
         hi = max(hi, now_year + 15)
-    hi = min(hi, lo + _TZ_MAX_SPAN)
+    if hi - lo > _TZ_MAX_SPAN:
+        raise ValueError("Calendar export cannot cover more than 40 years of timezone transitions.")
     return (
         datetime(lo, 1, 1, tzinfo=timezone.utc),
         datetime(hi, 1, 1, tzinfo=timezone.utc),
@@ -338,20 +344,20 @@ def _transitions(
     found: list[tuple[datetime, timedelta, timedelta, bool, str]] = []
     step = timedelta(hours=1)
     prev = start
-    prev_off = tz.utcoffset(prev) or timedelta(0)
+    prev_off = prev.astimezone(tz).utcoffset() or timedelta(0)
     moment = start + step
     while moment <= end:
-        off = tz.utcoffset(moment) or timedelta(0)
+        off = moment.astimezone(tz).utcoffset() or timedelta(0)
         if off != prev_off:
             onset = _first_changed(tz, prev, moment, prev_off)
-            new_off = tz.utcoffset(onset) or timedelta(0)
+            new_off = onset.astimezone(tz).utcoffset() or timedelta(0)
             found.append(
                 (
                     onset,
                     prev_off,
                     new_off,
-                    bool(tz.dst(onset)),
-                    tz.tzname(onset) or "",
+                    bool(onset.astimezone(tz).dst()),
+                    onset.astimezone(tz).tzname() or "",
                 )
             )
             prev_off = new_off
@@ -367,7 +373,7 @@ def _first_changed(tz: ZoneInfo, start: datetime, end: datetime, previous: timed
     lo, hi = start, end
     while hi - lo > timedelta(seconds=1):
         mid = lo + timedelta(seconds=int((hi - lo).total_seconds() // 2))
-        if (tz.utcoffset(mid) or timedelta(0)) == previous:
+        if (mid.astimezone(tz).utcoffset() or timedelta(0)) == previous:
             lo = mid
         else:
             hi = mid

@@ -87,7 +87,8 @@ def export_ics(calendar_id: str | None = Query(default=None)):
     else:
         name = calendars[0].name.strip() or "calendar"
         filename = ics_filename(name)
-    body = render_calendar(calendars, events, calendar_name=name)
+    with errors():
+        body = render_calendar(calendars, events, calendar_name=name)
     return Response(
         content=body.encode("utf-8"),
         media_type="text/calendar; charset=utf-8",

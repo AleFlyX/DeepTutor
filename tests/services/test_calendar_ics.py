@@ -214,3 +214,42 @@ def test_ics_filename_strips_path_chars():
     assert ics_filename("School/Work") == "School-Work.ics"
     assert ics_filename("  ") == "calendar.ics"
     assert ics_filename("数学") == "数学.ics"
+
+
+def test_exported_timezone_roundtrips_both_dst_boundaries(store):
+    from datetime import datetime
+    from io import StringIO
+    from zoneinfo import ZoneInfo
+    from dateutil.tz import tzical
+
+    create(store, tzid="America/New_York")
+    timezone_text = "\r\n".join(
+        line
+        for line in unfold(ics(store))
+        if not line.startswith(("X-WR-CALNAME", "PRODID", "CALSCALE"))
+    )
+    # dateutil parses the actual VTIMEZONE observances, independent of zoneinfo.
+    parsed = tzical(StringIO(timezone_text)).get("America/New_York")
+    expected = ZoneInfo("America/New_York")
+    for wall in ["2026-03-08T01:30", "2026-03-08T03:30", "2026-11-01T00:30", "2026-11-01T02:30"]:
+        instant = datetime.fromisoformat(wall)
+        assert (
+            instant.replace(tzinfo=parsed).utcoffset()
+            == instant.replace(tzinfo=expected).utcoffset()
+        )
+
+
+def test_count_recurrence_timezone_covers_last_year(store):
+    from deeptutor.services.calendar.ics import _tz_window
+
+    create(store, tzid="America/New_York", rrule="FREQ=YEARLY;COUNT=10")
+    _, events = store.export(None)
+    _, end = _tz_window(events)
+    assert end.year >= 2036
+    assert "DTSTART:20350311T020000" in ics(store)
+
+
+def test_long_timezone_span_fails_instead_of_silently_truncating(store):
+    create(store, tzid="America/New_York", rrule="FREQ=YEARLY;COUNT=50")
+    with pytest.raises(ValueError, match="40 years"):
+        ics(store)
