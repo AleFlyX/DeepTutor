@@ -16,6 +16,7 @@ export const PROVIDER_ICONS: Readonly<Record<string, ProviderIconSpec>> = {
   byteplus_coding_plan: { file: "byteplus.png" },
   cheaperinference: { file: "cheaperinference.svg" },
   claude_code: { file: "anthropic.svg", mono: true },
+  cloudgpu: { file: "cloudgpu.png" },
   codebuddy: { file: "codebuddy-official.svg" },
   cohere: { file: "cohere-color.svg" },
   dashscope: { file: "bailian-color.svg" },
