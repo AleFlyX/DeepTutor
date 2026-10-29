@@ -22,12 +22,12 @@ test('only explicit loopback origins are accepted for attachment', () => {
 test('source data cannot share the checkout', () => {
   const config = { schemaVersion: 1, mode: 'source', sourcePath: '/tmp/core', pythonPath: '/python', nodePath: '/node', runtimeHome: '/tmp/core/data' };
   assert.throws(() => validateConfig(config));
-  assert.equal(validateConfig({ ...config, runtimeHome: '/tmp/data' }).runtimeHome, '/tmp/data');
+  assert.equal(validateConfig({ ...config, runtimeHome: '/tmp/data' }).runtimeHome, path.resolve('/tmp/data'));
 });
 
 test('update signatures bind version, checksum and architecture', () => {
   const { privateKey, publicKey } = generateKeyPairSync('ed25519');
-  const manifest = { formatVersion: 1, protocolVersion: 1, platform: 'darwin', arch: 'arm64', runtimeId: '1.7.0-test-arm64', archive: 'core.tar.gz', sha256: 'a'.repeat(64) };
+  const manifest = { formatVersion: 1, protocolVersion: 1, platform: process.platform, arch: 'arm64', runtimeId: '1.7.0-test-arm64', archive: 'core.tar.gz', sha256: 'a'.repeat(64) };
   manifest.signature = sign(null, Buffer.from(canonicalManifest(manifest)), privateKey).toString('base64');
   assert.equal(verifyManifest(manifest, publicKey, 'arm64'), manifest);
   assert.throws(() => verifyManifest({ ...manifest, sha256: 'b'.repeat(64) }, publicKey, 'arm64'));

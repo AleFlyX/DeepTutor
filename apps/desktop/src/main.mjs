@@ -7,11 +7,17 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { installBundle, bundleConfig, verifyManifest } from './bundles.mjs';
 import { externalURL } from './config.mjs';
 import { resolveLanguage, translate } from './i18n.mjs';
+import { WINDOWS, agentMarker, edition, targetId } from './platform.mjs';
+import { killTree } from './processes.mjs';
 
 app.setName('Open DeepTutor');
+if (WINDOWS) app.setAppUserModelId('org.deeptutor.open-desktop');
+const EDITION = edition();
 const sourceDirectory = path.dirname(fileURLToPath(import.meta.url));
 const shellURL = pathToFileURL(path.join(sourceDirectory, 'index.html')).href;
-const userRoot = process.env.OPEN_DEEPTUTOR_TEST_HOME || path.join(app.getPath('appData'), 'Open DeepTutor');
+// Runtimes are large and machine-specific, so Windows keeps them out of the roaming profile.
+const userRoot = process.env.OPEN_DEEPTUTOR_TEST_HOME
+  || path.join(WINDOWS ? process.env.LOCALAPPDATA ?? app.getPath('appData') : app.getPath('appData'), 'Open DeepTutor');
 app.setPath('userData', userRoot);
 const runtimeHome = path.join(userRoot, 'workspace');
 const logPath = path.join(userRoot, 'logs/runtime.log');
@@ -19,9 +25,10 @@ const activeFile = path.join(userRoot, 'active.json');
 const transactionFile = path.join(userRoot, 'upgrade.json');
 // DeepTutor's own Settings page writes the interface language and theme here.
 const interfaceFile = path.join(runtimeHome, 'data/user/settings/interface.json');
-const seed = app.isPackaged ? path.join(process.resourcesPath, 'seed/runtime.json') : path.join(sourceDirectory, '../.local/seed/runtime.json');
+const seed = app.isPackaged ? path.join(process.resourcesPath, 'seed/runtime.json') : path.join(sourceDirectory, '../.local', targetId(), 'seed/runtime.json');
 const publicKey = await readFile(path.join(sourceDirectory, '../assets/runtime-public.pem'), 'utf8');
-const HEADER_HEIGHT = 44;
+// macOS draws the shell's own title bar under the traffic lights; Windows keeps its native frame and menu bar.
+const HEADER_HEIGHT = WINDOWS ? 0 : 44;
 const BACKGROUND = { light: '#ffffff', dark: '#161618' };
 let window;
 let view;
@@ -61,7 +68,7 @@ function snapshot() {
     message: failed ? t('errorBody') : state.step ? t(state.step) : '',
     detail: failed ? state.message ?? '' : '',
     tagline: t('tagline'), retry: t('retry'), logs: t('logs'),
-    edition: `MacOS v${coreVersion()}`,
+    edition: `${EDITION.full} v${coreVersion()}`,
   };
 }
 
@@ -159,10 +166,12 @@ async function stopWorker() {
   worker = undefined;
   if (!previous || previous.exitCode !== null) return;
   await new Promise(resolve => {
-    const timer = setTimeout(() => { previous.kill('SIGTERM'); }, 12000);
+    // Windows cannot signal the worker, so a stuck worker is ended with its services.
+    const force = () => { if (WINDOWS) killTree(previous.pid); else previous.kill('SIGTERM'); };
+    const timer = setTimeout(force, 12000);
     previous.once('exit', () => { clearTimeout(timer); resolve(); });
     if (previous.connected) previous.send({ type: 'stop' });
-    else previous.kill('SIGTERM');
+    else force();
   });
 }
 
@@ -266,12 +275,13 @@ async function installUpdate() {
 }
 
 function buildMenu() {
+  const about = { label: t('about'), click: () => dialog.showMessageBox(window, {
+    message: `${EDITION.full} v${coreVersion()}`,
+    detail: t('aboutDetail', { core: active?.manifest.coreVersion ?? '—', runtime: active?.manifest.runtimeId ?? '—' }),
+  }) };
   Menu.setApplicationMenu(Menu.buildFromTemplate([
-    { label: 'Open DeepTutor', submenu: [
-      { label: t('about'), click: () => dialog.showMessageBox(window, {
-        message: `Open DeepTutor MacOS v${coreVersion()}`,
-        detail: t('aboutDetail', { core: active?.manifest.coreVersion ?? '—', runtime: active?.manifest.runtimeId ?? '—' }),
-      }) },
+    { label: 'Open DeepTutor', submenu: WINDOWS ? [about, { type: 'separator' }, { role: 'quit', label: t('quit') }] : [
+      about,
       { type: 'separator' },
       { role: 'hide', label: t('hide') }, { role: 'hideOthers', label: t('hideOthers') }, { role: 'unhide', label: t('showAll') },
       { type: 'separator' },
@@ -300,7 +310,7 @@ function buildMenu() {
       { label: t('openData'), click: () => void shell.openPath(runtimeHome) },
       { label: t('openLogs'), click: () => void shell.openPath(path.dirname(logPath)) },
     ] },
-    { role: 'windowMenu', label: t('window'), submenu: [
+    { role: 'windowMenu', label: t('window'), submenu: WINDOWS ? [{ role: 'minimize', label: t('minimize') }] : [
       { role: 'minimize', label: t('minimize') }, { role: 'zoom', label: t('zoom') },
       { type: 'separator' }, { role: 'front', label: t('front') },
     ] },
@@ -325,8 +335,8 @@ else {
   ui = await readInterface();
   nativeTheme.on('updated', () => void refreshInterface());
   const coreSession = session.fromPartition('persist:deeptutor');
-  // The web UI reads this marker to label itself "Open DeepTutor MacOS".
-  coreSession.setUserAgent(`${coreSession.getUserAgent()} OpenDeepTutor/${app.getVersion()} (macOS)`);
+  // The web UI reads this marker to name the client, e.g. "Open DeepTutor for MacOS with Apple Silicon".
+  coreSession.setUserAgent(`${coreSession.getUserAgent()} ${agentMarker(app.getVersion())}`);
   coreSession.setPermissionCheckHandler((_contents, permission) => permission === 'clipboard-sanitized-write');
   coreSession.setPermissionRequestHandler(async (contents, permission, callback, details) => {
     if (permission === 'clipboard-sanitized-write') return callback(true);
@@ -336,7 +346,8 @@ else {
   });
   window = new BrowserWindow({
     title: 'Open DeepTutor', width: 1360, height: 920, minWidth: 900, minHeight: 620,
-    backgroundColor: BACKGROUND[ui.theme], titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 18, y: 16 },
+    backgroundColor: BACKGROUND[ui.theme],
+    ...(WINDOWS ? {} : { titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 18, y: 16 } }),
     webPreferences: { preload: path.join(sourceDirectory, 'preload.cjs'), contextIsolation: true, sandbox: true, nodeIntegration: false },
   });
   window.webContents.on('will-navigate', event => event.preventDefault());

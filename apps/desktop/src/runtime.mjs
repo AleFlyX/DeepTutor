@@ -4,6 +4,7 @@ import { constants } from 'node:fs';
 import path from 'node:path';
 import { validateConfig } from './config.mjs';
 import { ProcessGroup, availablePort, waitReady, probe } from './processes.mjs';
+import { WINDOWS } from './platform.mjs';
 
 const SKIP = new Set(['node_modules', 'dist', 'out', 'coverage', 'playwright-report', 'test-results', '.git']);
 
@@ -48,7 +49,7 @@ export async function stageWeb(sourcePath, cachePath) {
         || name.startsWith('.env') || name.endsWith('.tsbuildinfo') || name.startsWith('tsconfig.deeptutor-'));
     },
   });
-  await symlink(path.join(source, 'node_modules'), path.join(target, 'node_modules'), 'dir');
+  await symlink(path.join(source, 'node_modules'), path.join(target, 'node_modules'), WINDOWS ? 'junction' : 'dir');
   // Next's version display reads this sibling file. It is a disposable runtime cache.
   await mkdir(path.join(cachePath, 'deeptutor'), { recursive: true });
   await cp(path.join(sourcePath, 'deeptutor', '__version__.py'), path.join(cachePath, 'deeptutor', '__version__.py'));

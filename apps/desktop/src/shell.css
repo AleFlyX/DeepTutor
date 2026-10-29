@@ -17,7 +17,7 @@ html, body { height: 100%; }
 body {
   margin: 0; display: flex; flex-direction: column; overflow: hidden;
   background: var(--bg); color: var(--fg);
-  font: 13px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  font: 13px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "Helvetica Neue", sans-serif;
   -webkit-font-smoothing: antialiased; user-select: none; cursor: default;
   transition: background-color .3s ease, color .3s ease;
 }
@@ -34,6 +34,8 @@ body {
 }
 .titlebar-name img { width: 14px; height: 14px; }
 :root[data-phase="ready"] .titlebar { border-bottom-color: var(--line); }
+/* Windows keeps its native title bar, so the shell draws none. */
+:root[data-platform="win32"] .titlebar { display: none; }
 :root[data-phase="ready"] .titlebar-name { opacity: .88; }
 
 .stage {
@@ -61,7 +63,7 @@ body {
 .problem pre {
   margin: 18px 0 0; width: 100%; max-height: 120px; overflow: auto; padding: 10px 12px;
   border-radius: 10px; background: var(--well); color: var(--muted); text-align: left;
-  font: 11px/1.55 ui-monospace, "SF Mono", Menlo, monospace; white-space: pre-wrap; word-break: break-word;
+  font: 11px/1.55 ui-monospace, "SF Mono", Menlo, Consolas, monospace; white-space: pre-wrap; word-break: break-word;
   user-select: text; cursor: text;
 }
 .problem pre:empty { display: none; }

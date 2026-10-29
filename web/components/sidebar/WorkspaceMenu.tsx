@@ -130,7 +130,12 @@ export function WorkspaceMenu({
           {accountSlot ? <div className="dt-menu-slot">{accountSlot}</div> : null}
           <div className="dt-menu-divider" />
           <div className="dt-menu-footer">
-            <span className="min-w-0 truncate">{clientEditionLabel(process.env.NEXT_PUBLIC_APP_VERSION)}</span>
+            <span
+              className="min-w-0 truncate"
+              title={clientEditionLabel(process.env.NEXT_PUBLIC_APP_VERSION)}
+            >
+              {clientEditionLabel(process.env.NEXT_PUBLIC_APP_VERSION, undefined, 'short')}
+            </span>
             <VersionBadge onNavigate={close} />
           </div>
         </div>

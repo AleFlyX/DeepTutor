@@ -4,18 +4,19 @@ import { readFile, mkdir, rename, rm, access, writeFile } from 'node:fs/promises
 import path from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { runtimeLayout, systemTar } from './platform.mjs';
 
 const exec = promisify(execFile);
 export function canonicalManifest(manifest) {
   return JSON.stringify(Object.fromEntries(Object.entries(manifest).filter(([key]) => key !== 'signature').sort(([a], [b]) => a.localeCompare(b))));
 }
 
-export function verifyManifest(manifest, publicKey, architecture = process.arch) {
+export function verifyManifest(manifest, publicKey, architecture = process.arch, platform = process.platform) {
   if (!manifest || manifest.formatVersion !== 1 || manifest.protocolVersion !== 1
-    || manifest.platform !== 'darwin' || manifest.arch !== architecture
+    || manifest.platform !== platform || manifest.arch !== architecture
     || !/^[a-zA-Z0-9][a-zA-Z0-9.+_-]{0,100}$/.test(manifest.runtimeId)
     || !/^[a-zA-Z0-9][a-zA-Z0-9.+_-]*\.tar\.gz$/.test(manifest.archive)
-    || !/^[a-f0-9]{64}$/.test(manifest.sha256)) throw new Error('This core bundle is not compatible with this app or this Mac');
+    || !/^[a-f0-9]{64}$/.test(manifest.sha256)) throw new Error('This core bundle is not compatible with this app or this computer');
   if (!verify(null, Buffer.from(canonicalManifest(manifest)), publicKey, Buffer.from(manifest.signature ?? '', 'base64'))) {
     throw new Error('The core bundle signature is invalid');
   }
@@ -49,7 +50,7 @@ export async function installBundle(manifestFile, root, publicKey, progress = ()
   try {
     progress('firstLaunch');
     // Only locally signed, hash-verified artifacts reach extraction.
-    await exec('/usr/bin/tar', ['-xzf', archive, '-C', staging], { timeout: 240000 });
+    await exec(systemTar(), ['-xzf', archive, '-C', staging], { timeout: 600000, windowsHide: true });
     await checkLayout(staging);
     await writeFile(path.join(staging, 'installed.json'), JSON.stringify(manifest, null, 2));
     await rename(staging, destination);
@@ -61,17 +62,19 @@ export async function installBundle(manifestFile, root, publicKey, progress = ()
 }
 
 async function checkLayout(root) {
-  for (const relative of ['python/bin/python3', 'node/bin/node', 'core/deeptutor_cli/main.py', 'web/server.js']) {
+  const { python, node } = runtimeLayout();
+  for (const relative of [python, node, 'core/deeptutor_cli/main.py', 'web/server.js']) {
     await access(path.join(root, relative));
   }
 }
 
 export function bundleConfig(destination, runtimeHome, runtimeId) {
+  const { python, node } = runtimeLayout();
   return {
     schemaVersion: 1, mode: 'bundled', runtimeId,
     sourcePath: path.join(destination, 'core'),
-    pythonPath: path.join(destination, 'python/bin/python3'),
-    nodePath: path.join(destination, 'node/bin/node'),
+    pythonPath: path.join(destination, python),
+    nodePath: path.join(destination, node),
     webPath: path.join(destination, 'web'), runtimeHome,
   };
 }
