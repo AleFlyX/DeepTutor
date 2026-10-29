@@ -169,6 +169,7 @@ class _FakeStartTurnRecorder:
         payload: dict[str, Any],
         *,
         replace_assistant_message_id: int | str | None = None,
+        persist_llm_selection_only: bool = False,
     ) -> tuple[dict, dict]:
         self.calls.append(payload)
         if replace_assistant_message_id is not None:
