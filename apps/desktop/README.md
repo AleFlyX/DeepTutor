@@ -132,5 +132,9 @@ signature and platform rejection, process shutdown, cancellation and local
 service behaviour; CI runs it on Linux and Windows. `npm run smoke` boots the
 real bundled core in a fresh temporary workspace, checks backend, frontend and
 API proxy, then verifies both ports close. It does not call a paid model or
-test optional external renderers. `OPEN_DEEPTUTOR_TEST_HOME` selects a
-disposable desktop home for UI checks.
+test optional external renderers. Windows CI also runs
+`platforms/windows-x64/smoke-installer.ps1`: it silently installs the app,
+opens the actual Electron window with a fresh data path containing spaces and
+Chinese characters, checks UI/API readiness and service shutdown on window
+close, then verifies uninstall preserves learning data and unrelated files.
+`OPEN_DEEPTUTOR_TEST_HOME` selects a disposable desktop home for UI checks.
