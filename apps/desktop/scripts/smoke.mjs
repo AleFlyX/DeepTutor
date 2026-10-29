@@ -18,7 +18,7 @@ if (target.arch !== process.arch) {
   const result = spawnSync(target.nodeBin, [fileURLToPath(import.meta.url), '--target', target.id], { stdio: 'inherit' });
   process.exit(result.status ?? 1);
 }
-const home = await mkdtemp(path.join(os.tmpdir(), 'Open DeepTutor smoke '));
+const home = await mkdtemp(path.join(os.tmpdir(), 'Open DeepTutor 核心 smoke '));
 const log = createWriteStream(path.join(target.local, 'smoke.log'));
 const runtime = new SourceRuntime({ log: chunk => log.write(chunk) });
 runtime.on('status', state => console.log(`${state.phase}: ${state.step ?? state.message}`));

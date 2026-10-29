@@ -4,6 +4,7 @@ import { readFile, mkdir, rename, rm, access, writeFile } from 'node:fs/promises
 import path from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { pipeline } from 'node:stream/promises';
 import { runtimeLayout, systemTar } from './platform.mjs';
 
 const exec = promisify(execFile);
@@ -50,7 +51,14 @@ export async function installBundle(manifestFile, root, publicKey, progress = ()
   try {
     progress('firstLaunch');
     // Only locally signed, hash-verified artifacts reach extraction.
-    await exec(systemTar(), ['-xzf', archive, '-C', staging], { timeout: 600000, windowsHide: true });
+    // Windows' system tar can mangle non-ASCII command-line paths. Node opens
+    // the archive and sets the working directory using Unicode-aware OS APIs.
+    const extraction = exec(systemTar(), ['-xzf', '-'], { cwd: staging, timeout: 600000, windowsHide: true });
+    const [input, result] = await Promise.allSettled([
+      pipeline(createReadStream(archive), extraction.child.stdin), extraction,
+    ]);
+    if (result.status === 'rejected') throw result.reason;
+    if (input.status === 'rejected') throw input.reason;
     await checkLayout(staging);
     await writeFile(path.join(staging, 'installed.json'), JSON.stringify(manifest, null, 2));
     await rename(staging, destination);

@@ -1,7 +1,7 @@
 import { app, BrowserWindow, WebContentsView, Menu, ipcMain, shell, dialog, session, nativeTheme } from 'electron';
 import { fork } from 'node:child_process';
 import { watch } from 'node:fs';
-import { mkdir, readFile, writeFile, rename, cp } from 'node:fs/promises';
+import { mkdir, readFile, writeFile, rename, cp, appendFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { installBundle, bundleConfig, verifyManifest } from './bundles.mjs';
@@ -214,6 +214,15 @@ async function recoverInterruptedUpgrade() {
   await writeJSON(transactionFile, { ...transaction, phase: 'recovered' });
 }
 
+async function logStartupFailure(error) {
+  // Bundle extraction can fail before the supervisor creates the runtime log.
+  console.error(error);
+  try {
+    await mkdir(path.dirname(logPath), { recursive: true });
+    await appendFile(logPath, `\nDesktop startup failed: ${error.stack ?? error}\n`);
+  } catch (logError) { console.error(logError); }
+}
+
 async function boot() {
   if (busy || quitting) return;
   busy = true;
@@ -232,6 +241,7 @@ async function boot() {
     await refreshInterface();
     await openContent(ready.url);
   } catch (error) {
+    await logStartupFailure(error);
     status({ phase: 'error', step: null, message: error.message });
     await stopWorker();
   } finally { busy = false; }
@@ -363,8 +373,8 @@ else {
   watchInterface();
   await window.loadURL(shellURL);
   void boot();
-  }).catch(error => {
-    console.error(error);
+  }).catch(async error => {
+    await logStartupFailure(error);
     dialog.showErrorBox('Open DeepTutor', error.message);
     exitAllowed = true;
     app.quit();

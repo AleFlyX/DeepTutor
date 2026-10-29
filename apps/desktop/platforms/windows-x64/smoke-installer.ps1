@@ -15,12 +15,14 @@ $oldHome = $env:OPEN_DEEPTUTOR_TEST_HOME
 $appProcess = $null
 $log = Join-Path $userRoot 'logs/runtime.log'
 try {
+    Write-Host 'Installing into a path containing spaces and Chinese characters...'
     $setup = Start-Process $installer[0].FullName -ArgumentList @('/S', "/D=$install") -Wait -PassThru
     if ($setup.ExitCode -ne 0) { throw "Installer exited with $($setup.ExitCode)" }
     $exe = Join-Path $install 'Open DeepTutor.exe'
     if (!(Test-Path $exe) -or !(Test-Path $sentinel)) { throw 'Install did not preserve the destination' }
     $env:OPEN_DEEPTUTOR_TEST_HOME = $userRoot
     $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot;$env:SystemRoot\System32\Wbem"
+    Write-Host 'Starting the installed app with no developer tools on PATH...'
     $appProcess = Start-Process $exe -PassThru
     $deadline = (Get-Date).AddMinutes(10)
     $backend = $null
@@ -29,6 +31,7 @@ try {
         if ($appProcess.HasExited) { throw "App exited early: $($appProcess.ExitCode)" }
         if (Test-Path $log) {
             $text = Get-Content $log -Raw
+            if ($text -match 'UnicodeEncodeError|Desktop startup failed:') { throw "Installed app failed to start:`n$text" }
             if ($text -match 'Uvicorn running on (http://127\.0\.0\.1:\d+)') { $backend = $Matches[1] }
             if ($text -match 'Local:\s+(http://127\.0\.0\.1:\d+)') { $frontend = $Matches[1] }
         }
@@ -40,11 +43,12 @@ try {
                 if ($health.StatusCode -eq 200 -and $page.Content -match 'DeepTutor' -and $proxy.StatusCode -eq 200) { break }
             } catch { }
         }
-        if ((Get-Date) -gt $deadline) { throw 'Installed app did not become ready' }
+        if ((Get-Date) -gt $deadline) { throw "Installed app did not become ready. Runtime log:`n$text" }
         Start-Sleep -Seconds 2
     } while ($true)
 
     # Closing the real window must stop both services, not just Electron.
+    Write-Host 'UI and API are ready. Checking window close and uninstall...'
     $appProcess.Refresh()
     if (!$appProcess.CloseMainWindow()) { throw 'App did not expose a main window' }
     if (!$appProcess.WaitForExit(30000)) { throw 'App did not quit after closing its window' }

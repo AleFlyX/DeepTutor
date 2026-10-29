@@ -92,6 +92,10 @@ export class SourceRuntime extends EventEmitter {
         PYTHONPATH: config.sourcePath,
         PYTHONUNBUFFERED: '1',
         PYTHONDONTWRITEBYTECODE: '1',
+        // Windows pipes otherwise use the legacy code page. Initialization
+        // prints the data path, which can contain names outside that encoding.
+        PYTHONUTF8: '1',
+        PYTHONIOENCODING: 'utf-8',
         DEEPTUTOR_HOME: config.runtimeHome,
         BACKEND_PORT: String(backendPort), FRONTEND_PORT: String(frontendPort),
       };
