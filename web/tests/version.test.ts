@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { normalizeVersionTag } from "../lib/version";
+import { clientEditionLabel, normalizeVersionTag } from "../lib/version";
 
 test("normalizeVersionTag accepts bare semver", () => {
   assert.equal(normalizeVersionTag("1.4.0"), "v1.4.0");
@@ -20,4 +20,25 @@ test("normalizeVersionTag rejects unparseable inputs", () => {
   assert.equal(normalizeVersionTag(undefined), null);
   assert.equal(normalizeVersionTag("abc1234"), null);
   assert.equal(normalizeVersionTag("v1.2.3-5-gabc1234"), null);
+});
+
+test("clientEditionLabel names the web client by default", () => {
+  assert.equal(
+    clientEditionLabel("1.7.0", "Mozilla/5.0 Chrome/140.0"),
+    "Open DeepTutor Web v1.7.0",
+  );
+});
+
+test("clientEditionLabel recognises the macOS desktop shell", () => {
+  assert.equal(
+    clientEditionLabel(
+      "1.7.0",
+      "Mozilla/5.0 Chrome/140.0 Electron/45.1.0 OpenDeepTutor/1.7.0 (macOS)",
+    ),
+    "Open DeepTutor MacOS v1.7.0",
+  );
+});
+
+test("clientEditionLabel omits an unparseable version", () => {
+  assert.equal(clientEditionLabel(undefined, ""), "Open DeepTutor Web");
 });

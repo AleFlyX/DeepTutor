@@ -14,3 +14,24 @@ export function normalizeVersionTag(
   );
   return match ? `v${match[1]}` : null;
 }
+
+/** The desktop shell appends ``OpenDeepTutor/<version> (macOS)`` to its user agent. */
+const DESKTOP_AGENT = /\bOpenDeepTutor\/\S+ \((macOS)\)/;
+
+/** The client this page runs in, as shown beside the version: ``MacOS`` or ``Web``. */
+export function clientPlatform(userAgent?: string | null): string {
+  const agent =
+    userAgent ?? (typeof navigator === "undefined" ? "" : navigator.userAgent);
+  return DESKTOP_AGENT.test(agent) ? "MacOS" : "Web";
+}
+
+/** ``Open DeepTutor MacOS v1.7.0`` / ``Open DeepTutor Web v1.7.0``. */
+export function clientEditionLabel(
+  version: string | null | undefined,
+  userAgent?: string | null,
+): string {
+  const tag = normalizeVersionTag(version);
+  return ["Open DeepTutor", clientPlatform(userAgent), tag]
+    .filter(Boolean)
+    .join(" ");
+}
