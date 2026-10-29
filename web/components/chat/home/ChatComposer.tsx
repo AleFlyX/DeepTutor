@@ -30,6 +30,7 @@ import {
   MessageSquare,
   Mic,
   Paperclip,
+  PencilRuler,
   Plug,
   Sparkles,
   Square,
@@ -60,12 +61,13 @@ import ComposerResources, {
 import KnowledgeSelector from "./KnowledgeSelector";
 import ModelSelector from "./ModelSelector";
 import styles from "./ChatComposer.module.css";
-import { ComposerTray, type TrayMode } from "./ComposerTray";
+import { ComposerTray, type TrayCreate, type TrayMode } from "./ComposerTray";
 import type { AnswerModeProps, PartnerLinkProps } from "./AnswerModeMenu";
 import type { LeadToken } from "./ComposerLead";
 import { modeIcon } from "./ComposerIcons";
 import type { ComposerResourceCatalog } from "@/hooks/useComposerResources";
 import type { ResourceSelection } from "@/features/chat/ChatStateAdapter";
+import { CREATE_KINDS, isCreationKind } from "@/lib/creations";
 
 import TaskLinkSelector from "@/components/tasks/TaskLinkSelector";
 import { useTaskBoard } from "@/lib/task-board-store";
@@ -275,6 +277,8 @@ export default memo(function ChatComposer({
   resourceCatalog,
   resourceSelection,
   onResourceSelectionChange,
+  createTarget = null,
+  onCreateTargetChange,
   agentsAvailable = true,
   onToggleMemoryFile,
   onSend,
@@ -426,6 +430,10 @@ export default memo(function ChatComposer({
   resourceCatalog?: ComposerResourceCatalog;
   resourceSelection?: ResourceSelection;
   onResourceSelectionChange?: (selection: ResourceSelection) => void;
+  /** Create mode: the artifact kind this conversation is authoring, or null.
+   *  Rendered (and its tray entry shown) only when a parent supplies both. */
+  createTarget?: string | null;
+  onCreateTargetChange?: (value: string | null) => void;
   /** Hide the My Agents reference entry (e.g. the quiz follow-up surface). */
   agentsAvailable?: boolean;
   onToggleMemoryFile: (file: SpaceMemoryFile) => void;
@@ -881,7 +889,37 @@ export default memo(function ChatComposer({
   const trayMode: TrayMode | undefined = modeInTray
     ? { capabilities, value: activeCap.value, onChange: handleSelectCapability }
     : undefined;
+  // Create mode's own chip reads "Create Skill" / "Create Persona" and comes
+  // before even the mode token: picking a kind already forced the mode back
+  // to plain chat (see `trayCreate.onChange`), so the two never coexist, but
+  // this keeps the ordering right the instant a mode is chosen afterwards —
+  // which itself clears create mode (`onSelectCapability` in the parent).
+  const createKindDef = isCreationKind(createTarget) ? CREATE_KINDS[createTarget] : null;
+  const createToken: LeadToken[] =
+    onCreateTargetChange && createKindDef
+      ? [
+          {
+            key: `create:${createKindDef.kind}`,
+            icon: PencilRuler,
+            kind: t("Create"),
+            prefix: t("Create"),
+            label: t(createKindDef.labelKey),
+            onRemove: () => onCreateTargetChange(null),
+          },
+        ]
+      : [];
+  const trayCreate: TrayCreate | undefined = onCreateTargetChange
+    ? {
+        value: createTarget,
+        onChange: (kind) => {
+          onCreateTargetChange(kind);
+          // Create mode only makes sense on the plain chat loop.
+          if (kind) handleSelectCapability("");
+        },
+      }
+    : undefined;
   const leadTokens: LeadToken[] = [
+    ...createToken,
     ...modeToken,
     ...(resourceSelection && onResourceSelectionChange
       ? [
@@ -1154,7 +1192,7 @@ export default memo(function ChatComposer({
             replyLanguageDisabled={replyLanguageDisabled}
             onReplyLanguageChange={onReplyLanguageChange}
             languagePickerBelow={!hasMessages && !docked}
-            placeholder={inputPlaceholder}
+            placeholder={inputPlaceholder ?? (createKindDef ? t(createKindDef.placeholderKey) : undefined)}
             placeholderCompletion={inputPlaceholderCompletion}
             minHeight={hasMessages || docked ? 28 : 64}
             lead={leadTokens}
@@ -1443,7 +1481,7 @@ export default memo(function ChatComposer({
             </div>
           </div>
         </div>
-        {trayMode || (resourceCatalog && resourceSelection && onResourceSelectionChange) || answerMode || partnerLinks || trayEnd ? (
+        {trayMode || (resourceCatalog && resourceSelection && onResourceSelectionChange) || trayCreate || answerMode || partnerLinks || trayEnd ? (
           <ComposerTray
             controls={controls}
             placement={hasMessages || docked ? "up" : "down"}
@@ -1453,6 +1491,7 @@ export default memo(function ChatComposer({
                 ? { catalog: resourceCatalog, selection: resourceSelection, onChange: onResourceSelectionChange }
                 : undefined
             }
+            create={trayCreate}
             partners={partnerLinks}
             answer={answerMode}
             end={trayEnd}

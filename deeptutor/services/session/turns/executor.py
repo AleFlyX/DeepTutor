@@ -1026,6 +1026,11 @@ class TurnExecutor:
                     # model where the user is actually looking.
                     "note_document_id": payload.get("note_document_id"),
                     "note_generation": payload.get("note_generation") or {},
+                    # What this conversation is authoring, for the creator
+                    # loop extension (deeptutor.capabilities.creator). Empty
+                    # string, like every other turn-kind flag here, means
+                    # "not active" rather than absent.
+                    "create_target": payload.get("create_target") or "",
                     "reading_material_id": _reading_material_id(payload.get("reading_material_id")),
                     "reading_material_revision": _reading_material_revision(
                         payload.get("reading_material_revision")

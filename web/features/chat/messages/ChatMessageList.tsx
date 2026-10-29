@@ -98,6 +98,8 @@ import { SetupCredentialCard } from "@/components/chat/home/SetupCredentialCard"
 import { extractSetupCredential } from "@/lib/setup-signals";
 import { PartnerDraftCard } from "@/components/chat/home/PartnerDraftCard";
 import { extractPartnerDraft } from "@/lib/partner-draft";
+import { CreationDraftCard } from "@/components/chat/home/CreationDraftCard";
+import { extractCreationDraft } from "@/lib/creation-draft";
 import { extractMasteryHandoffs } from "@/lib/mastery-handoff";
 import ContextReferenceTree, {
   type ContextTreeItem,
@@ -922,6 +924,11 @@ export const AssistantMessage = memo(function AssistantMessage({
     [msg.events],
   );
 
+  const creationDraft = useMemo(
+    () => extractCreationDraft(msg.events),
+    [msg.events],
+  );
+
 
   // Set by the mastery navigation tools when the learner asked to be taken
   // back to something they are studying. The offer carries a
@@ -1271,6 +1278,7 @@ export const AssistantMessage = memo(function AssistantMessage({
           replacing it, and applies to every branch. */}
       {setupCredential ? <SetupCredentialCard data={setupCredential} /> : null}
       {partnerDraft ? <PartnerDraftCard data={partnerDraft} /> : null}
+      {creationDraft ? <CreationDraftCard data={creationDraft} /> : null}
       {masteryHandoffs.length > 0 && <MasteryHandoffCards handoffs={masteryHandoffs} />}
     </>
   );
