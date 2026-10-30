@@ -28,6 +28,8 @@ vi.mock("next/dynamic", async () => {
       openSideChatThread: (thread) => fixture.calls.push(`thread:${thread.session_id}`),
       closeSideChatThread: (threadSessionId) =>
         fixture.calls.push(`close-thread:${threadSessionId}`),
+      clearSideChatSource: (threadSessionId, sourceMessageId) =>
+        fixture.calls.push(`clear-source:${threadSessionId}:${String(sourceMessageId)}`),
       openGeogebraTab: () => fixture.calls.push("geogebra"),
       openSubagentTab: () => fixture.calls.push("subagent"),
       focusActivityHome: () => fixture.calls.push("activity"),

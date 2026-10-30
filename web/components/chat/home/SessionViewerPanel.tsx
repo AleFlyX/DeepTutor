@@ -224,6 +224,14 @@ export interface SessionViewerPanelHandle {
   openSideChatThread(thread: SessionSummary): void;
   /** Closes the tab showing ``sessionId``, if it is open. */
   closeSideChatThread(sessionId: string): void;
+  /**
+   * Forgets ``sourceMessageId`` on the open tab showing ``sessionId`` after
+   * that anchor was cleared on the server, so its next send does not file the
+   * thread back under the message. The tab is found by the thread id it
+   * recorded or the session its live thread bound on the first send. A tab
+   * that has since moved to another passage keeps the newer anchor.
+   */
+  clearSideChatSource(sessionId: string, sourceMessageId: number | string | null): void;
   /** Opens (or focuses) an interactive GeoGebra applet tab. */
   openGeogebraTab(payload: GeogebraTabPayload): void;
   /** Opens (first time) or live-updates a connected subagent's run tab. */
@@ -236,7 +244,9 @@ export interface SessionViewerPanelHandle {
 export interface SideChatOpenOptions {
   responder?: SideChatResponder;
   quote?: string;
-  /** The message the quote came from; omitted for a bare side chat. */
+  /** The message the quote came from. Omitted for a bare side chat, which
+   *  keeps the anchor the thread already has; null when the passage has no
+   *  persisted message yet (an optimistic row), which leaves it unattached. */
   sourceMessageId?: number | string | null;
 }
 
@@ -703,8 +713,14 @@ function SessionViewerPanelInner(
       if (target) {
         const existingSource = target.context.sideChat?.sourceMessageId ?? null;
         // A new selection is an explicit move: the thread follows the passage
-        // the learner just asked about. Opening it bare keeps its anchor.
-        const nextSource = sourceMessageId ?? existingSource ?? null;
+        // the learner just asked about, and a passage without a persisted
+        // message (an optimistic row) leaves it unattached rather than on the
+        // old message. Opening the side chat bare keeps whatever anchor it had.
+        const nextSource = seedQuote
+          ? (sourceMessageId ?? null)
+          : sourceMessageId === undefined
+            ? existingSource
+            : sourceMessageId;
         if (seedQuote || nextSource !== existingSource) {
           setTabs((prev) =>
             prev.map((tab) =>
@@ -918,6 +934,44 @@ function SessionViewerPanelInner(
     [closeTab, tabs],
   );
 
+  /**
+   * The thread's anchor was cleared on the server: an open tab must forget it
+   * too, or the next send would file the thread back under the message the
+   * learner just detached. A tab already pointing at another passage keeps it
+   * — the newest selection wins over the entry point that was detached.
+   */
+  const clearSideChatSource = useCallback(
+    (threadSessionId: string, sourceMessageId: number | string | null) => {
+      setTabs((prev) =>
+        prev.map((tab) => {
+          if (tab.kind !== "side-chat" || !tab.context.sideChat) return tab;
+          // A brand-new side chat sends before it is ever reopened, so its tab
+          // has no followupSessionId yet; the session its first turn bound
+          // lives in the live thread state instead.
+          const liveSessionId =
+            followups?.getThread(tab.context.questionKey).sessionId ?? null;
+          if (
+            tab.context.followupSessionId !== threadSessionId &&
+            liveSessionId !== threadSessionId
+          ) {
+            return tab;
+          }
+          const side = tab.context.sideChat;
+          const current = String(side.sourceMessageId ?? "");
+          if (current !== String(sourceMessageId ?? "")) return tab;
+          return {
+            ...tab,
+            context: {
+              ...tab.context,
+              sideChat: { ...side, sourceMessageId: null },
+            },
+          };
+        }),
+      );
+    },
+    [followups],
+  );
+
   useImperativeHandle(
     ref,
     () => ({
@@ -928,6 +982,7 @@ function SessionViewerPanelInner(
       openSideChatTab,
       openSideChatThread,
       closeSideChatThread,
+      clearSideChatSource,
       openGeogebraTab,
       openSubagentTab,
       focusActivityHome,
@@ -940,6 +995,7 @@ function SessionViewerPanelInner(
       openSideChatTab,
       openSideChatThread,
       closeSideChatThread,
+      clearSideChatSource,
       openGeogebraTab,
       openSubagentTab,
       focusActivityHome,

@@ -976,6 +976,14 @@ export default function ChatWorkspace() {
           { tutor_source_message_id: null },
           state.workspaceId || undefined,
         );
+        // The tab showing this thread may still hold the old anchor; left
+        // alone, its next send would file the thread back under the message
+        // the learner just detached. A tab already moved by a newer selection
+        // keeps that anchor.
+        viewerPanelRef.current?.clearSideChatSource(
+          thread.session_id,
+          thread.preferences?.tutor_source_message_id ?? null,
+        );
       } catch (error) {
         notify(
           error instanceof Error
