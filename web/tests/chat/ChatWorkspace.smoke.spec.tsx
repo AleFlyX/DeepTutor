@@ -41,7 +41,10 @@ const fixture = vi.hoisted(() => ({
     submitUserReply: vi.fn(async () => true),
     regenerateLastMessage: vi.fn(),
     resendLastMessage: vi.fn(),
-    deleteTurn: vi.fn(),
+    deleteTurn: vi.fn(async () => ({
+      detachedThreadIds: [] as string[],
+      deletedMessageIds: [] as number[],
+    })),
     editMessage: vi.fn(),
     switchBranch: vi.fn(),
     newSession: vi.fn(() => 'draft:general'),
@@ -58,6 +61,7 @@ const fixture = vi.hoisted(() => ({
     isStreaming: boolean
     canResendLastTurn: boolean
     onDetachThread?: (thread: SessionSummary) => Promise<void>
+    onDeleteTurn?: (messageId: number) => void | Promise<void>
   } | null,
   setActiveSessionId: vi.fn(),
   viewer: {
@@ -222,6 +226,7 @@ vi.mock('@/features/chat/messages', () => ({
     messages: MessageItem[]
     isStreaming: boolean
     canResendLastTurn: boolean
+    onDeleteTurn?: (messageId: number) => void | Promise<void>
   }) => {
     fixture.listProps = props
     return (
@@ -541,6 +546,32 @@ describe('ChatWorkspace smoke', () => {
     // The tab must forget the anchor too, or its next send would file the
     // thread back under the message the learner just detached.
     expect(fixture.viewer.clearSideChatSource).toHaveBeenCalledWith('thread-1', 7)
+    view.unmount()
+  })
+
+  it('clears deleted-source tabs after deleting a turn', async () => {
+    const view = renderWorkspace()
+    await waitFor(() => expect(fixture.adapter.newSession).toHaveBeenCalled())
+
+    fixture.adapter.deleteTurn.mockResolvedValue({
+      detachedThreadIds: ['thread-1'],
+      deletedMessageIds: [1],
+    })
+    applyState({
+      sessionId: 's-1',
+      messages: [{ id: 1, role: 'user', content: 'Explain photosynthesis' }],
+    })
+    view.rerender(<ChatWorkspace />)
+    await waitFor(() => expect(fixture.listProps?.onDeleteTurn).toBeTypeOf('function'))
+
+    await act(async () => {
+      await fixture.listProps!.onDeleteTurn!(1)
+    })
+
+    expect(fixture.adapter.deleteTurn).toHaveBeenCalledWith(1)
+    // The open tab only forgets the deleted message's anchor; a newer pending
+    // selection is preserved by the id comparison inside the panel.
+    expect(fixture.viewer.clearSideChatSource).toHaveBeenCalledWith('thread-1', 1)
     view.unmount()
   })
 })

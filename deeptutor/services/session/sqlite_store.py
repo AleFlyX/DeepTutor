@@ -2580,6 +2580,7 @@ class SQLiteSessionStore:
             "attachment_ids": attachment_ids,
             "turn_id": turn_id,
             "was_active": was_active,
+            "deleted_message_ids": ids_to_delete,
             "detached_thread_ids": detached_thread_ids,
         }
 

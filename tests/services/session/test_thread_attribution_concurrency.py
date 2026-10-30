@@ -209,6 +209,7 @@ async def test_deleting_a_source_message_detaches_its_threads(tmp_path) -> None:
 
     assert result["deleted"] is True
     assert result["detached_thread_ids"] == [child["id"]]
+    assert set(result["deleted_message_ids"]) == {user, answer}
     persisted = await store.get_session(child["id"])
     assert persisted is not None
     assert persisted["preferences"][TUTOR_SOURCE_KEY] == ""

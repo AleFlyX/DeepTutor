@@ -996,6 +996,25 @@ export default function ChatWorkspace() {
     },
     [state.workspaceId, t],
   );
+  /** Delete a turn and release any side-chat tab the server detached from it. */
+  const handleDeleteTurn = useCallback(
+    async (messageId: number) => {
+      const { detachedThreadIds, deletedMessageIds } = await deleteTurn(messageId);
+      for (const threadSessionId of detachedThreadIds) {
+        // A turn delete removes a user row and its assistant row. Only forget
+        // a tab still filed under one of those rows: a learner may already
+        // have selected a newer passage, and that pending anchor must survive.
+        for (const deletedMessageId of deletedMessageIds) {
+          viewerPanelRef.current?.clearSideChatSource(
+            threadSessionId,
+            deletedMessageId,
+          );
+        }
+      }
+    },
+    [deleteTurn],
+  );
+
   const cancelSessionTitleEdit = useCallback(() => {
     skipTitleCommitRef.current = true;
     setSessionTitleDraft(displaySessionTitle);
@@ -2776,7 +2795,7 @@ export default function ChatWorkspace() {
                             key, String(meta.subagent_name || t("Subagent")), events, true,
                           );
                         }}
-                        onDeleteTurn={deleteTurn}
+                        onDeleteTurn={handleDeleteTurn}
                         onDiscardFailedSubmission={discardFailedSubmission}
                         onRetryFailedSubmission={retryFailedSubmission}
                         selectedBranches={state.selectedBranches}

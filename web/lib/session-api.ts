@@ -518,17 +518,44 @@ export async function recordQuizResults(
   await expectJson<{ recorded: boolean }>(response);
 }
 
+export interface DeleteMessageResult {
+  /** Little Tutor threads the server detached from the deleted messages. */
+  detachedThreadIds: string[];
+  /** Every message row the delete removed (a turn's user + assistant rows). */
+  deletedMessageIds: number[];
+}
+
 export async function deleteMessage(
   sessionId: string,
   messageId: number,
-): Promise<void> {
+): Promise<DeleteMessageResult> {
   const response = await apiFetch(
     apiUrl(`/api/sessions/${sessionId}/messages/${messageId}`),
     {
       method: "DELETE",
     },
   );
-  await expectJson<{ deleted: boolean }>(response);
+  const payload = await expectJson<{
+    deleted: boolean;
+    detached_thread_ids?: string[];
+    deleted_message_ids?: number[];
+  }>(response);
+  // Older servers omit both lists. Keep the caller's own id as the only known
+  // deleted row; never invent thread ids for a response that has none.
+  return {
+    detachedThreadIds: Array.isArray(payload.detached_thread_ids)
+      ? payload.detached_thread_ids.filter(
+          (threadId): threadId is string =>
+            typeof threadId === "string" && threadId.length > 0,
+        )
+      : [],
+    deletedMessageIds: Array.isArray(payload.deleted_message_ids)
+      ? payload.deleted_message_ids.filter(
+          (deletedId): deletedId is number =>
+            typeof deletedId === "number" && Number.isFinite(deletedId),
+        )
+      : [messageId],
+  };
 }
 
 export async function updateBranchSelection(
