@@ -220,6 +220,10 @@ export interface SessionViewerPanelHandle {
    * second passage continues the same thread.
    */
   openSideChatTab(options?: SideChatOpenOptions): void;
+  /** Focuses an earlier side chat, its history read from the server. */
+  openSideChatThread(thread: SessionSummary): void;
+  /** Closes the tab showing ``sessionId``, if it is open. */
+  closeSideChatThread(sessionId: string): void;
   /** Opens (or focuses) an interactive GeoGebra applet tab. */
   openGeogebraTab(payload: GeogebraTabPayload): void;
   /** Opens (first time) or live-updates a connected subagent's run tab. */
@@ -232,6 +236,8 @@ export interface SessionViewerPanelHandle {
 export interface SideChatOpenOptions {
   responder?: SideChatResponder;
   quote?: string;
+  /** The message the quote came from; omitted for a bare side chat. */
+  sourceMessageId?: number | string | null;
 }
 
 /** What a side chat opened from the viewer is about. */
@@ -255,6 +261,9 @@ export interface SessionViewerPanelProps {
   conversation?: ViewerConversation | null;
   /** Store scope for reading this conversation's side chats. */
   workspaceId?: string | null;
+  /** The conversation's side chats when the page already read them. The
+   *  launcher then shares that one list instead of fetching its own. */
+  threads?: SessionSummary[];
   onClose: () => void;
   onAutoOpen: () => void;
   /** Aggregated session activity, shown on the Activity home view. */
@@ -373,6 +382,7 @@ function SessionViewerPanelInner(
     reboundFromKey = null,
     conversation = null,
     workspaceId = null,
+    threads: providedThreads,
     onClose,
     onAutoOpen,
     activity,
@@ -625,6 +635,7 @@ function SessionViewerPanelInner(
       language: string,
       followupSessionId: string | null = null,
       seedQuote?: { id: number; text: string },
+      sourceMessageId: number | string | null = null,
     ) => {
       const id = sideChatTabIdFor(questionKey);
       const label = responderLabel(responder);
@@ -649,6 +660,7 @@ function SessionViewerPanelInner(
         sideChat: {
           parentSessionId: sessionId ?? null,
           leafMessageId: conversation?.leafMessageId ?? null,
+          sourceMessageId,
           parentTitle: conversation?.title,
           responder,
         },
@@ -670,7 +682,7 @@ function SessionViewerPanelInner(
 
   const seedCounter = useRef(0);
   const openSideChatTab = useCallback(
-    ({ responder = DITO, quote }: SideChatOpenOptions = {}) => {
+    ({ responder = DITO, quote, sourceMessageId }: SideChatOpenOptions = {}) => {
       const text = quote ? normalizeSelectedText(quote) : "";
       const seedQuote = text ? { id: ++seedCounter.current, text } : undefined;
       const sideChats = tabs.filter(
@@ -689,11 +701,24 @@ function SessionViewerPanelInner(
               (followups?.getThread(tab.context.questionKey).messages.length ?? 0) === 0,
           );
       if (target) {
-        if (seedQuote) {
+        const existingSource = target.context.sideChat?.sourceMessageId ?? null;
+        // A thread keeps the message it was first opened from: a second quote
+        // joins the conversation, it does not move the message-level entry.
+        const keepSource = existingSource ?? sourceMessageId ?? null;
+        if (seedQuote || keepSource !== existingSource) {
           setTabs((prev) =>
             prev.map((tab) =>
               tab.id === target.id && tab.kind === "side-chat"
-                ? { ...tab, context: { ...tab.context, seedQuote } }
+                ? {
+                    ...tab,
+                    context: {
+                      ...tab.context,
+                      ...(seedQuote ? { seedQuote } : {}),
+                      sideChat: tab.context.sideChat
+                        ? { ...tab.context.sideChat, sourceMessageId: keepSource }
+                        : tab.context.sideChat,
+                    },
+                  }
                 : tab,
             ),
           );
@@ -708,6 +733,7 @@ function SessionViewerPanelInner(
         conversation?.language ?? "en",
         null,
         seedQuote,
+        sourceMessageId ?? null,
       );
     },
     [activeTabId, conversation, followups, onAutoOpen, putSideChatTab, sessionId, tabs],
@@ -753,6 +779,8 @@ function SessionViewerPanelInner(
         named(responderFromPreferences(prefs)),
         conversation?.language ?? prefs.language ?? "en",
         thread.session_id,
+        undefined,
+        prefs.tutor_source_message_id ?? null,
       );
     },
     [conversation, followups, named, putSideChatTab, sessionId],
@@ -835,37 +863,13 @@ function SessionViewerPanelInner(
     onAutoOpen();
   }, [onAutoOpen]);
 
-  useImperativeHandle(
-    ref,
-    () => ({
-      openFileTab,
-      openWebTab,
-      openMarkdownNoteTab,
-      openQuizFollowupTab,
-      openSideChatTab,
-      openGeogebraTab,
-      openSubagentTab,
-      focusActivityHome,
-    }),
-    [
-      openFileTab,
-      openWebTab,
-      openMarkdownNoteTab,
-      openQuizFollowupTab,
-      openSideChatTab,
-      openGeogebraTab,
-      openSubagentTab,
-      focusActivityHome,
-    ],
-  );
-
   const closeTab = useCallback(
-    (id: string) => {
+    (id: string, options?: { remember?: boolean }) => {
       setTabs((prev) => {
         const idx = prev.findIndex((tab) => tab.id === id);
         if (idx === -1) return prev;
         const closed = prev[idx];
-        if (closed.kind !== "new") {
+        if (closed.kind !== "new" && options?.remember !== false) {
           setClosedTabs((recent) =>
             [closed, ...recent.filter((tab) => tab.id !== id)].slice(
               0,
@@ -889,6 +893,58 @@ function SessionViewerPanelInner(
     [activeTabId],
   );
 
+  /** Close the tab showing a thread that no longer exists (e.g. it was
+   *  deleted from its message-level entry point). It is not remembered as
+   *  recently closed: reopening it would only 404. */
+  const closeSideChatThread = useCallback(
+    (threadSessionId: string) => {
+      setClosedTabs((recent) =>
+        recent.filter(
+          (tab) =>
+            !(
+              tab.kind === "side-chat" &&
+              tab.context.followupSessionId === threadSessionId
+            ),
+        ),
+      );
+      const tab = tabs.find(
+        (open) =>
+          open.kind === "side-chat" &&
+          open.context.followupSessionId === threadSessionId,
+      );
+      if (tab) closeTab(tab.id, { remember: false });
+    },
+    [closeTab, tabs],
+  );
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      openFileTab,
+      openWebTab,
+      openMarkdownNoteTab,
+      openQuizFollowupTab,
+      openSideChatTab,
+      openSideChatThread,
+      closeSideChatThread,
+      openGeogebraTab,
+      openSubagentTab,
+      focusActivityHome,
+    }),
+    [
+      openFileTab,
+      openWebTab,
+      openMarkdownNoteTab,
+      openQuizFollowupTab,
+      openSideChatTab,
+      openSideChatThread,
+      closeSideChatThread,
+      openGeogebraTab,
+      openSubagentTab,
+      focusActivityHome,
+    ],
+  );
+
   const reopenClosedTab = useCallback(
     (id: string) => {
       const closed = closedTabs.find((tab) => tab.id === id);
@@ -906,23 +962,28 @@ function SessionViewerPanelInner(
 
   // This conversation's side chats, read when the launcher opens —
   // new threads appear between two openings, never while one is on screen.
+  // When the chat page already read them for the message-level entries, that
+  // list is the single source and no second request is made.
   const launcherOpen = tabs.some((tab) => tab.id === newTabId) && activeTabId === newTabId;
-  const [threads, setThreads] = useState<{ sessionId: string; rows: SessionSummary[] }>({
+  const [launcherThreadRows, setLauncherThreadRows] = useState<{
+    sessionId: string;
+    rows: SessionSummary[];
+  }>({
     sessionId: "",
     rows: [],
   });
   const [threadsRevision, setThreadsRevision] = useState(0);
   useEffect(() => subscribeSessionChanges(() => setThreadsRevision((n) => n + 1)), []);
   useEffect(() => {
-    if (!launcherOpen || !sessionId) return;
+    if (providedThreads !== undefined || !launcherOpen || !sessionId) return;
     const controller = new AbortController();
     listSessionThreads(sessionId, workspaceId ?? undefined, controller.signal)
-      .then((rows) => setThreads({ sessionId, rows }))
+      .then((rows) => setLauncherThreadRows({ sessionId, rows }))
       .catch(() => {
         /* the launcher simply omits threads it cannot read */
       });
     return () => controller.abort();
-  }, [launcherOpen, sessionId, threadsRevision, workspaceId]);
+  }, [launcherOpen, providedThreads, sessionId, threadsRevision, workspaceId]);
 
   const openThreadSessionIds = new Set(
     tabs.flatMap((tab) =>
@@ -934,7 +995,9 @@ function SessionViewerPanelInner(
         : [],
     ),
   );
-  const threadRows = threads.sessionId === sessionId ? threads.rows : [];
+  const threadRows =
+    providedThreads ??
+    (launcherThreadRows.sessionId === sessionId ? launcherThreadRows.rows : []);
   const launcherThreads: LauncherThread[] = threadRows
     .filter((row) => !openThreadSessionIds.has(row.session_id))
     .slice(0, 6)

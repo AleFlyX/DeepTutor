@@ -91,6 +91,10 @@ const LazySessionViewerPanel = forwardRef<
       openQuizFollowupTab: (context) =>
         callPanel((panel) => panel.openQuizFollowupTab(context)),
       openSideChatTab: (options) => callPanel((panel) => panel.openSideChatTab(options)),
+      openSideChatThread: (thread) =>
+        callPanel((panel) => panel.openSideChatThread(thread)),
+      closeSideChatThread: (threadSessionId) =>
+        callPanel((panel) => panel.closeSideChatThread(threadSessionId)),
       openGeogebraTab: (payload) =>
         callPanel((panel) => panel.openGeogebraTab(payload)),
       openSubagentTab: (callId, label, events, focus) =>

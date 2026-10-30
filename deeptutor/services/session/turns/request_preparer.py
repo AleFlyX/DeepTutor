@@ -87,13 +87,25 @@ _REPLAY_SNAPSHOT_FIELDS: dict[str, str] = {
 
 
 def _tutor_thread_preferences(context: dict[str, Any]) -> dict[str, Any]:
+    preferences: dict[str, Any] = {}
     if context.get("selected_text"):
-        return {
-            "tutor_scope": "selection",
-            "tutor_selected_text": str(context["selected_text"])[:2000],
-            "tutor_source_message_id": context.get("source_message_id"),
-        }
-    return {"tutor_scope": "conversation"}
+        preferences.update(
+            {
+                "tutor_scope": "selection",
+                "tutor_selected_text": str(context["selected_text"])[:2000],
+            }
+        )
+    else:
+        preferences["tutor_scope"] = "conversation"
+    # Which message this thread was opened from, restated by the client on
+    # every turn. ``source_message_id`` is the branch tip the transcript is
+    # read up to and only doubles as the source for legacy selection threads.
+    quoted_message_id = context.get("quoted_message_id")
+    if quoted_message_id is None and context.get("selected_text"):
+        quoted_message_id = context.get("source_message_id")
+    if quoted_message_id is not None:
+        preferences["tutor_source_message_id"] = quoted_message_id
+    return preferences
 
 
 class TurnRequestPreparer:

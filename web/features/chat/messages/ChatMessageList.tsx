@@ -77,6 +77,8 @@ import { extractVisualizeResult } from "@/lib/visualize-types";
 import type { StreamEvent } from "@/features/chat/model/protocol";
 import { hasVisibleMarkdownContent } from "@/lib/markdown-display";
 import type { SelectedBookReference } from "@/lib/book-references";
+import type { SessionSummary } from "@/lib/session-api";
+import MessageThreadMarker from "./MessageThreadMarker";
 import { buildVisiblePath, type SiblingInfo } from "@/lib/message-branches";
 import { turnAnchorKey } from "@/lib/chat-outline";
 import { readingPassageHref } from "@/lib/reading-citations";
@@ -2124,6 +2126,9 @@ export const ChatMessageList = memo(function ChatMessageList({
   onReleaseMessageTrace,
   assistantActions,
   compactActions = false,
+  threadsByMessageId,
+  onOpenThread,
+  onDeleteThread,
 }: {
   messages: ChatMessageItem[];
   isStreaming: boolean;
@@ -2200,8 +2205,20 @@ export const ChatMessageList = memo(function ChatMessageList({
   /** A narrow side surface keeps only copy, regenerate and its own actions:
    *  read-aloud, delete and the usage line belong to the full chat. */
   compactActions?: boolean;
+  /** Little Tutor threads opened from a message, keyed by that message id
+   *  (``String(message.id)`` so SQLite and PocketBase ids group alike).
+   *  Omitted where the surface has no message-level thread entry point. */
+  threadsByMessageId?: ReadonlyMap<string, SessionSummary[]>;
+  onOpenThread?: (thread: SessionSummary) => void;
+  onDeleteThread?: (thread: SessionSummary) => Promise<void>;
 }) {
   const { t } = useTranslation();
+  // One lookup for both bubbles; the map is memoized by the chat page, so a
+  // message without threads costs a miss and no render branch.
+  const threadsForMessage = (messageId?: number) =>
+    messageId != null && threadsByMessageId
+      ? threadsByMessageId.get(String(messageId))
+      : undefined;
   // Visible path: when no branching has happened the result is identical
   // to the input. After an edit, sibling branches are filtered out so the
   // UI shows exactly one continuous thread, with arrow nav exposed on the
@@ -2463,6 +2480,17 @@ export const ChatMessageList = memo(function ChatMessageList({
                   ) : null}
                 </div>
               ) : null}
+              {(() => {
+                const threads = threadsForMessage(msg.id);
+                return threads?.length && onOpenThread && onDeleteThread ? (
+                  <MessageThreadMarker
+                    threads={threads}
+                    align="right"
+                    onOpen={onOpenThread}
+                    onDelete={onDeleteThread}
+                  />
+                ) : null;
+              })()}
             </div>
           );
         }
@@ -2656,6 +2684,17 @@ export const ChatMessageList = memo(function ChatMessageList({
                 )}
               </div>
             )}
+            {(() => {
+              const threads = threadsForMessage(msg.id);
+              return threads?.length && onOpenThread && onDeleteThread ? (
+                <MessageThreadMarker
+                  threads={threads}
+                  align="left"
+                  onOpen={onOpenThread}
+                  onDelete={onDeleteThread}
+                />
+              ) : null;
+            })()}
           </div>
         );
       })}

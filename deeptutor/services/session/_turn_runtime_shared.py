@@ -1091,6 +1091,41 @@ SIDE_CHAT_TRANSCRIPT_MAX_CHARS = 24_000
 SIDE_CHAT_MESSAGE_MAX_CHARS = 6_000
 
 
+def _coerce_leaf_message_id(value: Any) -> int | None:
+    """A positive integer message id, or None.
+
+    ``source_message_id`` is the branch tip the transcript is read up to, so it
+    must be a SQLite rowid; PocketBase's opaque ids are not usable there.
+    """
+    if value is None or isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value if value > 0 else None
+    text = str(value).strip()
+    if not text.isdigit():
+        return None
+    number = int(text)
+    return number if number > 0 else None
+
+
+def _coerce_quoted_message_id(value: Any) -> int | str | None:
+    """Normalize the message a side chat quotes, without losing opaque ids.
+
+    SQLite message ids are positive rowids; PocketBase ids are opaque strings.
+    Only the quoted message travels this way — ``source_message_id`` keeps its
+    own meaning (the branch tip the transcript is read up to) and stays integer.
+    """
+    positive = _coerce_leaf_message_id(value)
+    if positive is not None:
+        return positive
+    if value is None or isinstance(value, (bool, int)):
+        return None
+    text = str(value).strip()
+    if not text or text.lstrip("-").isdigit():
+        return None
+    return text
+
+
 def _extract_side_chat_context(
     config: dict[str, Any] | None,
 ) -> dict[str, Any] | None:
@@ -1098,8 +1133,10 @@ def _extract_side_chat_context(
 
     The wire key is still ``selection_tutor_context`` from when the side thread
     tutored one selected passage. A selection now reaches a side chat the way
-    it reaches any chat — as a quote attachment — so the context only names
-    the parent and the tip of the branch the learner was looking at.
+    it reaches any chat — as a quote attachment — so the context names the
+    parent, the tip of the branch the learner was looking at (the transcript
+    bound), and optionally the message the quote came from (``quoted_message_id``,
+    which the session list uses to file the thread under that message).
     """
     if not isinstance(config, dict):
         return None
@@ -1112,16 +1149,14 @@ def _extract_side_chat_context(
     if not parent_session_id:
         return None
     context: dict[str, Any] = {"parent_session_id": parent_session_id}
-    raw_leaf = raw.get("source_message_id")
-    leaf: int | None = None
-    if isinstance(raw_leaf, int) and not isinstance(raw_leaf, bool):
-        leaf = raw_leaf
-    elif str(raw_leaf or "").strip().isdigit():
-        leaf = int(str(raw_leaf).strip())
+    leaf = _coerce_leaf_message_id(raw.get("source_message_id"))
     # Edit branches the learner moved away from are not part of what they are
     # asking about.
-    if leaf is not None and leaf > 0:
+    if leaf is not None:
         context["source_message_id"] = leaf
+    quoted_message_id = _coerce_quoted_message_id(raw.get("quoted_message_id"))
+    if quoted_message_id is not None:
+        context["quoted_message_id"] = quoted_message_id
     return context
 
 
@@ -1417,12 +1452,8 @@ def _extract_selection_tutor_context(
         return None
 
     parent_session_id = str(raw.get("parent_session_id", "") or "").strip()
-    raw_source_message_id = raw.get("source_message_id")
-    source_message_id: int | None = None
-    if isinstance(raw_source_message_id, int) and not isinstance(raw_source_message_id, bool):
-        source_message_id = raw_source_message_id
-    elif str(raw_source_message_id or "").strip().isdigit():
-        source_message_id = int(str(raw_source_message_id).strip())
+    source_message_id = _coerce_leaf_message_id(raw.get("source_message_id"))
+    quoted_message_id = _coerce_quoted_message_id(raw.get("quoted_message_id"))
 
     if str(raw.get("scope", "") or "").strip() == "conversation":
         if not parent_session_id:
@@ -1434,8 +1465,10 @@ def _extract_selection_tutor_context(
         }
         # The tip of the branch the learner is looking at; edit branches they
         # moved away from are not part of what they are asking about.
-        if source_message_id is not None and source_message_id > 0:
+        if source_message_id is not None:
             conversation["source_message_id"] = source_message_id
+        if quoted_message_id is not None:
+            conversation["quoted_message_id"] = quoted_message_id
         return conversation
 
     selected_text = _clip_text(
@@ -1450,6 +1483,8 @@ def _extract_selection_tutor_context(
     }
     if source_message_id is not None:
         context["source_message_id"] = source_message_id
+    if quoted_message_id is not None:
+        context["quoted_message_id"] = quoted_message_id
     source_message_text = str(raw.get("source_message_text", "") or "").strip()
     if source_message_text:
         context["source_message_text"] = source_message_text

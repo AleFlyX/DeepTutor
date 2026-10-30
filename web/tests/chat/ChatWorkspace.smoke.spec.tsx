@@ -147,6 +147,7 @@ vi.mock('@/lib/session-api', () => ({
     preferences: {},
   })),
   deleteSession: vi.fn(async () => undefined),
+  listSessionThreads: vi.fn(async () => []),
 }))
 
 vi.mock('@/features/knowledge/api/catalog', () => ({

@@ -104,12 +104,15 @@ import { copyText } from "@/lib/clipboard";
 import { useChatAutoScroll } from "@/hooks/useChatAutoScroll";
 import { useContextBudget } from "@/hooks/useContextBudget";
 import { useMeasuredHeight } from "@/hooks/useMeasuredHeight";
+import { useSessionThreads } from "@/hooks/useSessionThreads";
 import { useSetupSync } from "@/hooks/useSetupSync";
 import { consumePendingPrompt } from "@/lib/pending-prompt";
 import {
+  deleteSession,
   fetchSessionAskHint,
   updateSessionOrganization,
   type SessionDetail,
+  type SessionSummary,
 } from "@/lib/session-api";
 import {
   DEFAULT_QUIZ_CONFIG,
@@ -402,10 +405,13 @@ export default function ChatWorkspace() {
   // Single right-side panel: the Activity/Viewer. Its home view is the
   // session activity; files and web pages open as tabs alongside it.
   const [viewerPanelOpen, setViewerPanelOpen] = useState(false);
-  // A passage selected in a reply, and where its actions float.
+  // A passage selected in a reply, and where its actions float. The message
+  // it came from rides along: it is what files a Little Tutor thread under
+  // the message that prompted it.
   const [selectedPassage, setSelectedPassage] = useState<{
     text: string;
     anchor: SelectionAnchor;
+    messageId: number | string | null;
   } | null>(null);
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -930,6 +936,36 @@ export default function ChatWorkspace() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+
+  // Little Tutor threads filed under this conversation's messages. The hook
+  // refreshes on session-list changes, so a thread's first turn shows up under
+  // its message without a reload.
+  const { threads, byMessageId: threadsByMessageId } = useSessionThreads(
+    state.sessionId,
+    state.workspaceId,
+  );
+
+  const openMessageThread = useCallback((thread: SessionSummary) => {
+    viewerPanelRef.current?.openSideChatThread(thread);
+  }, []);
+
+  const deleteMessageThread = useCallback(
+    async (thread: SessionSummary) => {
+      try {
+        await deleteSession(thread.session_id, state.workspaceId || undefined);
+        viewerPanelRef.current?.closeSideChatThread(thread.session_id);
+      } catch (error) {
+        notify(
+          error instanceof Error
+            ? error.message
+            : t("The tutor thread could not be deleted."),
+          { tone: "error" },
+        );
+        throw error;
+      }
+    },
+    [state.workspaceId, t],
+  );
   const cancelSessionTitleEdit = useCallback(() => {
     skipTitleCommitRef.current = true;
     setSessionTitleDraft(displaySessionTitle);
@@ -1710,9 +1746,25 @@ export default function ChatWorkspace() {
       rects.length > 0
         ? rects[rects.length - 1]
         : range.getBoundingClientRect();
+    // The selection may span messages; the anchor is where the learner
+    // started, so that is the message the follow-up is filed under.
+    const anchorElement =
+      selection.anchorNode instanceof HTMLElement
+        ? selection.anchorNode
+        : selection.anchorNode?.parentElement;
+    const rawMessageId =
+      anchorElement
+        ?.closest("[data-chat-message-id]")
+        ?.getAttribute("data-chat-message-id") ?? "";
+    const messageId = /^-?\d+$/.test(rawMessageId)
+      ? Number(rawMessageId) > 0
+        ? Number(rawMessageId)
+        : null
+      : rawMessageId || null;
     setSelectedPassage({
       text,
       anchor: { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom },
+      messageId,
     });
   }, [messagesContainerRef]);
 
@@ -1755,7 +1807,11 @@ export default function ChatWorkspace() {
   const askAboutSelectedPassage = useCallback(
     (responder: SideChatResponder) => {
       if (selectedPassage) {
-        viewerPanelRef.current?.openSideChatTab({ responder, quote: selectedPassage.text });
+        viewerPanelRef.current?.openSideChatTab({
+          responder,
+          quote: selectedPassage.text,
+          sourceMessageId: selectedPassage.messageId,
+        });
       }
       dismissSelectedPassage();
     },
@@ -2716,6 +2772,9 @@ export default function ChatWorkspace() {
                         kbDisplayNames={
                           knowledgeBasesLoaded ? kbDisplayNames : undefined
                         }
+                        threadsByMessageId={threadsByMessageId}
+                        onOpenThread={openMessageThread}
+                        onDeleteThread={deleteMessageThread}
                       />
                       <div
                         ref={messagesEndRef}
@@ -3000,6 +3059,7 @@ export default function ChatWorkspace() {
               reboundFromKey={state.boundFromKey ?? null}
               conversation={viewerConversation}
               workspaceId={sessionStoreId}
+              threads={threads}
               resourceCatalog={resourceCatalog}
               agents={agentOptions}
               activity={sessionActivity}

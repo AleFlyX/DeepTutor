@@ -130,6 +130,15 @@ export interface SessionPreferences {
   /** The partner group a side chat convenes; a partner or an agent answering
    *  one is ``answer_by``. Written by the backend on each turn. */
   side_chat_group_id?: string;
+  /** ``selection`` tutored one passage; ``conversation`` is about the whole
+   *  parent conversation. Written by the backend on each side-chat turn. */
+  tutor_scope?: "selection" | "conversation";
+  /** The passage a ``selection`` thread was opened from, clipped by the server. */
+  tutor_selected_text?: string;
+  /** The message a side chat was opened from; absent for a bare side chat and
+   *  for threads created before this was recorded. Drives the message-level
+   *  Little Tutor entry. */
+  tutor_source_message_id?: number | string | null;
   /** Owning Immersive Reading workspace, present only for reading sessions. */
   reading_workspace_id?: string;
   /** Material active when the reading conversation was created. */

@@ -485,9 +485,121 @@ async def test_side_chat_starts_from_the_parent_alone(
     assert persisted["preferences"]["parent_session_id"] == parent["id"]
     assert persisted["preferences"]["session_kind"] == "selection_tutor"
     assert persisted["preferences"]["tutor_scope"] == "conversation"
+    # The branch tip is a reading bound, not the message this thread was
+    # opened from; without an explicit quote there is nothing to attribute.
+    assert "tutor_source_message_id" not in persisted["preferences"]
     # The transcript is resolved again when the turn runs, never queued with it.
     queued = runtime._executions[turn["id"]].payload["selection_tutor_context"]
     assert "conversation_messages" not in queued
+
+
+@pytest.mark.asyncio
+async def test_side_chat_records_the_quoted_message(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    """A quoted passage names the message it came from, even for a side chat
+    about the whole conversation (the branch tip is a different id)."""
+    store = SQLiteSessionStore(tmp_path / "quoted-message.db")
+    runtime = TurnRuntimeManager(store)
+    parent = await store.ensure_session(None)
+    await store.add_message(parent["id"], "user", "Explain fork()")
+    quoted = await store.add_message(parent["id"], "assistant", "It returns twice.")
+    leaf = await store.add_message(parent["id"], "user", "So why does the child skip it?")
+
+    async def _noop_run_turn(_execution):
+        return None
+
+    monkeypatch.setattr(runtime, "_run_turn", _noop_run_turn)
+
+    child, _ = await runtime.start_turn(
+        {
+            "type": "start_turn",
+            "session_id": None,
+            "capability": "chat",
+            "content": "Why twice?",
+            "tools": [],
+            "knowledge_bases": [],
+            "attachments": [],
+            "language": "en",
+            "config": {
+                "selection_tutor_context": {
+                    "scope": "conversation",
+                    "parent_session_id": parent["id"],
+                    "source_message_id": leaf,
+                    "quoted_message_id": quoted,
+                }
+            },
+        }
+    )
+
+    persisted = await store.get_session(child["id"])
+    assert persisted is not None
+    assert persisted["preferences"]["tutor_source_message_id"] == quoted
+    assert persisted["preferences"]["tutor_scope"] == "conversation"
+
+
+@pytest.mark.asyncio
+async def test_side_chat_keeps_its_quoted_message_when_a_turn_omits_it(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    """The client restates the quote each turn; a turn that does not must not
+    erase the attribution an earlier one recorded."""
+    store = SQLiteSessionStore(tmp_path / "quoted-message-kept.db")
+    runtime = TurnRuntimeManager(store)
+    parent = await store.ensure_session(None)
+    quoted = await store.add_message(parent["id"], "assistant", "It returns twice.")
+    leaf = await store.add_message(parent["id"], "user", "So why does the child skip it?")
+
+    async def _noop_run_turn(_execution):
+        return None
+
+    monkeypatch.setattr(runtime, "_run_turn", _noop_run_turn)
+
+    child, first_turn = await runtime.start_turn(
+        {
+            "type": "start_turn",
+            "session_id": None,
+            "capability": "chat",
+            "content": "Why twice?",
+            "tools": [],
+            "knowledge_bases": [],
+            "attachments": [],
+            "language": "en",
+            "config": {
+                "selection_tutor_context": {
+                    "scope": "conversation",
+                    "parent_session_id": parent["id"],
+                    "source_message_id": leaf,
+                    "quoted_message_id": quoted,
+                }
+            },
+        }
+    )
+    await store.update_turn_status(first_turn["id"], "cancelled", "test")
+
+    await runtime.start_turn(
+        {
+            "type": "start_turn",
+            "session_id": child["id"],
+            "capability": "chat",
+            "content": "And the parent?",
+            "tools": [],
+            "knowledge_bases": [],
+            "attachments": [],
+            "language": "en",
+            "config": {
+                "selection_tutor_context": {
+                    "scope": "conversation",
+                    "parent_session_id": parent["id"],
+                    "source_message_id": leaf,
+                }
+            },
+        }
+    )
+
+    persisted = await store.get_session(child["id"])
+    assert persisted is not None
+    assert persisted["preferences"]["tutor_source_message_id"] == quoted
 
 
 @pytest.mark.asyncio
