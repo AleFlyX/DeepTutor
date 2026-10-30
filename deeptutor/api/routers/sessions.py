@@ -477,7 +477,12 @@ async def get_session_organization(session_id: str):
 
 @router.get("/{session_id}/threads")
 async def list_session_threads(session_id: str):
-    """Little Tutor threads opened from this conversation, newest first."""
+    """Little Tutor threads opened from this conversation, newest first.
+
+    Threads from before the source message was recorded are attributed here
+    once, when their passage can be found unambiguously in the parent
+    transcript (see ``thread_attribution``).
+    """
     store = get_session_store()
     if await store.get_session(session_id) is None:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -488,6 +493,14 @@ async def list_session_threads(session_id: str):
         if str((row.get("preferences") or {}).get("parent_session_id") or "") == session_id
         and (row.get("preferences") or {}).get("session_kind") == "selection_tutor"
     ]
+    try:
+        from deeptutor.services.session.thread_attribution import backfill_thread_sources
+
+        threads = await backfill_thread_sources(store, session_id, threads)
+    except Exception:
+        # Attribution is an enhancement; a conversation whose threads cannot be
+        # recovered still lists exactly as it did before.
+        logger.warning("Little Tutor thread attribution failed", exc_info=True)
     threads.sort(key=lambda row: float(row.get("updated_at") or 0), reverse=True)
     return {"threads": _with_source_workspace(threads)}
 
