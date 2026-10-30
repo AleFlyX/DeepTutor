@@ -6296,5 +6296,6 @@
   "The generated file changed. Review its details again.": "Згенерований файл змінився. Перегляньте його відомості ще раз.",
   "Unable to remove generated file.": "Не вдалося видалити згенерований файл.",
   "Removing the workspace copy keeps the chat attachment available.": "Після видалення копії з робочого простору вкладення в чаті залишиться доступним.",
-  "Workspace file removed. The chat attachment is still available.": "Файл робочого простору видалено. Вкладення в чаті залишається доступним."
+  "Workspace file removed. The chat attachment is still available.": "Файл робочого простору видалено. Вкладення в чаті залишається доступним.",
+  "language.portuguese": "Португальська"
 }

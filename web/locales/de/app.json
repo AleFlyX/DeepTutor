@@ -6274,5 +6274,6 @@
   "Unable to clean render files.": "Unable to clean render files.",
   "Render files changed. Review the storage preview again.": "Render files changed. Review the storage preview again.",
   "Wait for running conversations to finish before cleanup.": "Wait for running conversations to finish before cleanup.",
-  "Workspace data is busy. Wait for active requests and tasks before retrying.": "Workspace data is busy. Wait for active requests and tasks before retrying."
+  "Workspace data is busy. Wait for active requests and tasks before retrying.": "Workspace data is busy. Wait for active requests and tasks before retrying.",
+  "language.portuguese": "Portugiesisch"
 }
