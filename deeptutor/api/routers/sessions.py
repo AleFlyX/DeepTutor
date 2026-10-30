@@ -24,7 +24,10 @@ from deeptutor.services.session.provider_response_state import (
     redact_private_message_metadata as _redact_provider_state_metadata,
 )
 from deeptutor.services.session.search import MAX_SEARCH_QUERY_CHARS
-from deeptutor.services.session.thread_attribution import BACKFILL_ATTEMPTED_KEY
+from deeptutor.services.session.thread_attribution import (
+    BACKFILL_ATTEMPTED_KEY,
+    parent_message_role,
+)
 from deeptutor.services.storage.attachment_store import get_attachment_store
 
 logger = logging.getLogger(__name__)
@@ -653,10 +656,22 @@ async def update_session_organization(
                 detail="Only a Little Tutor thread has a source message",
             )
         source = payload.tutor_source_message_id
+        normalized_source: int | str | None = None
         if isinstance(source, int) and not isinstance(source, bool) and source > 0:
-            updates["tutor_source_message_id"] = source
+            normalized_source = source
         elif isinstance(source, str) and source.strip():
-            updates["tutor_source_message_id"] = source.strip()
+            normalized_source = source.strip()
+        if normalized_source is not None:
+            parent_id = str(
+                (session.get("preferences") or {}).get("parent_session_id") or ""
+            ).strip()
+            role = await parent_message_role(store, parent_id, normalized_source)
+            if role is None:
+                raise HTTPException(
+                    status_code=400,
+                    detail="The source message does not belong to this thread's conversation",
+                )
+            updates["tutor_source_message_id"] = normalized_source
         else:
             # Detach from the message without deleting the thread, and keep the
             # legacy backfill from attaching it again on the next read.

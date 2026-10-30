@@ -1159,6 +1159,9 @@ def _extract_side_chat_context(
         # Presence is authoritative: a null quotes nothing, which clears the
         # thread's anchor in the preference write.
         context["quoted_message_id"] = quoted_message_id
+    source_message_role = str(raw.get("source_message_role", "") or "").strip()
+    if source_message_role in {"user", "assistant"}:
+        context["source_message_role"] = source_message_role
     return context
 
 
@@ -1621,6 +1624,16 @@ async def _resolve_selection_tutor_context(
         except Exception:
             raise ValueError("Could not read the conversation this side chat is about") from None
         resolved["conversation_messages"] = _side_chat_transcript(path)
+        quoted_message_id = resolved.get("quoted_message_id")
+        if quoted_message_id is not None:
+            quoted_message = next(
+                (message for message in path if str(message.get("id")) == str(quoted_message_id)),
+                None,
+            )
+            if quoted_message is not None:
+                role = str(quoted_message.get("role") or "").strip()
+                if role in {"user", "assistant"}:
+                    resolved["source_message_role"] = role
         return resolved
 
     source_message_id = resolved.get("source_message_id")
@@ -1629,9 +1642,10 @@ async def _resolve_selection_tutor_context(
         parent_session_id and isinstance(source_message_id, int) and source_message_id > 0
     )
     source_message = None
+    source_path: list[dict[str, Any]] | None = None
     if authoritative_source_required:
         try:
-            path = await store.get_messages_for_context(
+            source_path = await store.get_messages_for_context(
                 parent_session_id,
                 source_message_id,
             )
@@ -1641,7 +1655,7 @@ async def _resolve_selection_tutor_context(
             source_message = next(
                 (
                     message
-                    for message in reversed(path)
+                    for message in reversed(source_path)
                     if str(message.get("id")) == str(source_message_id)
                 ),
                 None,
@@ -1651,6 +1665,21 @@ async def _resolve_selection_tutor_context(
             resolved["source_message_text"] = str(source_message.get("content") or "").strip()
             role = str(source_message.get("role") or "").strip()
             if role in {"user", "assistant", "system"}:
+                resolved["source_message_role"] = role
+
+    quoted_message_id = resolved.get("quoted_message_id")
+    if quoted_message_id is not None and source_path:
+        quoted_message = next(
+            (
+                message
+                for message in source_path
+                if str(message.get("id")) == str(quoted_message_id)
+            ),
+            None,
+        )
+        if quoted_message is not None:
+            role = str(quoted_message.get("role") or "").strip()
+            if role in {"user", "assistant"}:
                 resolved["source_message_role"] = role
 
     source_text = str(resolved.get("source_message_text") or "").strip()

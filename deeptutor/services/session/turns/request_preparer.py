@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import logging
 import time
 from typing import TYPE_CHECKING, Any
 import uuid
@@ -17,7 +18,10 @@ from deeptutor.services.session.protocol import (
     SUBMISSION_REPLAY_FIELD,
     SUBMISSION_USER_FIELD,
 )
-from deeptutor.services.session.thread_attribution import BACKFILL_ATTEMPTED_KEY
+from deeptutor.services.session.thread_attribution import (
+    BACKFILL_ATTEMPTED_KEY,
+    parent_message_role,
+)
 from deeptutor.services.session.workspace_preferences import (
     WORKSPACE_MODE_MASTERY,
     WORKSPACE_MODE_READING,
@@ -45,6 +49,8 @@ from .._turn_runtime_shared import (
 if TYPE_CHECKING:
     from deeptutor.runtime.coordination import RuntimeCoordinator
     from deeptutor.services.session.protocol import SessionStoreProtocol
+
+logger = logging.getLogger(__name__)
 
 
 # Request snapshots use the browser's display keys. Only these saved turn
@@ -677,6 +683,36 @@ class TurnRequestPreparer:
             if parent_session_id == session["id"]:
                 raise RuntimeError("A selection tutor session cannot parent itself")
             if parent_session_id:
+                quoted_message_id = selection_tutor_context.get("quoted_message_id")
+                if quoted_message_id is not None:
+                    source_role = await parent_message_role(
+                        self.store, parent_session_id, quoted_message_id
+                    )
+                    if source_role is None:
+                        # A deleted or foreign message must not become an
+                        # invisible anchor; treat it as an explicit detach.
+                        logger.warning(
+                            "side chat quoted message %s is not in parent %s",
+                            quoted_message_id,
+                            parent_session_id,
+                        )
+                        selection_tutor_context["quoted_message_id"] = None
+                        selection_tutor_context.pop("source_message_role", None)
+                    else:
+                        selection_tutor_context["source_message_role"] = source_role
+                elif (
+                    "quoted_message_id" not in selection_tutor_context
+                    and selection_tutor_context.get("selected_text")
+                ):
+                    # Legacy selection clients persisted the branch tip as an
+                    # anchor; keep it only when it is really a parent message.
+                    legacy_source = selection_tutor_context.get("source_message_id")
+                    if (
+                        legacy_source is not None
+                        and await parent_message_role(self.store, parent_session_id, legacy_source)
+                        is None
+                    ):
+                        selection_tutor_context.pop("source_message_id", None)
                 from deeptutor.services.session.organization import (
                     validate_parent_assignment,
                 )

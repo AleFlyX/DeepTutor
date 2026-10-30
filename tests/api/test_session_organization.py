@@ -9,12 +9,20 @@ from deeptutor.services.session.organization import validate_parent_assignment
 
 
 class _ReorderingStore:
-    def __init__(self, rows: list[dict[str, Any]]) -> None:
+    def __init__(
+        self,
+        rows: list[dict[str, Any]],
+        messages: dict[str, list[dict[str, Any]]] | None = None,
+    ) -> None:
         self.rows = {row["session_id"]: row for row in rows}
+        self.messages = messages or {}
         self.clock = max((float(row.get("updated_at") or 0) for row in rows), default=0)
 
     async def get_session(self, session_id: str):
         return self.rows.get(session_id)
+
+    async def get_messages(self, session_id: str):
+        return list(self.messages.get(session_id, []))
 
     async def list_sessions(self, *, limit: int, offset: int):
         ordered = sorted(self.rows.values(), key=lambda row: -float(row["updated_at"]))
@@ -25,8 +33,9 @@ class _ReorderingStore:
     ):
         row = self.rows[session_id]
         row.setdefault("preferences", {}).update(updates)
-        self.clock += 1
-        row["updated_at"] = self.clock
+        if touch:
+            self.clock += 1
+            row["updated_at"] = self.clock
         return True
 
 
@@ -184,6 +193,7 @@ async def test_a_thread_anchor_can_be_cleared_or_moved_from_organization(
 ) -> None:
     store = _ReorderingStore(
         [
+            {"session_id": "root", "updated_at": 2, "preferences": {}},
             {
                 "session_id": "thread",
                 "updated_at": 1,
@@ -192,8 +202,14 @@ async def test_a_thread_anchor_can_be_cleared_or_moved_from_organization(
                     "session_kind": "selection_tutor",
                     "tutor_source_message_id": 7,
                 },
-            }
-        ]
+            },
+        ],
+        {
+            "root": [
+                {"id": 7, "role": "assistant", "content": "It returns twice."},
+                {"id": 9, "role": "assistant", "content": "It skips the parent path."},
+            ]
+        },
     )
     monkeypatch.setattr(sessions_router, "get_session_store", lambda: store)
 
@@ -209,6 +225,33 @@ async def test_a_thread_anchor_can_be_cleared_or_moved_from_organization(
     assert preferences["tutor_source_message_id"] == ""
     # A deliberate detach must survive the legacy-thread backfill.
     assert preferences["tutor_source_backfill_attempted"] is True
+
+
+@pytest.mark.asyncio
+async def test_a_source_message_must_belong_to_the_threads_conversation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    store = _ReorderingStore(
+        [
+            {"session_id": "root", "updated_at": 2, "preferences": {}},
+            {
+                "session_id": "thread",
+                "updated_at": 1,
+                "preferences": {
+                    "parent_session_id": "root",
+                    "session_kind": "selection_tutor",
+                },
+            },
+        ],
+        {"root": [{"id": 7, "role": "assistant", "content": "It returns twice."}]},
+    )
+    monkeypatch.setattr(sessions_router, "get_session_store", lambda: store)
+
+    with pytest.raises(sessions_router.HTTPException) as excinfo:
+        await sessions_router.update_session_organization(
+            "thread", sessions_router.SessionOrganizationRequest(tutor_source_message_id=99)
+        )
+    assert excinfo.value.status_code == 400
 
 
 @pytest.mark.asyncio

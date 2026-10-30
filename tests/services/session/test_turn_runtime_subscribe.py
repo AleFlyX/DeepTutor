@@ -728,6 +728,46 @@ async def test_side_chat_clears_its_quoted_message_on_an_explicit_null(
 
 
 @pytest.mark.asyncio
+async def test_a_quoted_message_outside_the_parent_is_treated_as_a_detach(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    store = SQLiteSessionStore(tmp_path / "quoted-invalid.db")
+    runtime = TurnRuntimeManager(store)
+    parent = await store.ensure_session(None)
+    await store.add_message(parent["id"], "assistant", "It returns twice.")
+
+    async def _noop_run_turn(_execution):
+        return None
+
+    monkeypatch.setattr(runtime, "_run_turn", _noop_run_turn)
+
+    child, _ = await runtime.start_turn(
+        {
+            "type": "start_turn",
+            "session_id": None,
+            "capability": "chat",
+            "content": "Why twice?",
+            "tools": [],
+            "knowledge_bases": [],
+            "attachments": [],
+            "language": "en",
+            "config": {
+                "selection_tutor_context": {
+                    "scope": "conversation",
+                    "parent_session_id": parent["id"],
+                    "quoted_message_id": 999,
+                }
+            },
+        }
+    )
+
+    persisted = await store.get_session(child["id"])
+    assert persisted is not None
+    assert persisted["preferences"]["tutor_source_message_id"] == ""
+    assert persisted["preferences"]["tutor_source_backfill_attempted"] is True
+
+
+@pytest.mark.asyncio
 async def test_reconnect_after_turn_completion_still_carries_message_ids(
     monkeypatch: pytest.MonkeyPatch, tmp_path
 ) -> None:
