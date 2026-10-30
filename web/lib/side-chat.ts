@@ -63,11 +63,10 @@ export function sideChatTurnConfig(
             parent_session_id: context.parentSessionId,
             source_message_id: context.leafMessageId,
             // Which message the quote came from. The branch tip above is a
-            // reading bound; this is what the message-level entry point (and
-            // its delete/open affordances) files the thread under.
-            ...(context.sourceMessageId != null
-              ? { quoted_message_id: context.sourceMessageId }
-              : {}),
+            // reading bound; this is what the message-level entry point files
+            // the thread under. Sent every turn, like ``create_target``: null
+            // is an explicit detach, and a new id moves the thread.
+            quoted_message_id: context.sourceMessageId ?? null,
           },
         }
       : {}),

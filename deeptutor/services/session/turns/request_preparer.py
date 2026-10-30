@@ -17,6 +17,7 @@ from deeptutor.services.session.protocol import (
     SUBMISSION_REPLAY_FIELD,
     SUBMISSION_USER_FIELD,
 )
+from deeptutor.services.session.thread_attribution import BACKFILL_ATTEMPTED_KEY
 from deeptutor.services.session.workspace_preferences import (
     WORKSPACE_MODE_MASTERY,
     WORKSPACE_MODE_READING,
@@ -97,14 +98,24 @@ def _tutor_thread_preferences(context: dict[str, Any]) -> dict[str, Any]:
         )
     else:
         preferences["tutor_scope"] = "conversation"
-    # Which message this thread was opened from, restated by the client on
-    # every turn. ``source_message_id`` is the branch tip the transcript is
-    # read up to and only doubles as the source for legacy selection threads.
-    quoted_message_id = context.get("quoted_message_id")
-    if quoted_message_id is None and context.get("selected_text"):
-        quoted_message_id = context.get("source_message_id")
-    if quoted_message_id is not None:
-        preferences["tutor_source_message_id"] = quoted_message_id
+    # Which message this thread is filed under, restated by the client on every
+    # turn. The key's presence is authoritative, like ``create_target``: a
+    # value moves the thread, an explicit null clears it, and omitting the key
+    # (what older clients do) leaves the stored anchor untouched.
+    if "quoted_message_id" in context:
+        quoted_message_id = context.get("quoted_message_id")
+        if quoted_message_id is None:
+            preferences["tutor_source_message_id"] = ""
+            # A deliberate detach must survive the legacy-thread backfill.
+            preferences[BACKFILL_ATTEMPTED_KEY] = True
+        else:
+            preferences["tutor_source_message_id"] = quoted_message_id
+    elif context.get("selected_text"):
+        # ``source_message_id`` is the branch tip the transcript is read up to;
+        # for a legacy selection thread it is also the selected message.
+        source_message_id = context.get("source_message_id")
+        if source_message_id is not None:
+            preferences["tutor_source_message_id"] = source_message_id
     return preferences
 
 

@@ -176,3 +176,52 @@ async def test_organization_read_skips_the_transcript(monkeypatch: pytest.Monkey
     assert result["session"]["preferences"] == {"pinned": True}
     with pytest.raises(sessions_router.HTTPException):
         await sessions_router.get_session_organization("missing")
+
+
+@pytest.mark.asyncio
+async def test_a_thread_anchor_can_be_cleared_or_moved_from_organization(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    store = _ReorderingStore(
+        [
+            {
+                "session_id": "thread",
+                "updated_at": 1,
+                "preferences": {
+                    "parent_session_id": "root",
+                    "session_kind": "selection_tutor",
+                    "tutor_source_message_id": 7,
+                },
+            }
+        ]
+    )
+    monkeypatch.setattr(sessions_router, "get_session_store", lambda: store)
+
+    moved = await sessions_router.update_session_organization(
+        "thread", sessions_router.SessionOrganizationRequest(tutor_source_message_id=9)
+    )
+    assert moved["session"]["preferences"]["tutor_source_message_id"] == 9
+
+    cleared = await sessions_router.update_session_organization(
+        "thread", sessions_router.SessionOrganizationRequest(tutor_source_message_id=None)
+    )
+    preferences = cleared["session"]["preferences"]
+    assert preferences["tutor_source_message_id"] == ""
+    # A deliberate detach must survive the legacy-thread backfill.
+    assert preferences["tutor_source_backfill_attempted"] is True
+
+
+@pytest.mark.asyncio
+async def test_only_a_tutor_thread_can_carry_a_source_message(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    store = _ReorderingStore(
+        [{"session_id": "chat", "updated_at": 1, "preferences": {"session_kind": "chat"}}]
+    )
+    monkeypatch.setattr(sessions_router, "get_session_store", lambda: store)
+
+    with pytest.raises(sessions_router.HTTPException) as excinfo:
+        await sessions_router.update_session_organization(
+            "chat", sessions_router.SessionOrganizationRequest(tutor_source_message_id=7)
+        )
+    assert excinfo.value.status_code == 400

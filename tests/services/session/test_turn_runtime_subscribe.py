@@ -603,6 +603,131 @@ async def test_side_chat_keeps_its_quoted_message_when_a_turn_omits_it(
 
 
 @pytest.mark.asyncio
+async def test_side_chat_moves_its_quoted_message_when_the_client_says_so(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    store = SQLiteSessionStore(tmp_path / "quoted-moved.db")
+    runtime = TurnRuntimeManager(store)
+    parent = await store.ensure_session(None)
+    first_source = await store.add_message(parent["id"], "assistant", "It returns twice.")
+    second_source = await store.add_message(parent["id"], "user", "And in the child?")
+    leaf = await store.add_message(parent["id"], "assistant", "It skips the parent path.")
+
+    async def _noop_run_turn(_execution):
+        return None
+
+    monkeypatch.setattr(runtime, "_run_turn", _noop_run_turn)
+
+    payload = {
+        "type": "start_turn",
+        "capability": "chat",
+        "tools": [],
+        "knowledge_bases": [],
+        "attachments": [],
+        "language": "en",
+    }
+    child, turn = await runtime.start_turn(
+        {
+            **payload,
+            "session_id": None,
+            "content": "Why twice?",
+            "config": {
+                "selection_tutor_context": {
+                    "scope": "conversation",
+                    "parent_session_id": parent["id"],
+                    "source_message_id": leaf,
+                    "quoted_message_id": first_source,
+                }
+            },
+        }
+    )
+    await store.update_turn_status(turn["id"], "cancelled", "test")
+
+    await runtime.start_turn(
+        {
+            **payload,
+            "session_id": child["id"],
+            "content": "Show me the child path.",
+            "config": {
+                "selection_tutor_context": {
+                    "scope": "conversation",
+                    "parent_session_id": parent["id"],
+                    "source_message_id": leaf,
+                    "quoted_message_id": second_source,
+                }
+            },
+        }
+    )
+
+    persisted = await store.get_session(child["id"])
+    assert persisted is not None
+    assert persisted["preferences"]["tutor_source_message_id"] == second_source
+
+
+@pytest.mark.asyncio
+async def test_side_chat_clears_its_quoted_message_on_an_explicit_null(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    store = SQLiteSessionStore(tmp_path / "quoted-cleared.db")
+    runtime = TurnRuntimeManager(store)
+    parent = await store.ensure_session(None)
+    quoted = await store.add_message(parent["id"], "assistant", "It returns twice.")
+    leaf = await store.add_message(parent["id"], "user", "So why does the child skip it?")
+
+    async def _noop_run_turn(_execution):
+        return None
+
+    monkeypatch.setattr(runtime, "_run_turn", _noop_run_turn)
+
+    payload = {
+        "type": "start_turn",
+        "capability": "chat",
+        "tools": [],
+        "knowledge_bases": [],
+        "attachments": [],
+        "language": "en",
+    }
+    child, turn = await runtime.start_turn(
+        {
+            **payload,
+            "session_id": None,
+            "content": "Why twice?",
+            "config": {
+                "selection_tutor_context": {
+                    "scope": "conversation",
+                    "parent_session_id": parent["id"],
+                    "source_message_id": leaf,
+                    "quoted_message_id": quoted,
+                }
+            },
+        }
+    )
+    await store.update_turn_status(turn["id"], "cancelled", "test")
+
+    await runtime.start_turn(
+        {
+            **payload,
+            "session_id": child["id"],
+            "content": "Forget the passage.",
+            "config": {
+                "selection_tutor_context": {
+                    "scope": "conversation",
+                    "parent_session_id": parent["id"],
+                    "source_message_id": leaf,
+                    "quoted_message_id": None,
+                }
+            },
+        }
+    )
+
+    persisted = await store.get_session(child["id"])
+    assert persisted is not None
+    assert persisted["preferences"]["tutor_source_message_id"] == ""
+    # A deliberate detach must not be undone by the legacy-thread backfill.
+    assert persisted["preferences"]["tutor_source_backfill_attempted"] is True
+
+
+@pytest.mark.asyncio
 async def test_reconnect_after_turn_completion_still_carries_message_ids(
     monkeypatch: pytest.MonkeyPatch, tmp_path
 ) -> None:

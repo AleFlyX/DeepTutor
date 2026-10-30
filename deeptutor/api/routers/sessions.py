@@ -24,6 +24,7 @@ from deeptutor.services.session.provider_response_state import (
     redact_private_message_metadata as _redact_provider_state_metadata,
 )
 from deeptutor.services.session.search import MAX_SEARCH_QUERY_CHARS
+from deeptutor.services.session.thread_attribution import BACKFILL_ATTEMPTED_KEY
 from deeptutor.services.storage.attachment_store import get_attachment_store
 
 logger = logging.getLogger(__name__)
@@ -97,6 +98,9 @@ class SessionOrganizationRequest(BaseModel):
     session_kind: Literal["chat", "selection_tutor", "immersive_reading"] | None = None
     pinned: bool | None = None
     archived: bool | None = None
+    # Which message a Little Tutor thread is filed under; null detaches it from
+    # its message without deleting the thread.
+    tutor_source_message_id: int | str | None = None
 
 
 class SessionReplyLanguageRequest(BaseModel):
@@ -642,6 +646,22 @@ async def update_session_organization(
         updates["pinned"] = bool(payload.pinned)
     if "archived" in fields:
         updates["archived"] = bool(payload.archived)
+    if "tutor_source_message_id" in fields:
+        if (session.get("preferences") or {}).get("session_kind") != "selection_tutor":
+            raise HTTPException(
+                status_code=400,
+                detail="Only a Little Tutor thread has a source message",
+            )
+        source = payload.tutor_source_message_id
+        if isinstance(source, int) and not isinstance(source, bool) and source > 0:
+            updates["tutor_source_message_id"] = source
+        elif isinstance(source, str) and source.strip():
+            updates["tutor_source_message_id"] = source.strip()
+        else:
+            # Detach from the message without deleting the thread, and keep the
+            # legacy backfill from attaching it again on the next read.
+            updates["tutor_source_message_id"] = ""
+            updates[BACKFILL_ATTEMPTED_KEY] = True
 
     if updates:
         await store.update_session_preferences(session_id, updates)

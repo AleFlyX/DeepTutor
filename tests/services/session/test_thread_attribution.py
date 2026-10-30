@@ -141,3 +141,23 @@ def test_short_passages_are_not_evidence_of_a_source() -> None:
 
     assert locate_quote_message(messages, "x = 1") is None
     assert locate_quote_message(messages, "x = 1 and y = 2") is None
+
+
+@pytest.mark.asyncio
+async def test_a_deliberately_detached_thread_is_not_recovered(tmp_path) -> None:
+    store = SQLiteSessionStore(tmp_path / "detached.db")
+    parent = await store.ensure_session(None)
+    await store.add_message(parent["id"], "assistant", "It returns twice.")
+    thread = await _thread(
+        store,
+        parent["id"],
+        {
+            "tutor_selected_text": "It returns twice.",
+            "tutor_source_message_id": "",
+            BACKFILL_ATTEMPTED_KEY: True,
+        },
+    )
+
+    rows = await backfill_thread_sources(store, parent["id"], [thread])
+
+    assert rows[0]["preferences"]["tutor_source_message_id"] == ""

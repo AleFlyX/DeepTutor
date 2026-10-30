@@ -129,3 +129,39 @@ it("renders nothing when the message has no threads", () => {
 
   expect(container).toBeEmptyDOMElement();
 });
+
+it("detaches a thread from the message without deleting it", async () => {
+  const onDetach = vi.fn(async () => {});
+  render(
+    <MessageThreadMarker
+      threads={[thread("a")]}
+      onOpen={vi.fn()}
+      onDelete={vi.fn(async () => {})}
+      onDetach={onDetach}
+    />,
+  );
+
+  fireEvent.click(
+    screen.getByRole("button", { name: "Tutor threads on this message" }),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Detach from this message" }));
+
+  await waitFor(() => expect(onDetach).toHaveBeenCalledTimes(1));
+  expect(onDetach).toHaveBeenCalledWith(expect.objectContaining({ session_id: "a" }));
+  expect(screen.getByRole("button", { name: "Delete tutor thread" })).toBeTruthy();
+});
+
+it("offers no detach action when the surface cannot move anchors", () => {
+  render(
+    <MessageThreadMarker
+      threads={[thread("a")]}
+      onOpen={vi.fn()}
+      onDelete={vi.fn(async () => {})}
+    />,
+  );
+
+  fireEvent.click(
+    screen.getByRole("button", { name: "Tutor threads on this message" }),
+  );
+  expect(screen.queryByRole("button", { name: "Detach from this message" })).toBeNull();
+});

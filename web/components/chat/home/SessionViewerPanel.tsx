@@ -702,10 +702,10 @@ function SessionViewerPanelInner(
           );
       if (target) {
         const existingSource = target.context.sideChat?.sourceMessageId ?? null;
-        // A thread keeps the message it was first opened from: a second quote
-        // joins the conversation, it does not move the message-level entry.
-        const keepSource = existingSource ?? sourceMessageId ?? null;
-        if (seedQuote || keepSource !== existingSource) {
+        // A new selection is an explicit move: the thread follows the passage
+        // the learner just asked about. Opening it bare keeps its anchor.
+        const nextSource = sourceMessageId ?? existingSource ?? null;
+        if (seedQuote || nextSource !== existingSource) {
           setTabs((prev) =>
             prev.map((tab) =>
               tab.id === target.id && tab.kind === "side-chat"
@@ -715,7 +715,7 @@ function SessionViewerPanelInner(
                       ...tab.context,
                       ...(seedQuote ? { seedQuote } : {}),
                       sideChat: tab.context.sideChat
-                        ? { ...tab.context.sideChat, sourceMessageId: keepSource }
+                        ? { ...tab.context.sideChat, sourceMessageId: nextSource }
                         : tab.context.sideChat,
                     },
                   }
@@ -780,7 +780,8 @@ function SessionViewerPanelInner(
         conversation?.language ?? prefs.language ?? "en",
         thread.session_id,
         undefined,
-        prefs.tutor_source_message_id ?? null,
+        // "" is how a detached thread stores "no anchor"; the wire uses null.
+        prefs.tutor_source_message_id || null,
       );
     },
     [conversation, followups, named, putSideChatTab, sessionId],

@@ -3081,6 +3081,8 @@
   "Delete tutor thread": "删除小老师追问",
   "Delete this tutor thread?": "删除这条小老师追问？",
   "The tutor thread could not be deleted.": "无法删除这条小老师追问。",
+  "Detach from this message": "从此消息解除关联",
+  "The tutor thread could not be detached.": "无法解除这条小老师追问的关联。",
   "Ask Little Tutor": "问小老师",
   "Ask about selected text": "针对选中内容提问",
   "Selected text": "选中内容",

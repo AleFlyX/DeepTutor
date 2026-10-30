@@ -966,6 +966,28 @@ export default function ChatWorkspace() {
     },
     [state.workspaceId, t],
   );
+
+  /** Remove a thread from this message without deleting the conversation. */
+  const detachMessageThread = useCallback(
+    async (thread: SessionSummary) => {
+      try {
+        await updateSessionOrganization(
+          thread.session_id,
+          { tutor_source_message_id: null },
+          state.workspaceId || undefined,
+        );
+      } catch (error) {
+        notify(
+          error instanceof Error
+            ? error.message
+            : t("The tutor thread could not be detached."),
+          { tone: "error" },
+        );
+        throw error;
+      }
+    },
+    [state.workspaceId, t],
+  );
   const cancelSessionTitleEdit = useCallback(() => {
     skipTitleCommitRef.current = true;
     setSessionTitleDraft(displaySessionTitle);
@@ -2775,6 +2797,7 @@ export default function ChatWorkspace() {
                         threadsByMessageId={threadsByMessageId}
                         onOpenThread={openMessageThread}
                         onDeleteThread={deleteMessageThread}
+                        onDetachThread={detachMessageThread}
                       />
                       <div
                         ref={messagesEndRef}

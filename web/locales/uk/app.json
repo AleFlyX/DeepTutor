@@ -2988,6 +2988,8 @@
   "Delete tutor thread": "Видалити гілку тьютора",
   "Delete this tutor thread?": "Видалити цю гілку тьютора?",
   "The tutor thread could not be deleted.": "Не вдалося видалити гілку тьютора.",
+  "Detach from this message": "Від’єднати від цього повідомлення",
+  "The tutor thread could not be detached.": "Не вдалося від’єднати гілку тьютора.",
   "Ask Little Tutor": "Запитати Little Tutor",
   "Ask about selected text": "Запитати про виділений текст",
   "Selected text": "Виділений текст",

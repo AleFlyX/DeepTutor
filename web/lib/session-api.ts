@@ -139,6 +139,9 @@ export interface SessionPreferences {
    *  for threads created before this was recorded. Drives the message-level
    *  Little Tutor entry. */
   tutor_source_message_id?: number | string | null;
+  /** Internal: the legacy-thread backfill has already run for this row, so a
+   *  detached thread is not attached again. */
+  tutor_source_backfill_attempted?: boolean;
   /** Owning Immersive Reading workspace, present only for reading sessions. */
   reading_workspace_id?: string;
   /** Material active when the reading conversation was created. */
@@ -437,6 +440,8 @@ export type SessionOrganizationPatch = Partial<{
   session_kind: "chat" | "selection_tutor";
   pinned: boolean;
   archived: boolean;
+  /** Which message a Little Tutor thread is filed under; null detaches it. */
+  tutor_source_message_id: number | string | null;
 }>;
 
 export async function updateSessionOrganization(

@@ -54,6 +54,7 @@ test("a side chat names its parent and who answers it", () => {
       selection_tutor_context: {
         parent_session_id: "parent-1",
         source_message_id: 9,
+        quoted_message_id: null,
       },
       answer_by: "",
     },
@@ -74,6 +75,7 @@ test("a side chat names its parent and who answers it", () => {
       selection_tutor_context: {
         parent_session_id: "parent-1",
         source_message_id: 9,
+        quoted_message_id: null,
       },
       answer_by: "",
       partner_discussion_group_id: "g1",

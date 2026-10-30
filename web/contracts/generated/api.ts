@@ -8112,6 +8112,10 @@ export interface paths {
     /**
      * List Session Threads
      * @description Little Tutor threads opened from this conversation, newest first.
+     *
+     *     Threads from before the source message was recorded are attributed here
+     *     once, when their passage can be found unambiguously in the parent
+     *     transcript (see ``thread_attribution``).
      */
     readonly get: operations["list_session_threads_api_sessions__session_id__threads_get"];
     readonly put?: never;
@@ -16845,6 +16849,8 @@ export interface components {
       /** Session Kind */
       readonly session_kind?:
         ("chat" | "selection_tutor" | "immersive_reading") | null;
+      /** Tutor Source Message Id */
+      readonly tutor_source_message_id?: number | string | null;
       /** Workspace Id */
       readonly workspace_id?: string | null;
     };

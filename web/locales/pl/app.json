@@ -3080,6 +3080,8 @@
   "Delete tutor thread": "Usuń wątek tutora",
   "Delete this tutor thread?": "Usunąć ten wątek tutora?",
   "The tutor thread could not be deleted.": "Nie udało się usunąć wątku tutora.",
+  "Detach from this message": "Odłącz od tej wiadomości",
+  "The tutor thread could not be detached.": "Nie udało się odłączyć wątku tutora.",
   "Ask Little Tutor": "Zapytaj Little Tutor",
   "Ask about selected text": "Zapytaj o zaznaczony tekst",
   "Selected text": "Zaznaczony tekst",

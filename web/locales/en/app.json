@@ -3081,6 +3081,8 @@
   "Delete tutor thread": "Delete tutor thread",
   "Delete this tutor thread?": "Delete this tutor thread?",
   "The tutor thread could not be deleted.": "The tutor thread could not be deleted.",
+  "Detach from this message": "Detach from this message",
+  "The tutor thread could not be detached.": "The tutor thread could not be detached.",
   "Ask Little Tutor": "Ask Little Tutor",
   "Ask about selected text": "Ask about selected text",
   "Selected text": "Selected text",

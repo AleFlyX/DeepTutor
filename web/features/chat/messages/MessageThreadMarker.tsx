@@ -21,7 +21,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { MessagesSquare, Trash2 } from "lucide-react";
+import { MessagesSquare, Trash2, Unlink } from "lucide-react";
 
 import type { SessionSummary } from "@/lib/session-api";
 import { placeMenu } from "@/lib/floating-menu";
@@ -43,6 +43,8 @@ export interface MessageThreadMarkerProps {
   align?: "left" | "right";
   onOpen: (thread: SessionSummary) => void;
   onDelete: (thread: SessionSummary) => Promise<void>;
+  /** Remove the thread from this message without deleting the conversation. */
+  onDetach?: (thread: SessionSummary) => Promise<void>;
 }
 
 export default function MessageThreadMarker({
@@ -50,12 +52,14 @@ export default function MessageThreadMarker({
   align = "left",
   onOpen,
   onDelete,
+  onDetach,
 }: MessageThreadMarkerProps) {
   const { t, i18n } = useTranslation();
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<PopoverPosition | null>(null);
   const [confirming, setConfirming] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [detaching, setDetaching] = useState<string | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
 
@@ -149,6 +153,18 @@ export default function MessageThreadMarker({
     }
   };
 
+  const detachThread = async (thread: SessionSummary) => {
+    if (!onDetach || detaching) return;
+    setDetaching(thread.session_id);
+    try {
+      await onDetach(thread);
+    } catch {
+      // The page that owns the detach explains the failure; the row stays.
+    } finally {
+      setDetaching(null);
+    }
+  };
+
   return (
     <div
       className={`mt-1 flex ${align === "right" ? "justify-end pr-1" : "justify-start"}`}
@@ -201,8 +217,13 @@ export default function MessageThreadMarker({
                     }
                     confirming={confirming === thread.session_id}
                     deleting={deleting === thread.session_id}
-                    deleteDisabled={deleting !== null || thread.status === "running"}
+                    deleteDisabled={
+                      deleting !== null || detaching !== null || thread.status === "running"
+                    }
+                    detaching={detaching === thread.session_id}
+                    canDetach={Boolean(onDetach)}
                     onOpen={() => openThread(thread)}
+                    onDetach={() => void detachThread(thread)}
                     onAskDelete={() => setConfirming(thread.session_id)}
                     onCancelDelete={() => setConfirming(null)}
                     onConfirmDelete={() => void deleteThread(thread)}
@@ -222,8 +243,11 @@ function ThreadRow({
   timeLabel,
   confirming,
   deleting,
+  detaching,
   deleteDisabled,
+  canDetach,
   onOpen,
+  onDetach,
   onAskDelete,
   onCancelDelete,
   onConfirmDelete,
@@ -232,8 +256,11 @@ function ThreadRow({
   timeLabel: string;
   confirming: boolean;
   deleting: boolean;
+  detaching: boolean;
   deleteDisabled: boolean;
+  canDetach: boolean;
   onOpen: () => void;
+  onDetach: () => void;
   onAskDelete: () => void;
   onCancelDelete: () => void;
   onConfirmDelete: () => void;
@@ -285,15 +312,28 @@ function ThreadRow({
           </button>
         </span>
       ) : (
-        <button
-          type="button"
-          disabled={deleteDisabled}
-          onClick={onAskDelete}
-          aria-label={t("Delete tutor thread")}
-          className="mr-1 mt-1.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[var(--muted-foreground)] opacity-0 transition-opacity hover:bg-[var(--muted)]/50 hover:text-[var(--destructive)] focus-visible:opacity-100 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-30 group-hover/thread:opacity-100"
-        >
-          <Trash2 size={12} strokeWidth={1.7} />
-        </button>
+        <span className="flex shrink-0 items-center">
+          {canDetach ? (
+            <button
+              type="button"
+              disabled={detaching || deleteDisabled}
+              onClick={onDetach}
+              aria-label={t("Detach from this message")}
+              className="mr-0.5 mt-1.5 flex h-6 w-6 items-center justify-center rounded-md text-[var(--muted-foreground)] opacity-0 transition-opacity hover:bg-[var(--muted)]/50 hover:text-[var(--foreground)] focus-visible:opacity-100 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-30 group-hover/thread:opacity-100"
+            >
+              <Unlink size={12} strokeWidth={1.7} />
+            </button>
+          ) : null}
+          <button
+            type="button"
+            disabled={deleteDisabled}
+            onClick={onAskDelete}
+            aria-label={t("Delete tutor thread")}
+            className="mr-1 mt-1.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[var(--muted-foreground)] opacity-0 transition-opacity hover:bg-[var(--muted)]/50 hover:text-[var(--destructive)] focus-visible:opacity-100 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-30 group-hover/thread:opacity-100"
+          >
+            <Trash2 size={12} strokeWidth={1.7} />
+          </button>
+        </span>
       )}
     </div>
   );

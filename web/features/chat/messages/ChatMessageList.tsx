@@ -2129,6 +2129,7 @@ export const ChatMessageList = memo(function ChatMessageList({
   threadsByMessageId,
   onOpenThread,
   onDeleteThread,
+  onDetachThread,
 }: {
   messages: ChatMessageItem[];
   isStreaming: boolean;
@@ -2211,6 +2212,8 @@ export const ChatMessageList = memo(function ChatMessageList({
   threadsByMessageId?: ReadonlyMap<string, SessionSummary[]>;
   onOpenThread?: (thread: SessionSummary) => void;
   onDeleteThread?: (thread: SessionSummary) => Promise<void>;
+  /** Detach a thread from this message without deleting its conversation. */
+  onDetachThread?: (thread: SessionSummary) => Promise<void>;
 }) {
   const { t } = useTranslation();
   // One lookup for both bubbles; the map is memoized by the chat page, so a
@@ -2488,6 +2491,7 @@ export const ChatMessageList = memo(function ChatMessageList({
                     align="right"
                     onOpen={onOpenThread}
                     onDelete={onDeleteThread}
+                    onDetach={onDetachThread}
                   />
                 ) : null;
               })()}
@@ -2692,6 +2696,7 @@ export const ChatMessageList = memo(function ChatMessageList({
                   align="left"
                   onOpen={onOpenThread}
                   onDelete={onDeleteThread}
+                  onDetach={onDetachThread}
                 />
               ) : null;
             })()}

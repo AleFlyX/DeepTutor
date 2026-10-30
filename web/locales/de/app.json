@@ -3081,6 +3081,8 @@
   "Delete tutor thread": "Tutor-Thread löschen",
   "Delete this tutor thread?": "Diesen Tutor-Thread löschen?",
   "The tutor thread could not be deleted.": "Der Tutor-Thread konnte nicht gelöscht werden.",
+  "Detach from this message": "Von dieser Nachricht lösen",
+  "The tutor thread could not be detached.": "Der Tutor-Thread konnte nicht gelöst werden.",
   "Ask Little Tutor": "Little Tutor fragen",
   "Ask about selected text": "Frage zum markierten Text stellen",
   "Selected text": "Markierter Text",

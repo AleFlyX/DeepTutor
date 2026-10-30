@@ -11129,6 +11129,20 @@
             ],
             "title": "Session Kind"
           },
+          "tutor_source_message_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tutor Source Message Id"
+          },
           "workspace_id": {
             "anyOf": [
               {
@@ -53605,7 +53619,7 @@
     },
     "/api/sessions/{session_id}/threads": {
       "get": {
-        "description": "Little Tutor threads opened from this conversation, newest first.",
+        "description": "Little Tutor threads opened from this conversation, newest first.\n\nThreads from before the source message was recorded are attributed here\nonce, when their passage can be found unambiguously in the parent\ntranscript (see ``thread_attribution``).",
         "operationId": "list_session_threads_api_sessions__session_id__threads_get",
         "parameters": [
           {

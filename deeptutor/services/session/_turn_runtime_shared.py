@@ -1155,7 +1155,9 @@ def _extract_side_chat_context(
     if leaf is not None:
         context["source_message_id"] = leaf
     quoted_message_id = _coerce_quoted_message_id(raw.get("quoted_message_id"))
-    if quoted_message_id is not None:
+    if "quoted_message_id" in raw:
+        # Presence is authoritative: a null quotes nothing, which clears the
+        # thread's anchor in the preference write.
         context["quoted_message_id"] = quoted_message_id
     return context
 
@@ -1453,6 +1455,7 @@ def _extract_selection_tutor_context(
 
     parent_session_id = str(raw.get("parent_session_id", "") or "").strip()
     source_message_id = _coerce_leaf_message_id(raw.get("source_message_id"))
+    quoted_supplied = "quoted_message_id" in raw
     quoted_message_id = _coerce_quoted_message_id(raw.get("quoted_message_id"))
 
     if str(raw.get("scope", "") or "").strip() == "conversation":
@@ -1467,7 +1470,7 @@ def _extract_selection_tutor_context(
         # moved away from are not part of what they are asking about.
         if source_message_id is not None:
             conversation["source_message_id"] = source_message_id
-        if quoted_message_id is not None:
+        if quoted_supplied:
             conversation["quoted_message_id"] = quoted_message_id
         return conversation
 
@@ -1483,7 +1486,7 @@ def _extract_selection_tutor_context(
     }
     if source_message_id is not None:
         context["source_message_id"] = source_message_id
-    if quoted_message_id is not None:
+    if quoted_supplied:
         context["quoted_message_id"] = quoted_message_id
     source_message_text = str(raw.get("source_message_text", "") or "").strip()
     if source_message_text:

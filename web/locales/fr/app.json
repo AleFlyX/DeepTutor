@@ -3545,6 +3545,8 @@
   "Delete tutor thread": "Supprimer le fil du tuteur",
   "Delete this tutor thread?": "Supprimer ce fil du tuteur ?",
   "The tutor thread could not be deleted.": "Le fil du tuteur n'a pas pu être supprimé.",
+  "Detach from this message": "Détacher de ce message",
+  "The tutor thread could not be detached.": "Le fil du tuteur n'a pas pu être détaché.",
   "Ask Little Tutor": "Demander au petit tuteur",
   "Ask about selected text": "Poser une question sur le texte sélectionné",
   "Selected text": "Texte sélectionné",
