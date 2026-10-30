@@ -9,10 +9,52 @@ def _parse_language(language: str | None) -> str:
     raw = (language or "en").strip().lower()
     if raw.startswith("zh") or raw in {"cn", "chinese"}:
         return "zh"
+    if raw.startswith("pt") or raw in {"pt-br", "portuguese", "português"}:
+        return "pt"
     return "en"
 
 
 _MESSAGES: dict[str, dict[str, str]] = {
+    "pt": {
+        "api.content_required": "o conteúdo é obrigatório",
+        "api.invalid_channels_config": "Configuração de canais inválida",
+        "api.partner_already_exists": "O parceiro '{name}' já existe",
+        "api.partner_not_found": "Parceiro não encontrado",
+        "api.partner_not_found_or_not_running": "Parceiro não encontrado ou não está em execução",
+        "api.partner_not_running": "Parceiro não está em execução",
+        "api.partner_stopped_start_required": "O parceiro está parado. Inicie-o antes de conversar.",
+        "api.persona_already_exists": "A persona já existe: {name}",
+        "api.persona_name_required": "O nome da persona é obrigatório",
+        "api.persona_not_found": "Persona não encontrada: {name}",
+        "api.soul_already_exists": "A alma '{name}' já existe",
+        "api.soul_content_empty": "O conteúdo da alma personalizada está vazio",
+        "api.soul_library_not_found": "A alma '{name}' não foi encontrada na biblioteca",
+        "api.soul_not_found": "Alma não encontrada",
+        "api.tool_not_found": "Ferramenta '{name}' não encontrada",
+        "cli_apps.abi_mismatch": "O app de CLI {app!r} foi instalado para {installed}, mas este ambiente é {current}. Um administrador precisa reinstalá-lo.",
+        "cli_apps.args_required": "{tool} precisa de uma lista 'args' — um argumento de linha de comando por elemento.",
+        "cli_apps.entry_admin_only": "Apps de CLI são instalados por um administrador; solicite ao seu para adicionar este.",
+        "cli_apps.install_in_progress": "Esse app já está sendo instalado.",
+        "cli_apps.not_in_catalog": "Nenhum app de CLI chamado {id!r} no catálogo.",
+        "cli_apps.not_installed": "O app de CLI {app!r} não está mais instalado nesta implantação.",
+        "cli_apps.still_running": "{app} ainda está em execução ({seconds}s)",
+        "mcp.configure_command_or_url": "Servidor {name!r}: configure um comando (stdio) ou uma url.",
+        "mcp.configure_before_testing": "Configure um comando (stdio) ou uma url antes de testar.",
+        "mcp.server_error": "Servidor {name!r}: {error}",
+        "mcp.server_missing": "Nenhum servidor chamado {name!r} na sua lista.",
+        "mcp.not_oauth": "Este servidor não usa OAuth; forneça uma credencial.",
+        "mcp.oauth_callback_incomplete": "A resposta de autorização foi incompleta.",
+        "mcp.oauth_callback_unknown": "Essa autorização expirou ou já foi concluída. Inicie-a novamente.",
+        "mcp.oauth_done": "Autorizado. Você pode fechar esta aba.",
+        "mcp.oauth_failed": "Falha na autorização.",
+        "mcp.catalog_entry_missing": "Nenhum serviço MCP chamado {id!r} no catálogo.",
+        "mcp.entry_admin_only": "Este serviço roda como um comando local e só pode ser adicionado por um administrador.",
+        "mcp.tool_not_available": "Esta ferramenta não está disponível nesta conversa. Apenas as ferramentas listadas no prompt podem ser chamadas.",
+        "sandbox.command_blocked": "Erro: comando bloqueado pela proteção de segurança (padrão perigoso).",
+        "sandbox.disabled_for_account": "A execução de código está desativada para a sua conta.",
+        "sandbox.no_backend": "nenhum backend de sandbox disponível",
+    },
+
     "en": {
         "api.content_required": "content is required",
         "api.invalid_channels_config": "Invalid channels config",

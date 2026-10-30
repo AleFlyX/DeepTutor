@@ -28,6 +28,20 @@ _SAFE_FILENAME = re.compile(r"[^\w.-]+")
 # with English scaffolding. Keyed by the same language codes the prompt layer
 # uses (deeptutor/services/prompt/language.py), falling back to English.
 _LABELS: dict[str, dict[str, str]] = {
+    "pt": {
+        "takeaway": "Ponto principal",
+        "answer": "Resposta",
+        "front": "Frente",
+        "back": "Verso",
+        "sources": "Fontes",
+        "chapters": "Capítulos",
+        "note": "Nota",
+        "untitled_book": "Livro sem título",
+        "untitled_chapter": "Capítulo sem título",
+        "not_generated": "(Este capítulo ainda não foi gerado.)",
+        "omitted": "({kind} omitido — não possui representação em texto.)",
+    },
+
     "en": {
         "takeaway": "Key takeaway",
         "answer": "Answer",
