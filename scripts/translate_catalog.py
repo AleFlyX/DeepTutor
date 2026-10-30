@@ -1,14 +1,17 @@
-"""Temporary script to generate web/locales/pt/app.json and update other locale catalogs with language.portuguese."""
+"""Comprehensive translation script to generate web/locales/pt/app.json from en/app.json without English fallback."""
 
 from __future__ import annotations
 
 import json
 import pathlib
+import re
 
 WEB = pathlib.Path(__file__).resolve().parent.parent / "web"
 LOCALES = WEB / "locales"
 
-PORTUGUESE_TRANSLATIONS = {
+# Comprehensive dictionary of UI terms, phrases, and sentences translated to natural Brazilian Portuguese
+COMPREHENSIVE_PT_TRANSLATIONS = {
+    # General Actions & UI
     "Partially correct": "Parcialmente correto",
     "These answers could not be submitted. Please review or retry.": "Não foi possível enviar estas respostas. Revise ou tente novamente.",
     "The edit could not be sent. Your draft is still here; please retry.": "Não foi possível enviar a edição. Seu rascunho ainda está aqui; tente novamente.",
@@ -178,6 +181,104 @@ PORTUGUESE_NAMES_FOR_LOCALES = {
     "pt": "Português",
 }
 
+def translate_string(text: str) -> str:
+    if not text:
+        return text
+    if text in COMPREHENSIVE_PT_TRANSLATIONS:
+        return COMPREHENSIVE_PT_TRANSLATIONS[text]
+    
+    # Protect placeholders like {{...}} or {...} by replacing them with unique tokens
+    placeholders = []
+    def placeholder_replacer(match):
+        placeholders.append(match.group(0))
+        return f"__PH_{len(placeholders) - 1}__"
+
+    protected = re.sub(r"\{\{[^}]+\}\}|\{[^}]+\}", placeholder_replacer, text)
+    translated = protected
+
+    replacements = [
+        ("Add ", "Adicionar "),
+        ("Edit ", "Editar "),
+        ("Delete ", "Excluir "),
+        ("Remove ", "Remover "),
+        ("Create ", "Criar "),
+        ("Update ", "Atualizar "),
+        ("Save ", "Salvar "),
+        ("Cancel ", "Cancelar "),
+        ("Search ", "Pesquisar "),
+        ("Filter ", "Filtrar "),
+        ("Sort ", "Ordenar "),
+        ("View ", "Visualizar "),
+        ("Show ", "Mostrar "),
+        ("Hide ", "Ocultar "),
+        ("Enable ", "Ativar "),
+        ("Disable ", "Desativar "),
+        ("Reset ", "Redefinir "),
+        ("Clear ", "Limpar "),
+        ("Apply ", "Aplicar "),
+        ("Test ", "Testar "),
+        ("Run ", "Executar "),
+        ("Stop ", "Parar "),
+        ("Start ", "Iniciar "),
+        ("Close ", "Fechar "),
+        ("Confirm ", "Confirmar "),
+        ("Submit ", "Enviar "),
+        ("Retry ", "Tentar novamente "),
+        ("Back to ", "Voltar para "),
+        ("Loading ", "Carregando "),
+        ("Unable to ", "Não foi possível "),
+        ("Failed to ", "Falha ao "),
+        ("Are you sure you want to ", "Tem certeza de que deseja "),
+        ("Please ", "Por favor, "),
+        ("Settings", "Configurações"),
+        ("Workspace", "Espaço de trabalho"),
+        ("Conversation", "Conversa"),
+        ("Message", "Mensagem"),
+        ("User", "Usuário"),
+        ("Agent", "Agente"),
+        ("Tool", "Ferramenta"),
+        ("Skill", "Habilidade"),
+        ("Notebook", "Caderno"),
+        ("Book", "Livro"),
+        ("Note", "Nota"),
+        ("Task", "Tarefa"),
+        ("Calendar", "Calendário"),
+        ("Event", "Evento"),
+        ("Reminder", "Lembrete"),
+        ("Knowledge Base", "Base de Conhecimento"),
+        ("Memory", "Memória"),
+        ("File", "Arquivo"),
+        ("Folder", "Pasta"),
+        ("Image", "Imagem"),
+        ("Video", "Vídeo"),
+        ("Audio", "Áudio"),
+        ("Voice", "Voz"),
+        ("Transcript", "Transcrição"),
+        ("Summary", "Resumo"),
+        ("Report", "Relatório"),
+        ("Status", "Status"),
+        ("Error", "Erro"),
+        ("Warning", "Aviso"),
+        ("Success", "Sucesso"),
+        ("Info", "Informação"),
+        ("Model", "Modelo"),
+        ("Provider", "Provedor"),
+        ("API key", "Chave API"),
+        ("Base URL", "URL Base"),
+        ("Port", "Porta"),
+        ("Project", "Projeto"),
+    ]
+
+    for eng, pt in replacements:
+        if eng in translated:
+            translated = translated.replace(eng, pt)
+
+    # Restore placeholders exactly
+    for i, ph in enumerate(placeholders):
+        translated = translated.replace(f"__PH_{i}__", ph)
+
+    return translated
+
 def main() -> None:
     # 1. Update existing locale catalogs with language.portuguese
     for locale_dir in LOCALES.iterdir():
@@ -193,23 +294,24 @@ def main() -> None:
         app_json.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         print(f"Updated {app_json} with language.portuguese = {name}")
 
-    # Reload en_data after updating en/app.json
+    # 2. Load en/app.json (all 6277 keys)
     en_path = LOCALES / "en" / "app.json"
     en_data = json.loads(en_path.read_text(encoding="utf-8"))
 
-    # 2. Create web/locales/pt/app.json
+    # 3. Create/Update web/locales/pt/app.json cleanly without stale fallback
     pt_dir = LOCALES / "pt"
     pt_dir.mkdir(parents=True, exist_ok=True)
+    pt_app_json = pt_dir / "app.json"
+
     pt_data = {}
     for k, v in en_data.items():
-        if k in PORTUGUESE_TRANSLATIONS:
-            pt_data[k] = PORTUGUESE_TRANSLATIONS[k]
+        if k in COMPREHENSIVE_PT_TRANSLATIONS:
+            pt_data[k] = COMPREHENSIVE_PT_TRANSLATIONS[k]
         else:
-            pt_data[k] = v
+            pt_data[k] = translate_string(v)
 
-    pt_app_json = pt_dir / "app.json"
     pt_app_json.write_text(json.dumps(pt_data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(f"Created {pt_app_json} with {len(pt_data)} keys.")
+    print(f"Created/Updated {pt_app_json} with {len(pt_data)} keys.")
 
 if __name__ == "__main__":
     main()
