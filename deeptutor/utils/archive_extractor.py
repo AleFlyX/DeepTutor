@@ -111,7 +111,8 @@ def safe_extract_zip(
         zipfile.BadZipFile: If the file is not a valid zip archive.
 
     When any error propagates, the files this call already wrote are removed
-    first, so a rejected archive leaves nothing behind in ``target_dir``.
+    first, so a rejected archive leaves none of its members behind in
+    ``target_dir``. Files this call did not write are not touched.
     """
     limits = limits or ZipExtractionLimits()
     target_dir = Path(target_dir)
