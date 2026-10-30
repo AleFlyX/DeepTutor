@@ -1,5 +1,5 @@
 {
-  "fingerprint": "89ccb148b2f2be2f26231881c20cd6c77da096d6b16a24103a2670e8db3db538",
+  "fingerprint": "bed49f5553cd005ed8881f0a54f1e3bfc8a0ef0f9424a81eec9e55af44b7f7bd",
   "routers": {
     "deeptutor.api.routers.auth:router": [
       {
@@ -3919,6 +3919,14 @@
         "kind": "http",
         "methods": [
           "PUT"
+        ]
+      },
+      {
+        "path": "/display",
+        "name": "get_display_settings",
+        "kind": "http",
+        "methods": [
+          "GET"
         ]
       },
       {

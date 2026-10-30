@@ -626,6 +626,7 @@ _LEARNER_KB_READ_ROUTES = frozenset(
 
 _PERSONAL_PAGE_ROUTES = frozenset(
     {
+        ("GET", "/api/settings/display"),
         ("GET", "/api/settings/page-customization"),
         ("PUT", "/api/settings/page-customization/chat"),
         ("PUT", "/api/settings/page-customization/learning"),
@@ -731,7 +732,7 @@ async def require_learning_surface(
 
     route_path = _resolved_route_path(request)
     # Personal presentation does not grant a learning surface. Any authenticated
-    # learner may customize these two pages, including reading-only accounts.
+    # learner may read typography and customize these pages, including reading-only accounts.
     if (request.method, route_path) in _PERSONAL_PAGE_ROUTES:
         return
     # The landing page combines independent learning surfaces (#1987). Admit

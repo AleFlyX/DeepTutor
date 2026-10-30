@@ -104,6 +104,7 @@ function scrollAnchorIntoView(target: HTMLElement): void {
 
 export default function RichMarkdownRenderer({
   content,
+  learningTextSize,
   className = "",
   variant = "default",
   enableMath = false,
@@ -431,7 +432,7 @@ export default function RichMarkdownRenderer({
 
       if (lang === "mermaid" && enableMermaid) {
         return (
-          <div {...lineProps}>
+          <div className="learning-text-excluded" {...lineProps}>
             <LazyMermaid chart={raw} className={gap} />
           </div>
         );
@@ -450,7 +451,7 @@ export default function RichMarkdownRenderer({
             : convertSequenceFenceToMermaid(raw);
         if (converted) {
           return (
-            <div {...lineProps}>
+            <div className="learning-text-excluded" {...lineProps}>
               <LazyMermaid chart={converted} className={gap} />
             </div>
           );
@@ -469,7 +470,7 @@ export default function RichMarkdownRenderer({
         const ggbPayloadId = metaMatch?.[1]?.trim() || undefined;
         const ggbTitle = metaMatch?.[2]?.trim() || undefined;
         return (
-          <div {...lineProps}>
+          <div className="learning-text-excluded" {...lineProps}>
             <GeogebraOpenCTA
               script={raw}
               payloadId={ggbPayloadId}
@@ -485,7 +486,7 @@ export default function RichMarkdownRenderer({
       // theme instead of the washed-out fallback panel.
       if (isMultiline && enableCode) {
         return (
-          <div {...lineProps}>
+          <div className="learning-text-excluded" {...lineProps}>
             <LazyCodeBlock raw={raw} lang={lang || "text"} className={gap} />
           </div>
         );
@@ -697,10 +698,11 @@ export default function RichMarkdownRenderer({
   // clickable file links (no-op outside a chat message — fileCtx is null).
   const fileCtx = useInlineFileCardContext();
   const fileLinkPlugin = useMemo(
-    () => makeFileLinkRemarkPlugin(
-      fileCtx?.files ?? [],
-      fileCtx?.unresolvedRelativeLinksAsText,
-    ),
+    () =>
+      makeFileLinkRemarkPlugin(
+        fileCtx?.files ?? [],
+        fileCtx?.unresolvedRelativeLinksAsText,
+      ),
     [fileCtx?.files, fileCtx?.unresolvedRelativeLinksAsText],
   );
   const remarkPlugins = useMemo(() => {
@@ -718,7 +720,16 @@ export default function RichMarkdownRenderer({
   }, [allowHtml, enableMath, plugins.rehypeRaw, plugins.rehypeKatex]);
 
   return (
-    <div className={`${rootClasses} ${className}`}>
+    <div
+      className={`${rootClasses} ${className} ${learningTextSize && !isTrace ? "learning-text" : ""}`}
+      style={
+        learningTextSize && !isTrace
+          ? ({
+              "--learning-text-base": `${learningTextSize}px`,
+            } as React.CSSProperties)
+          : undefined
+      }
+    >
       <ReactMarkdown
         remarkPlugins={remarkPlugins}
         rehypePlugins={rehypePlugins}

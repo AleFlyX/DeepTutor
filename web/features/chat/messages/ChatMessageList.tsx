@@ -41,6 +41,7 @@ import { useTranslation } from "react-i18next";
 import type { SelectedHistorySession } from "@/components/chat/HistorySessionPicker";
 import type { SelectedQuestionEntry } from "@/components/chat/QuestionBankPicker";
 import { ActivityFold, FoldCaret } from "@/components/activity";
+import { LearningText } from "@/components/common/LearningText";
 import AssistantResponse from "@/components/common/AssistantResponse";
 import {
   InlineFileCardProvider,
@@ -408,7 +409,7 @@ function SentMidTurn({ messages }: { messages: string[] }) {
           key={index}
           className="max-w-[85%] whitespace-pre-wrap rounded-2xl bg-[var(--secondary)] px-3.5 py-2 text-[13.5px] leading-relaxed text-[var(--foreground)]"
         >
-          {text}
+          <LearningText size={13.5}>{text}</LearningText>
         </div>
       ))}
     </div>
@@ -1994,7 +1995,7 @@ export const UserMessage = memo(function UserMessage({
                 {quoteText(a)}
               </div>
             ))}
-            <div className="whitespace-pre-wrap">{msg.content}</div>
+            <div className="whitespace-pre-wrap"><LearningText size={14}>{msg.content}</LearningText></div>
           </div>
         )}
         {/* Recovery records are local to this browser. Keep their actions
