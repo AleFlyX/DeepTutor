@@ -27,6 +27,7 @@ import {
   useInlineFileCardContext,
 } from "@/components/common/InlineFileCard";
 import type { MarkdownRendererProps } from "./markdown-renderer-types";
+import { rehypeDirAuto } from "@/lib/rehype-dir-auto";
 import {
   extractMarkdownText as extractText,
   hasRenderableDetailsBody,
@@ -400,7 +401,7 @@ export default function RichMarkdownRenderer({
     ),
     th: ({ node, ...props }: any) => (
       <th
-        className={`border-b border-[var(--border)] text-left font-semibold text-[var(--foreground)] ${cellPad}`}
+        className={`border-b border-[var(--border)] text-start font-semibold text-[var(--foreground)] ${cellPad}`}
         {...props}
       />
     ),
@@ -626,7 +627,7 @@ export default function RichMarkdownRenderer({
     },
     blockquote: ({ node, ...props }: any) => (
       <blockquote
-        className={`${gap} border-l-[3px] border-[var(--muted-foreground)] pl-4 italic text-[var(--muted-foreground)] [&>p]:mb-1`}
+        className={`${gap} border-s-[3px] border-[var(--muted-foreground)] ps-4 italic text-[var(--muted-foreground)] [&>p]:mb-1`}
         {...lineAttr(node)}
         {...props}
       />
@@ -714,6 +715,7 @@ export default function RichMarkdownRenderer({
     const p: Array<any> = [];
     if (allowHtml && plugins.rehypeRaw) p.push(plugins.rehypeRaw as never);
     if (enableMath && plugins.rehypeKatex) p.push(plugins.rehypeKatex as never);
+    p.push(rehypeDirAuto);
     return p;
   }, [allowHtml, enableMath, plugins.rehypeRaw, plugins.rehypeKatex]);
 
