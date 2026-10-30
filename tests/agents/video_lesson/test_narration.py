@@ -54,3 +54,37 @@ def test_settings_edge_voice_is_used_for_its_language(monkeypatch) -> None:
 def test_non_edge_tts_settings_keep_the_default_voice(monkeypatch) -> None:
     _tts(monkeypatch, provider_name="openai", voice="alloy")
     assert narration._configured_voice("en") is None
+
+
+def test_settings_tts_provider_is_used_before_edge(monkeypatch) -> None:
+    async def settings(text: str) -> Clip:
+        return Clip(text, 30, [(0, text)], b"SETTINGS")
+
+    async def edge(text: str, voice: str) -> Clip:
+        raise AssertionError("Edge must not be called when the Settings provider works")
+
+    monkeypatch.setattr(narration, "_settings_provider", lambda: "openai")
+    monkeypatch.setattr(narration, "speak_with_settings", settings)
+    monkeypatch.setattr(narration, "speak", edge)
+    clips = asyncio.run(narration.narrate([NarrationLine("s1", "One line.")], "en"))
+    assert clips["s1"].audio == b"SETTINGS"
+
+
+def test_settings_tts_failure_falls_back_to_edge(monkeypatch) -> None:
+    async def settings(text: str) -> Clip:
+        raise RuntimeError("provider down")
+
+    async def edge(text: str, voice: str) -> Clip:
+        return Clip(text, 30, [(0, text)], b"EDGE")
+
+    monkeypatch.setattr(narration, "_settings_provider", lambda: "openai")
+    monkeypatch.setattr(narration, "speak_with_settings", settings)
+    monkeypatch.setattr(narration, "speak", edge)
+    monkeypatch.setattr(narration.importlib.util, "find_spec", lambda name: object())
+    clips = asyncio.run(narration.narrate([NarrationLine("s1", "One line.")], "en"))
+    assert clips["s1"].audio == b"EDGE"
+
+
+def test_edge_settings_leave_narration_to_edge(monkeypatch) -> None:
+    _tts(monkeypatch, provider_name="edge", voice="en-US-AvaNeural")
+    assert narration._settings_provider() is None
