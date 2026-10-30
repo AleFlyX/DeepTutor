@@ -1510,11 +1510,11 @@ def _normalize_engine_name(name: str) -> str:
 
 @router.post("/document-parsing/install")
 async def start_document_parsing_install(payload: DocumentParsingInstall):
-    """Kick off a one-click ``pip install`` of an optional engine's package(s).
+    """Return offline Docker/source/wheel guidance; never install into a live server.
 
-    Returns ``{ok, message}`` immediately; progress is polled via the shared job
-    status endpoint. Only one job runs at a time (process-wide singleton). The
-    engine must be in the install allow-list (``ENGINE_PIP_SPECS``)."""
+    Keeps the existing ``{ok, message}`` response and engine allow-list for
+    compatibility. Model downloads use their separate background-job endpoint.
+    """
     _require_settings_admin()
     from deeptutor.services.parsing.engines._install import (
         ENGINE_PIP_SPECS,

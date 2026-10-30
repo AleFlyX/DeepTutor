@@ -6274,5 +6274,16 @@
   "The generated file changed. Review its details again.": "生成文件已发生变化，请重新查看文件信息。",
   "The generated file differs from its chat attachment.": "生成文件与聊天附件内容不一致，已取消删除。",
   "Unable to load file details.": "无法读取文件信息。",
-  "Workspace data is busy. Wait for active requests and tasks before retrying.": "工作区正在使用中，请等待活动请求和任务完成后重试。"
+  "Workspace data is busy. Wait for active requests and tasks before retrying.": "工作区正在使用中，请等待活动请求和任务完成后重试。",
+  "This local parser is not installed. Choose the instructions for your server deployment; packages cannot be installed while DeepTutor is running.": "尚未安装此本地解析器。请按服务器部署方式选择说明；DeepTutor 运行时不能安装软件包。",
+  "Docker": "Docker",
+  "Add this extra to DEEPTUTOR_EXTRAS in your existing deployment configuration, preserving other extras. Recreate the same service with its existing configuration and mounts.": "在现有部署配置的 DEEPTUTOR_EXTRAS 中添加此扩展，并保留其他扩展。使用现有配置和挂载重新创建同一服务。",
+  "Startup reapplies extras. Installation failures do not stop the server: inspect startup logs, then recheck availability. Data mounts preserve user data, not installed Python packages.": "每次启动都会重新安装所声明的扩展。安装失败不会阻止服务器启动：请查看启动日志，再重新检查可用性。数据挂载保留用户数据，不保留已安装的 Python 软件包。",
+  "Stop DeepTutor. Run from the checkout in the server's Python environment, then restart the same instance.": "停止 DeepTutor。在源码目录中使用服务器的 Python 环境运行命令，然后重启同一实例。",
+  "Wheel installation": "Wheel 安装",
+  "Stop DeepTutor. Run in the server's Python environment, then restart with the same runtime home. Do not run this over a source checkout.": "停止 DeepTutor。在服务器的 Python 环境中运行命令，然后使用同一运行目录重启。不要在源码检出环境中运行此命令。",
+  "Recheck availability": "重新检查可用性",
+  "After restarting, refresh parser availability here. This does not install packages or apply pending settings.": "重启后，在此刷新解析器可用性。此操作不会安装软件包，也不会应用待保存的设置。",
+  "Checking availability…": "正在检查可用性…",
+  "Availability refreshed. This parser is still unavailable; check the installation and startup logs, then retry.": "已刷新可用性。此解析器仍不可用；请检查安装和启动日志后重试。"
 }

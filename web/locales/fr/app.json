@@ -6419,5 +6419,16 @@
   "Unable to clean render files.": "Unable to clean render files.",
   "Render files changed. Review the storage preview again.": "Render files changed. Review the storage preview again.",
   "Wait for running conversations to finish before cleanup.": "Wait for running conversations to finish before cleanup.",
-  "Workspace data is busy. Wait for active requests and tasks before retrying.": "Workspace data is busy. Wait for active requests and tasks before retrying."
+  "Workspace data is busy. Wait for active requests and tasks before retrying.": "Workspace data is busy. Wait for active requests and tasks before retrying.",
+  "This local parser is not installed. Choose the instructions for your server deployment; packages cannot be installed while DeepTutor is running.": "Ce parseur local n’est pas installé. Choisissez les instructions adaptées au déploiement de votre serveur ; aucun paquet ne peut être installé pendant l’exécution de DeepTutor.",
+  "Docker": "Docker",
+  "Add this extra to DEEPTUTOR_EXTRAS in your existing deployment configuration, preserving other extras. Recreate the same service with its existing configuration and mounts.": "Ajoutez cette extension à DEEPTUTOR_EXTRAS dans votre configuration de déploiement existante, en conservant les autres extensions. Recréez le même service avec sa configuration et ses montages existants.",
+  "Startup reapplies extras. Installation failures do not stop the server: inspect startup logs, then recheck availability. Data mounts preserve user data, not installed Python packages.": "Les extensions sont réappliquées à chaque démarrage. Un échec d’installation n’arrête pas le serveur : consultez les journaux de démarrage, puis vérifiez la disponibilité. Les montages de données conservent les données utilisateur, pas les paquets Python installés.",
+  "Stop DeepTutor. Run from the checkout in the server's Python environment, then restart the same instance.": "Arrêtez DeepTutor. Exécutez la commande depuis le code source dans l’environnement Python du serveur, puis redémarrez la même instance.",
+  "Wheel installation": "Installation Wheel",
+  "Stop DeepTutor. Run in the server's Python environment, then restart with the same runtime home. Do not run this over a source checkout.": "Arrêtez DeepTutor. Exécutez la commande dans l’environnement Python du serveur, puis redémarrez avec le même répertoire de données d’exécution. Ne l’exécutez pas dans une copie du code source.",
+  "Recheck availability": "Vérifier la disponibilité",
+  "After restarting, refresh parser availability here. This does not install packages or apply pending settings.": "Après le redémarrage, actualisez ici la disponibilité du parseur. Cela n’installe aucun paquet et n’applique pas les paramètres en attente.",
+  "Checking availability…": "Vérification de la disponibilité…",
+  "Availability refreshed. This parser is still unavailable; check the installation and startup logs, then retry.": "Disponibilité actualisée. Ce parseur reste indisponible ; vérifiez l’installation et les journaux de démarrage, puis réessayez."
 }

@@ -6296,5 +6296,16 @@
   "The generated file changed. Review its details again.": "Згенерований файл змінився. Перегляньте його відомості ще раз.",
   "Unable to remove generated file.": "Не вдалося видалити згенерований файл.",
   "Removing the workspace copy keeps the chat attachment available.": "Після видалення копії з робочого простору вкладення в чаті залишиться доступним.",
-  "Workspace file removed. The chat attachment is still available.": "Файл робочого простору видалено. Вкладення в чаті залишається доступним."
+  "Workspace file removed. The chat attachment is still available.": "Файл робочого простору видалено. Вкладення в чаті залишається доступним.",
+  "This local parser is not installed. Choose the instructions for your server deployment; packages cannot be installed while DeepTutor is running.": "Цей локальний парсер не встановлено. Виберіть інструкції для способу розгортання сервера; пакети не можна встановлювати під час роботи DeepTutor.",
+  "Docker": "Docker",
+  "Add this extra to DEEPTUTOR_EXTRAS in your existing deployment configuration, preserving other extras. Recreate the same service with its existing configuration and mounts.": "Додайте це доповнення до DEEPTUTOR_EXTRAS у наявній конфігурації розгортання, зберігши інші доповнення. Створіть заново ту саму службу з її поточною конфігурацією та монтуваннями.",
+  "Startup reapplies extras. Installation failures do not stop the server: inspect startup logs, then recheck availability. Data mounts preserve user data, not installed Python packages.": "Під час кожного запуску доповнення застосовуються повторно. Помилки встановлення не зупиняють сервер: перевірте журнали запуску, а потім доступність. Монтування даних зберігають дані користувача, але не встановлені пакети Python.",
+  "Stop DeepTutor. Run from the checkout in the server's Python environment, then restart the same instance.": "Зупиніть DeepTutor. Виконайте команду з каталогу вихідного коду в середовищі Python сервера, а потім перезапустіть той самий екземпляр.",
+  "Wheel installation": "Встановлення Wheel",
+  "Stop DeepTutor. Run in the server's Python environment, then restart with the same runtime home. Do not run this over a source checkout.": "Зупиніть DeepTutor. Виконайте команду в середовищі Python сервера, а потім перезапустіть із тим самим робочим каталогом даних. Не виконуйте це в копії вихідного коду.",
+  "Recheck availability": "Перевірити доступність знову",
+  "After restarting, refresh parser availability here. This does not install packages or apply pending settings.": "Після перезапуску оновіть тут доступність парсера. Це не встановлює пакети й не застосовує відкладені налаштування.",
+  "Checking availability…": "Перевірка доступності…",
+  "Availability refreshed. This parser is still unavailable; check the installation and startup logs, then retry.": "Доступність оновлено. Цей парсер досі недоступний; перевірте встановлення та журнали запуску й повторіть спробу."
 }

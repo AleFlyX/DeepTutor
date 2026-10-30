@@ -6274,5 +6274,16 @@
   "The generated file changed. Review its details again.": "The generated file changed. Review its details again.",
   "The generated file differs from its chat attachment.": "The generated file differs from its chat attachment.",
   "Unable to load file details.": "Unable to load file details.",
-  "Workspace data is busy. Wait for active requests and tasks before retrying.": "Workspace data is busy. Wait for active requests and tasks before retrying."
+  "Workspace data is busy. Wait for active requests and tasks before retrying.": "Workspace data is busy. Wait for active requests and tasks before retrying.",
+  "This local parser is not installed. Choose the instructions for your server deployment; packages cannot be installed while DeepTutor is running.": "This local parser is not installed. Choose the instructions for your server deployment; packages cannot be installed while DeepTutor is running.",
+  "Docker": "Docker",
+  "Add this extra to DEEPTUTOR_EXTRAS in your existing deployment configuration, preserving other extras. Recreate the same service with its existing configuration and mounts.": "Add this extra to DEEPTUTOR_EXTRAS in your existing deployment configuration, preserving other extras. Recreate the same service with its existing configuration and mounts.",
+  "Startup reapplies extras. Installation failures do not stop the server: inspect startup logs, then recheck availability. Data mounts preserve user data, not installed Python packages.": "Startup reapplies extras. Installation failures do not stop the server: inspect startup logs, then recheck availability. Data mounts preserve user data, not installed Python packages.",
+  "Stop DeepTutor. Run from the checkout in the server's Python environment, then restart the same instance.": "Stop DeepTutor. Run from the checkout in the server's Python environment, then restart the same instance.",
+  "Wheel installation": "Wheel installation",
+  "Stop DeepTutor. Run in the server's Python environment, then restart with the same runtime home. Do not run this over a source checkout.": "Stop DeepTutor. Run in the server's Python environment, then restart with the same runtime home. Do not run this over a source checkout.",
+  "Recheck availability": "Recheck availability",
+  "After restarting, refresh parser availability here. This does not install packages or apply pending settings.": "After restarting, refresh parser availability here. This does not install packages or apply pending settings.",
+  "Checking availability…": "Checking availability…",
+  "Availability refreshed. This parser is still unavailable; check the installation and startup logs, then retry.": "Availability refreshed. This parser is still unavailable; check the installation and startup logs, then retry."
 }
