@@ -76,7 +76,7 @@ async def test_ui_languages_are_persisted_independently(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("language", ["fr", "uk", "pl"])
+@pytest.mark.parametrize("language", ["fr", "uk", "pl", "vi"])
 async def test_ui_settings_persist_supported_languages_independently(
     monkeypatch: pytest.MonkeyPatch, tmp_path, language: str
 ) -> None:
@@ -127,6 +127,42 @@ async def test_ui_accepts_extended_response_languages(
     )
     assert response["response_language"] == "ms"
     assert settings_router.load_ui_settings()["response_language"] == "ms"
+
+    response = await settings_router.update_ui_settings(
+        settings_router.UISettingsUpdate(response_language="vi")
+    )
+    assert response["response_language"] == "vi"
+    assert settings_router.load_ui_settings()["response_language"] == "vi"
+
+
+@pytest.mark.asyncio
+async def test_changing_ui_language_to_vietnamese_keeps_an_existing_response_preference(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    settings_file = tmp_path / "interface.json"
+    monkeypatch.setattr(settings_router, "_settings_file", lambda: settings_file)
+
+    await settings_router.update_ui_settings(
+        settings_router.UISettingsUpdate(language="en", response_language="ja")
+    )
+    response = await settings_router.update_ui_settings(
+        settings_router.UISettingsUpdate(language="vi")
+    )
+
+    assert response["language"] == "vi"
+    assert response["response_language"] == "ja"
+
+    response = await settings_router.update_ui_settings(
+        settings_router.UISettingsUpdate(response_language="vi")
+    )
+    assert response["language"] == "vi"
+    assert response["response_language"] == "vi"
+
+    response = await settings_router.update_ui_settings(
+        settings_router.UISettingsUpdate(language="en")
+    )
+    assert response["language"] == "en"
+    assert response["response_language"] == "vi"
 
 
 class _FakeEmbeddingAdapter:

@@ -74,6 +74,26 @@ _COPY: dict[str, dict[str, Any]] = {
         "chapter_index_title": "章节索引",
         "chapter_index_heading": "## 章节索引",
     },
+    "vi": {
+        "chapter_title": "Cách đọc cuốn sách này",
+        "chapter_summary": "Tổng quan được tạo tự động về sơ đồ khái niệm và mục lục các chương của sách.",
+        "objectives": [
+            "Nắm toàn bộ bản đồ các chương chỉ trong một cái nhìn",
+            "Hiểu các khái niệm phụ thuộc lẫn nhau như thế nào",
+            "Chọn lộ trình đọc phù hợp với mục tiêu của bạn",
+        ],
+        "intro_title": "Cách đọc cuốn sách này",
+        "intro_body": (
+            "Sơ đồ bên dưới thể hiện {concepts} khái niệm cốt lõi của cuốn sách và "
+            "mối quan hệ phụ thuộc giữa chúng. Mục lục chương ngay sau đó liệt kê "
+            "cả {chapters} chương — bạn có thể đọc từ trên xuống dưới theo lộ trình "
+            "được đề xuất, hoặc chuyển thẳng đến phần mình quan tâm nhất."
+        ),
+        "untitled_book": "Cuốn sách này",
+        "concept_map_title": "Sơ đồ khái niệm",
+        "chapter_index_title": "Mục lục chương",
+        "chapter_index_heading": "## Mục lục chương",
+    },
 }
 
 

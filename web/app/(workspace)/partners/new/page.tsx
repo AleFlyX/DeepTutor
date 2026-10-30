@@ -346,6 +346,7 @@ export default function NewPartnerPage() {
                   <option value="en">English</option>
                   <option value="zh">中文</option>
                   <option value="uk">Українська</option>
+                  <option value="vi">{t("language.vietnamese")}</option>
                 </select>
               </div>
             </div>
