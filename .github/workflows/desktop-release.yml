@@ -7,11 +7,13 @@ name: Desktop Release
 #
 # Pull requests that touch apps/desktop build and smoke-test all three without
 # publishing; they keep the downloads as workflow artifacts for 7 days.
+# Pushes to dev and manual validation runs exercise configured signing without
+# publishing. Pull requests always use disposable runtime signing keys.
 #
 # Secrets:
 #   DESKTOP_RUNTIME_SIGNING_KEY  (required for releases) Ed25519 PEM matching
 #                                apps/desktop/assets/runtime-public.pem.
-#                                Pull requests without it seal with a throwaway key.
+#                                Pull requests always seal with a throwaway key.
 #   APPLE_CERTIFICATE_P12, APPLE_CERTIFICATE_PASSWORD, APPLE_SIGNING_IDENTITY,
 #   APPLE_ID, APPLE_TEAM_ID, APPLE_APP_PASSWORD
 #                                (optional) Developer ID signing and
@@ -20,6 +22,11 @@ name: Desktop Release
 #   The Windows build is unsigned; SmartScreen warns on first open.
 
 on:
+  push:
+    branches: [dev]
+    paths:
+      - apps/desktop/**
+      - .github/workflows/desktop-release.yml
   release:
     types: [published]
   pull_request:
@@ -29,13 +36,17 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Existing release tag to build the desktop apps for
-        required: true
+        description: Existing release tag (required only when publishing)
+        required: false
         type: string
+      publish:
+        description: Attach downloads to the existing release instead of only validating
+        type: boolean
+        default: false
 
 env:
   RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
-  PUBLISH: ${{ github.event_name != 'pull_request' }}
+  PUBLISH: ${{ github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.publish) }}
 
 permissions:
   contents: write
@@ -47,7 +58,6 @@ concurrency:
 jobs:
   build:
     name: ${{ matrix.name }}
-    if: github.event_name == 'pull_request' || startsWith(inputs.tag || github.event.release.tag_name, 'v')
     strategy:
       fail-fast: false
       matrix:
@@ -87,6 +97,25 @@ jobs:
             exit 1
           fi
 
+      - name: Verify signing configuration
+        if: github.event_name != 'pull_request'
+        env:
+          HAS_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD != '' }}
+          HAS_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY != '' }}
+          HAS_TEAM_ID: ${{ secrets.APPLE_TEAM_ID != '' }}
+          HAS_NOTARY_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD != '' }}
+        run: |
+          set -euo pipefail
+          [ "$HAS_RUNTIME_KEY" = "true" ] || { echo "DESKTOP_RUNTIME_SIGNING_KEY is required for signed validation and releases." >&2; exit 1; }
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            if [ "$HAS_DEVELOPER_ID" = "true" ] || [ "$HAS_SIGNING_IDENTITY" = "true" ] || [ "$HAS_CERTIFICATE_PASSWORD" = "true" ]; then
+              [ "$HAS_DEVELOPER_ID" = "true" ] && [ "$HAS_SIGNING_IDENTITY" = "true" ] && [ "$HAS_CERTIFICATE_PASSWORD" = "true" ] || { echo "Developer ID signing configuration is incomplete." >&2; exit 1; }
+            fi
+            if [ "$HAS_NOTARY" = "true" ] || [ "$HAS_NOTARY_PASSWORD" = "true" ]; then
+              [ "$HAS_DEVELOPER_ID" = "true" ] && [ "$HAS_NOTARY" = "true" ] && [ "$HAS_TEAM_ID" = "true" ] && [ "$HAS_NOTARY_PASSWORD" = "true" ] || { echo "Apple notarization configuration is incomplete." >&2; exit 1; }
+            fi
+          fi
+
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
@@ -105,7 +134,7 @@ jobs:
         run: npm ci && npm run check && npm test
 
       - name: Import the Developer ID certificate
-        if: runner.os == 'macOS' && env.HAS_DEVELOPER_ID == 'true' && env.PUBLISH == 'true'
+        if: runner.os == 'macOS' && env.HAS_DEVELOPER_ID == 'true' && github.event_name != 'pull_request'
         env:
           APPLE_CERTIFICATE_P12: ${{ secrets.APPLE_CERTIFICATE_P12 }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -113,6 +142,7 @@ jobs:
           set -euo pipefail
           keychain="$RUNNER_TEMP/signing.keychain-db"
           password="$(uuidgen)"
+          umask 077
           echo "$APPLE_CERTIFICATE_P12" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
           security create-keychain -p "$password" "$keychain"
           security set-keychain-settings -lut 21600 "$keychain"
@@ -141,7 +171,7 @@ jobs:
 
       - name: Package
         env:
-          APPLE_SIGNING_IDENTITY: ${{ env.PUBLISH == 'true' && secrets.APPLE_SIGNING_IDENTITY || '' }}
+          APPLE_SIGNING_IDENTITY: ${{ github.event_name != 'pull_request' && secrets.APPLE_SIGNING_IDENTITY || '' }}
         run: npm run package -- --target ${{ matrix.target }}
 
       - name: Verify Windows installation and app lifecycle
@@ -150,7 +180,7 @@ jobs:
         run: ./platforms/windows-x64/smoke-installer.ps1
 
       - name: Notarize the DMG
-        if: runner.os == 'macOS' && env.HAS_NOTARY == 'true' && env.PUBLISH == 'true'
+        if: runner.os == 'macOS' && env.HAS_NOTARY == 'true' && github.event_name != 'pull_request'
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
@@ -173,7 +203,15 @@ jobs:
           [ ${#files[@]} -gt 0 ] || { echo "No downloads were produced." >&2; exit 1; }
           gh release upload "$RELEASE_TAG" "${files[@]}" --clobber
 
-      - name: Keep the pull request build
+      - name: Remove the temporary signing keychain
+        if: always() && runner.os == 'macOS' && env.HAS_DEVELOPER_ID == 'true' && github.event_name != 'pull_request'
+        run: |
+          rm -f "$RUNNER_TEMP/certificate.p12"
+          if [ -f "$RUNNER_TEMP/signing.keychain-db" ]; then
+            security delete-keychain "$RUNNER_TEMP/signing.keychain-db"
+          fi
+
+      - name: Keep the validation build
         if: always() && env.PUBLISH != 'true'
         uses: actions/upload-artifact@v4
         with:

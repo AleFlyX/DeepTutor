@@ -115,6 +115,16 @@ when the Apple secrets listed in the workflow are present. Pull requests that
 touch `apps/desktop` run the same builds with a throwaway key and keep the
 downloads as workflow artifacts instead of publishing them.
 
+Pushes to `dev` that change the desktop app also build all three targets with
+the configured runtime key and Apple signing credentials, keeping the results
+as workflow artifacts without publishing a release. Manual runs default to the
+same validation mode on the selected branch. To attach downloads to an existing
+release, explicitly enable `publish` and supply its tag. GitHub only exposes the
+manual entry point after the workflow reaches the default branch. Apple
+notarization additionally needs `APPLE_ID` and `APPLE_APP_PASSWORD`; a Developer
+ID signature alone does not mean the app is notarized. Windows Authenticode
+signing is not configured by this workflow.
+
 ## Core updates
 
 The shell never `git pull`s or mutates a running Python environment. **Core →
