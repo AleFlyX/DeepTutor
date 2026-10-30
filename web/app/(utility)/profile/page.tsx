@@ -420,6 +420,12 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            {profile.must_change_password && (
+              <div className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-400">
+                {t("You are still using the password an administrator gave you. Please set your own below.")}
+              </div>
+            )}
+
             {/* Password card */}
             <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
               <h2 className="text-sm font-semibold text-[var(--foreground)]">

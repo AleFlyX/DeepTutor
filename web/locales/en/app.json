@@ -6209,5 +6209,6 @@
 "Password updated": "Password updated. Use it the next time you sign in.",
 "Password must be at least 8 characters": "Password must be at least 8 characters",
 "Current password is incorrect": "Current password is incorrect",
-"Failed to change password": "Failed to change password"
+"Failed to change password": "Failed to change password",
+  "You are still using the password an administrator gave you. Please set your own below.": "You are still using the password an administrator gave you. Please set your own below."
 }

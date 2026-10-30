@@ -161,3 +161,53 @@ def test_admin_reset_unknown_user(alice) -> None:
         resp = client.put("/users/nobody/password", json={"new_password": "reset-by-admin"})
 
     assert resp.status_code == 404
+
+
+def test_change_password_clears_the_initial_password_flag(alice, monkeypatch) -> None:
+    """A successful change ends the "still on the admin-assigned password" state."""
+    from deeptutor.api.routers import auth as auth_router
+    from deeptutor.multi_user import identity
+
+    calls: list[tuple[str, bool]] = []
+    monkeypatch.setattr(
+        identity, "set_must_change_password", lambda u, v: calls.append((u, v)) or True
+    )
+
+    client = _client(
+        auth_router.change_password,
+        "/profile/password",
+        "change_password",
+        TokenPayload(username="alice", role="user", user_id="u1"),
+    )
+
+    resp = client.put(
+        "/profile/password",
+        json={"current_password": "oldpassword", "new_password": "brand-new-pass"},
+    )
+
+    assert resp.status_code == 200
+    assert calls == [("alice", False)], "改密成功后必须清掉初始密码标记"
+
+
+def test_failed_change_leaves_the_flag_alone(alice, monkeypatch) -> None:
+    from deeptutor.api.routers import auth as auth_router
+    from deeptutor.multi_user import identity
+
+    calls: list[tuple[str, bool]] = []
+    monkeypatch.setattr(
+        identity, "set_must_change_password", lambda u, v: calls.append((u, v)) or True
+    )
+
+    client = _client(
+        auth_router.change_password,
+        "/profile/password",
+        "change_password",
+        TokenPayload(username="alice", role="user", user_id="u1"),
+    )
+    resp = client.put(
+        "/profile/password",
+        json={"current_password": "wrong", "new_password": "brand-new-pass"},
+    )
+
+    assert resp.status_code == 400
+    assert calls == [], "校验失败时不能清标记"

@@ -6363,5 +6363,6 @@
 "Password updated": "Mot de passe mis à jour. Utilisez-le lors de votre prochaine connexion.",
 "Password must be at least 8 characters": "Le mot de passe doit contenir au moins 8 caractères",
 "Current password is incorrect": "Le mot de passe actuel est incorrect",
-"Failed to change password": "Échec de la modification du mot de passe"
+"Failed to change password": "Échec de la modification du mot de passe",
+  "You are still using the password an administrator gave you. Please set your own below.": "Vous utilisez encore le mot de passe attribué par un administrateur. Définissez le vôtre ci-dessous."
 }

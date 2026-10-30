@@ -6231,5 +6231,6 @@
 "Password updated": "Hasło zaktualizowane. Użyj go przy następnym logowaniu.",
 "Password must be at least 8 characters": "Hasło musi mieć co najmniej 8 znaków",
 "Current password is incorrect": "Obecne hasło jest nieprawidłowe",
-"Failed to change password": "Nie udało się zmienić hasła"
+"Failed to change password": "Nie udało się zmienić hasła",
+  "You are still using the password an administrator gave you. Please set your own below.": "Nadal używasz hasła nadanego przez administratora. Ustaw własne poniżej."
 }

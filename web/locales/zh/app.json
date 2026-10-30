@@ -6209,5 +6209,6 @@
 "Password updated": "密码已更新，下次登录请使用新密码。",
 "Password must be at least 8 characters": "密码至少 8 个字符",
 "Current password is incorrect": "当前密码不正确",
-"Failed to change password": "修改密码失败"
+"Failed to change password": "修改密码失败",
+  "You are still using the password an administrator gave you. Please set your own below.": "你仍在使用管理员分配的初始密码，请在下方向自己设置新密码。"
 }

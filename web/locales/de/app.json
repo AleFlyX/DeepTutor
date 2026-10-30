@@ -6209,5 +6209,6 @@
 "Password updated": "Passwort aktualisiert. Verwenden Sie es bei der nächsten Anmeldung.",
 "Password must be at least 8 characters": "Das Passwort muss mindestens 8 Zeichen haben",
 "Current password is incorrect": "Das aktuelle Passwort ist falsch",
-"Failed to change password": "Passwort konnte nicht geändert werden"
+"Failed to change password": "Passwort konnte nicht geändert werden",
+  "You are still using the password an administrator gave you. Please set your own below.": "Sie verwenden noch das vom Administrator vergebene Passwort. Bitte legen Sie unten ein eigenes fest."
 }

@@ -361,6 +361,7 @@ class UserInfo(BaseModel):
     disabled: bool = False
     avatar: str = ""
     preset: AccountPreset = "standard"
+    must_change_password: bool = False
 
 
 class LearnerProfileRequest(BaseModel):
@@ -947,6 +948,9 @@ async def login(body: LoginRequest, request: Request, response: Response) -> dic
         "username": result.username,
         "role": result.role,
         "is_admin": result.role == "admin",
+        "must_change_password": bool(
+            (get_user_info(result.username) or {}).get("must_change_password", False)
+        ),
     }
 
 
@@ -1506,6 +1510,9 @@ async def change_password(
     if _set_password(current.username, hash_password(body.new_password)) is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
+    from deeptutor.multi_user.identity import set_must_change_password
+
+    set_must_change_password(current.username, False)
     logger.info(f"User '{current.username}' changed their password")
     return {"ok": True}
 
@@ -1802,7 +1809,15 @@ async def admin_create_user(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Auth is disabled — user creation is not available.",
         )
-    return _create_admin_user(body, current)
+    created = _create_admin_user(body, current)
+
+    # An admin-chosen password is temporary by definition: flag the account so
+    # the UI sends its owner to the password form on first use.
+    from deeptutor.multi_user.identity import set_must_change_password
+
+    set_must_change_password(body.username, True)
+    created["must_change_password"] = True
+    return created
 
 
 @router.post("/users/import")

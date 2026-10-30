@@ -6231,5 +6231,6 @@
 "Password updated": "Пароль оновлено. Використовуйте його під час наступного входу.",
 "Password must be at least 8 characters": "Пароль має містити щонайменше 8 символів",
 "Current password is incorrect": "Поточний пароль неправильний",
-"Failed to change password": "Не вдалося змінити пароль"
+"Failed to change password": "Не вдалося змінити пароль",
+  "You are still using the password an administrator gave you. Please set your own below.": "Ви досі використовуєте пароль, призначений адміністратором. Встановіть власний нижче."
 }
