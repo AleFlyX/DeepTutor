@@ -6354,5 +6354,14 @@
   "customize.learningHint": "Choisissez les méthodes d’apprentissage affichées. Vous pouvez rétablir les méthodes masquées à tout moment.",
   "customize.emptyLearning": "Préparez votre prochain objectif d’apprentissage",
   "customize.emptyLearningHint": "Personnalisez cette page pour afficher les méthodes. Consultez les modules indisponibles dans Paramètres → Exécution.",
-  "customize.learningFooter": "Vos choix sont enregistrés dans votre compte. Seules les méthodes disponibles sont affichées."
+  "customize.learningFooter": "Vos choix sont enregistrés dans votre compte. Seules les méthodes disponibles sont affichées.",
+  "Change your password": "Changer votre mot de passe",
+"Current password": "Mot de passe actuel",
+"New password": "Nouveau mot de passe",
+"Confirm new password": "Confirmer le nouveau mot de passe",
+"Update password": "Mettre à jour le mot de passe",
+"Password updated": "Mot de passe mis à jour. Utilisez-le lors de votre prochaine connexion.",
+"Password must be at least 8 characters": "Le mot de passe doit contenir au moins 8 caractères",
+"Current password is incorrect": "Le mot de passe actuel est incorrect",
+"Failed to change password": "Échec de la modification du mot de passe"
 }

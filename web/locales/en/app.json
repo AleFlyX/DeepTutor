@@ -6200,5 +6200,14 @@
   "customize.learningHint": "Choose the learning methods shown on this page. Hidden methods can be added back at any time.",
   "customize.emptyLearning": "Make room for your next learning goal",
   "customize.emptyLearningHint": "Customize this page to show learning methods. Unavailable modules can be reviewed in Settings → Runtime.",
-  "customize.learningFooter": "Your choices are saved to your account. Only learning methods available in this environment are shown."
+  "customize.learningFooter": "Your choices are saved to your account. Only learning methods available in this environment are shown.",
+  "Change your password": "Change your password",
+"Current password": "Current password",
+"New password": "New password",
+"Confirm new password": "Confirm new password",
+"Update password": "Update password",
+"Password updated": "Password updated. Use it the next time you sign in.",
+"Password must be at least 8 characters": "Password must be at least 8 characters",
+"Current password is incorrect": "Current password is incorrect",
+"Failed to change password": "Failed to change password"
 }

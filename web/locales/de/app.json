@@ -6200,5 +6200,14 @@
   "customize.learningHint": "Wähle die Lernmethoden auf dieser Seite. Ausgeblendete Methoden lassen sich jederzeit wieder hinzufügen.",
   "customize.emptyLearning": "Bereite dein nächstes Lernziel vor",
   "customize.emptyLearningHint": "Passe diese Seite an, um Lernmethoden anzuzeigen. Nicht verfügbare Module findest du unter Einstellungen → Laufzeit.",
-  "customize.learningFooter": "Deine Auswahl wird in deinem Konto gespeichert. Es werden nur verfügbare Lernmethoden angezeigt."
+  "customize.learningFooter": "Deine Auswahl wird in deinem Konto gespeichert. Es werden nur verfügbare Lernmethoden angezeigt.",
+  "Change your password": "Passwort ändern",
+"Current password": "Aktuelles Passwort",
+"New password": "Neues Passwort",
+"Confirm new password": "Neues Passwort bestätigen",
+"Update password": "Passwort aktualisieren",
+"Password updated": "Passwort aktualisiert. Verwenden Sie es bei der nächsten Anmeldung.",
+"Password must be at least 8 characters": "Das Passwort muss mindestens 8 Zeichen haben",
+"Current password is incorrect": "Das aktuelle Passwort ist falsch",
+"Failed to change password": "Passwort konnte nicht geändert werden"
 }

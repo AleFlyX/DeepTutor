@@ -6222,5 +6222,14 @@
   "customize.learningHint": "Wybierz metody nauki na tej stronie. Ukryte metody możesz przywrócić w dowolnej chwili.",
   "customize.emptyLearning": "Przygotuj się na kolejny cel nauki",
   "customize.emptyLearningHint": "Dostosuj stronę, aby wyświetlić metody nauki. Niedostępne moduły sprawdzisz w Ustawienia → Środowisko uruchomieniowe.",
-  "customize.learningFooter": "Twój wybór zostanie zapisany na koncie. Wyświetlane są tylko dostępne metody nauki."
+  "customize.learningFooter": "Twój wybór zostanie zapisany na koncie. Wyświetlane są tylko dostępne metody nauki.",
+  "Change your password": "Zmień hasło",
+"Current password": "Obecne hasło",
+"New password": "Nowe hasło",
+"Confirm new password": "Potwierdź nowe hasło",
+"Update password": "Zaktualizuj hasło",
+"Password updated": "Hasło zaktualizowane. Użyj go przy następnym logowaniu.",
+"Password must be at least 8 characters": "Hasło musi mieć co najmniej 8 znaków",
+"Current password is incorrect": "Obecne hasło jest nieprawidłowe",
+"Failed to change password": "Nie udało się zmienić hasła"
 }
