@@ -1,10 +1,11 @@
-import { createPrivateKey, createPublicKey, generateKeyPairSync, sign } from 'node:crypto';
+import { createPrivateKey, generateKeyPairSync, sign } from 'node:crypto';
 import { mkdir, readFile, rm, writeFile, access } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { canonicalManifest, sha256 } from '../src/bundles.mjs';
 import { systemTar } from '../src/platform.mjs';
 import { appRoot, loadTarget } from './lib/target.mjs';
+import { assertSigningKey } from './lib/signing.mjs';
 
 // One signing identity covers every platform; the manifest binds platform and architecture.
 const target = await loadTarget();
@@ -26,10 +27,7 @@ catch {
   await writeFile(publicKeyFile, keys.publicKey.export({ type: 'spki', format: 'pem' }));
 }
 const privateKey = createPrivateKey(await readFile(keyFile));
-const derived = createPublicKey(privateKey).export({ type: 'spki', format: 'pem' }).trim();
-if (derived !== (await readFile(publicKeyFile, 'utf8')).trim()) {
-  throw new Error('The signing key does not match assets/runtime-public.pem; the shipped app would reject this core.');
-}
+assertSigningKey(privateKey, await readFile(publicKeyFile));
 const coreVersion = /__version__\s*=\s*['"]([^'"]+)/.exec(await readFile(path.join(target.runtime, 'core/deeptutor/__version__.py'), 'utf8'))[1];
 const commit = (await readFile(path.join(target.runtime, 'BUILD_COMMIT'), 'utf8')).trim();
 const runtimeId = `${coreVersion}-${commit.slice(0, 9)}-${target.arch}`;
