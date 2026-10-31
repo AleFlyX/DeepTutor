@@ -1,5 +1,5 @@
 {
-  "fingerprint": "69c462feb4b678bfa4f6052dff95850f4adc085e28eb63e358ce89207c6a9f0d",
+  "fingerprint": "6af1d5871a2f7e6022ad65070ebb373af6dc56d8514c7fbc1f64dfac9fbbb6e2",
   "routers": {
     "deeptutor.api.routers.auth:router": [
       {
@@ -131,6 +131,14 @@
         ]
       },
       {
+        "path": "/profile/password",
+        "name": "change_password",
+        "kind": "http",
+        "methods": [
+          "PUT"
+        ]
+      },
+      {
         "path": "/devices",
         "name": "list_devices",
         "kind": "http",
@@ -229,6 +237,14 @@
       {
         "path": "/users/{username}/role",
         "name": "update_user_role",
+        "kind": "http",
+        "methods": [
+          "PUT"
+        ]
+      },
+      {
+        "path": "/users/{username}/password",
+        "name": "admin_reset_password",
         "kind": "http",
         "methods": [
           "PUT"

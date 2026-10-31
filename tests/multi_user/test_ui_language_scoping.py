@@ -77,6 +77,12 @@ def test_response_language_normalizes_supported_labels_and_variants():
     assert resolve_languages({"response_language": "zh-TW"})["response_language"] == "zh-tw"
     assert resolve_languages({"response_language": "ms-MY"})["response_language"] == "ms"
     assert resolve_languages({"response_language": "Malay"})["response_language"] == "ms"
+    assert resolve_languages({"response_language": "vi-VN"})["response_language"] == "vi"
+    assert resolve_languages({"response_language": "Vietnamese"})["response_language"] == "vi"
+    assert resolve_languages({"language": "vi", "response_language": "en"}) == {
+        "language": "vi",
+        "response_language": "en",
+    }
 
 
 def test_response_language_falls_back_when_unsupported():

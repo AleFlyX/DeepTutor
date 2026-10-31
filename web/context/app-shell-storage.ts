@@ -1,5 +1,7 @@
 "use client";
 
+import type { ResponseLanguage } from "@/i18n/languages";
+
 import { browserStorage } from "@/shared/storage";
 import { activeWorkspaceId } from "@/lib/workspace-scope";
 import {
@@ -9,23 +11,7 @@ import {
 
 export type { AppLanguage } from "@/i18n/languages";
 
-/** Model output can use more languages than the app UI locale supports. */
-export type ResponseLanguage =
-  | "en"
-  | "zh"
-  | "zh-tw"
-  | "ja"
-  | "ko"
-  | "es"
-  | "fr"
-  | "de"
-  | "ru"
-  | "pt"
-  | "it"
-  | "ar"
-  | "pl"
-  | "uk"
-  | "ms";
+export type { ResponseLanguage } from "@/i18n/languages";
 
 const SUPPORTED_RESPONSE_LANGUAGE_CODES: readonly ResponseLanguage[] = [
   "en",
@@ -43,6 +29,7 @@ const SUPPORTED_RESPONSE_LANGUAGE_CODES: readonly ResponseLanguage[] = [
   "pl",
   "uk",
   "ms",
+  "vi",
 ];
 
 export function isResponseLanguage(value: unknown): value is ResponseLanguage {
@@ -67,6 +54,8 @@ const RESPONSE_LANGUAGE_ALIASES: Record<string, ResponseLanguage> = {
   ukrainian: "uk",
   malay: "ms",
   "bahasa melayu": "ms",
+  vietnamese: "vi",
+  "tiếng việt": "vi",
   "zh-cn": "zh",
 };
 
