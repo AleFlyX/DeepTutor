@@ -211,6 +211,7 @@ export default function ProfilePage() {
       setNewPassword("");
       setConfirmPassword("");
       setPasswordNotice(t("Password updated"));
+      setProfile((previous) => previous ? { ...previous, must_change_password: false } : previous);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       // Map the two server messages we translate; anything else is a surprise
@@ -420,14 +421,14 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {profile.must_change_password && (
+            {profile.can_change_password && profile.must_change_password && (
               <div className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-400">
                 {t("You are still using the password an administrator gave you. Please set your own below.")}
               </div>
             )}
 
             {/* Password card */}
-            <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
+            {profile.can_change_password && <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
               <h2 className="text-sm font-semibold text-[var(--foreground)]">
                 {t("Password")}
               </h2>
@@ -498,7 +499,7 @@ export default function ProfilePage() {
                   </button>
                 </div>
               </div>
-            </div>
+            </div>}
 
             {/* Sign out card */}
             <div className="mt-4 flex items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">

@@ -225,6 +225,20 @@
         "title": "AdminCreateUserRequest",
         "type": "object"
       },
+      "AdminResetPasswordRequest": {
+        "description": "Payload for the admin PUT /users/{username}/password endpoint.",
+        "properties": {
+          "new_password": {
+            "title": "New Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "new_password"
+        ],
+        "title": "AdminResetPasswordRequest",
+        "type": "object"
+      },
       "AnchorThreadRequest": {
         "properties": {
           "block_id": {
@@ -2186,6 +2200,25 @@
           "new_type"
         ],
         "title": "ChangeBlockTypeRequest",
+        "type": "object"
+      },
+      "ChangePasswordRequest": {
+        "description": "Payload for the PUT /profile/password endpoint.",
+        "properties": {
+          "current_password": {
+            "title": "Current Password",
+            "type": "string"
+          },
+          "new_password": {
+            "title": "New Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "title": "ChangePasswordRequest",
         "type": "object"
       },
       "ChannelOnboardingStartRequest": {
@@ -14652,6 +14685,11 @@
             "title": "Avatar",
             "type": "string"
           },
+          "can_change_password": {
+            "default": false,
+            "title": "Can Change Password",
+            "type": "boolean"
+          },
           "created_at": {
             "title": "Created At",
             "type": "string"
@@ -14665,6 +14703,11 @@
             "default": "",
             "title": "Id",
             "type": "string"
+          },
+          "must_change_password": {
+            "default": false,
+            "title": "Must Change Password",
+            "type": "boolean"
           },
           "preset": {
             "default": "standard",
@@ -16576,6 +16619,84 @@
         ]
       }
     },
+    "/api/auth/profile/password": {
+      "put": {
+        "description": "Change the current user's own password.\n\nThe current password is required so that a stolen session alone cannot\ntake the account over. Existing JWTs remain valid until they expire —\ntokens are stateless, which is the same trade-off the rest of the app\nalready makes.",
+        "operationId": "change_password_api_auth_profile_password_put",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "dt_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Dt Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Change Password Api Auth Profile Password Put",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Change Password",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/api/auth/register": {
       "post": {
         "description": "Bootstrap-only registration.\n\nPublic endpoint that creates the *first* admin account when the user store\nis empty. Once an admin exists, this endpoint is closed; further accounts\nmust be created by an admin via ``POST /api/auth/users``.\n\nOnly available when AUTH_ENABLED=true.",
@@ -17387,6 +17508,93 @@
           }
         },
         "summary": "Put Learner Profile",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/users/{username}/password": {
+      "put": {
+        "description": "Reset another account's password (admin only).\n\nIntended for colleagues who forgot theirs. An admin changing their own\npassword should use PUT /profile/password, which also checks the old one.",
+        "operationId": "admin_reset_password_api_auth_users__username__password_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "username",
+            "required": true,
+            "schema": {
+              "title": "Username",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "dt_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Dt Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminResetPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Admin Reset Password Api Auth Users  Username  Password Put",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Admin Reset Password",
         "tags": [
           "auth"
         ]

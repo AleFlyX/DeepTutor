@@ -331,6 +331,31 @@ export interface paths {
     readonly patch?: never;
     readonly trace?: never;
   };
+  readonly "/api/auth/profile/password": {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    readonly get?: never;
+    /**
+     * Change Password
+     * @description Change the current user's own password.
+     *
+     *     The current password is required so that a stolen session alone cannot
+     *     take the account over. Existing JWTs remain valid until they expire —
+     *     tokens are stateless, which is the same trade-off the rest of the app
+     *     already makes.
+     */
+    readonly put: operations["change_password_api_auth_profile_password_put"];
+    readonly post?: never;
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
   readonly "/api/auth/register": {
     readonly parameters: {
       readonly query?: never;
@@ -495,6 +520,29 @@ export interface paths {
     readonly get: operations["get_learner_profile_api_auth_users__username__learner_profile_get"];
     /** Put Learner Profile */
     readonly put: operations["put_learner_profile_api_auth_users__username__learner_profile_put"];
+    readonly post?: never;
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly "/api/auth/users/{username}/password": {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    readonly get?: never;
+    /**
+     * Admin Reset Password
+     * @description Reset another account's password (admin only).
+     *
+     *     Intended for colleagues who forgot theirs. An admin changing their own
+     *     password should use PUT /profile/password, which also checks the old one.
+     */
+    readonly put: operations["admin_reset_password_api_auth_users__username__password_put"];
     readonly post?: never;
     readonly delete?: never;
     readonly options?: never;
@@ -11832,6 +11880,14 @@ export interface components {
       /** Username */
       readonly username: string;
     };
+    /**
+     * AdminResetPasswordRequest
+     * @description Payload for the admin PUT /users/{username}/password endpoint.
+     */
+    readonly AdminResetPasswordRequest: {
+      /** New Password */
+      readonly new_password: string;
+    };
     /** AnchorThreadRequest */
     readonly AnchorThreadRequest: {
       /** Block Id */
@@ -12718,6 +12774,16 @@ export interface components {
       readonly params_override?: {
         readonly [key: string]: unknown;
       } | null;
+    };
+    /**
+     * ChangePasswordRequest
+     * @description Payload for the PUT /profile/password endpoint.
+     */
+    readonly ChangePasswordRequest: {
+      /** Current Password */
+      readonly current_password: string;
+      /** New Password */
+      readonly new_password: string;
     };
     /** ChannelOnboardingStartRequest */
     readonly ChannelOnboardingStartRequest: {
@@ -18316,6 +18382,11 @@ export interface components {
        * @default
        */
       readonly avatar: string;
+      /**
+       * Can Change Password
+       * @default false
+       */
+      readonly can_change_password: boolean;
       /** Created At */
       readonly created_at: string;
       /**
@@ -18328,6 +18399,11 @@ export interface components {
        * @default
        */
       readonly id: string;
+      /**
+       * Must Change Password
+       * @default false
+       */
+      readonly must_change_password: boolean;
       /**
        * Preset
        * @default standard
@@ -18619,6 +18695,8 @@ export type SchemaAdminBatchDeleteRequest =
   components["schemas"]["AdminBatchDeleteRequest"];
 export type SchemaAdminCreateUserRequest =
   components["schemas"]["AdminCreateUserRequest"];
+export type SchemaAdminResetPasswordRequest =
+  components["schemas"]["AdminResetPasswordRequest"];
 export type SchemaAnchorThreadRequest =
   components["schemas"]["AnchorThreadRequest"];
 export type SchemaAnnotationInfo = components["schemas"]["AnnotationInfo"];
@@ -18704,6 +18782,8 @@ export type SchemaCategoryRenameRequest =
   components["schemas"]["CategoryRenameRequest"];
 export type SchemaChangeBlockTypeRequest =
   components["schemas"]["ChangeBlockTypeRequest"];
+export type SchemaChangePasswordRequest =
+  components["schemas"]["ChangePasswordRequest"];
 export type SchemaChannelOnboardingStartRequest =
   components["schemas"]["ChannelOnboardingStartRequest"];
 export type SchemaChapterImport = components["schemas"]["ChapterImport"];
@@ -19891,6 +19971,45 @@ export interface operations {
       };
     };
   };
+  readonly change_password_api_auth_profile_password_put: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: {
+        readonly Authorization?: string | null;
+      };
+      readonly path?: never;
+      readonly cookie?: {
+        readonly dt_token?: string | null;
+      };
+    };
+    readonly requestBody: {
+      readonly content: {
+        readonly "application/json": components["schemas"]["ChangePasswordRequest"];
+      };
+    };
+    readonly responses: {
+      /** @description Successful Response */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly "application/json": {
+            readonly [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      readonly 422: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   readonly register_api_auth_register_post: {
     readonly parameters: {
       readonly query?: never;
@@ -20230,6 +20349,47 @@ export interface operations {
     readonly requestBody: {
       readonly content: {
         readonly "application/json": components["schemas"]["LearnerProfileRequest"];
+      };
+    };
+    readonly responses: {
+      /** @description Successful Response */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly "application/json": {
+            readonly [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      readonly 422: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  readonly admin_reset_password_api_auth_users__username__password_put: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: {
+        readonly Authorization?: string | null;
+      };
+      readonly path: {
+        readonly username: string;
+      };
+      readonly cookie?: {
+        readonly dt_token?: string | null;
+      };
+    };
+    readonly requestBody: {
+      readonly content: {
+        readonly "application/json": components["schemas"]["AdminResetPasswordRequest"];
       };
     };
     readonly responses: {

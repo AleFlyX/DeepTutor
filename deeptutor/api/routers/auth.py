@@ -362,6 +362,7 @@ class UserInfo(BaseModel):
     avatar: str = ""
     preset: AccountPreset = "standard"
     must_change_password: bool = False
+    can_change_password: bool = False
 
 
 class LearnerProfileRequest(BaseModel):
@@ -1347,7 +1348,7 @@ async def get_profile(
             role=current.role,
             created_at="",
         )
-    return UserInfo(**info)
+    return UserInfo(**info, can_change_password=not POCKETBASE_ENABLED)
 
 
 @router.put("/profile")
@@ -1474,6 +1475,14 @@ async def get_avatar_image(
 # ---------------------------------------------------------------------------
 
 
+def _require_local_password_auth() -> None:
+    if not AUTH_ENABLED or POCKETBASE_ENABLED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password changes are only available for local authenticated accounts.",
+        )
+
+
 @router.put("/profile/password", status_code=status.HTTP_200_OK)
 async def change_password(
     body: ChangePasswordRequest,
@@ -1487,6 +1496,7 @@ async def change_password(
     already makes.
     """
     current = _require_profile_identity(payload)
+    _require_local_password_auth()
 
     from deeptutor.multi_user.identity import get_user
     from deeptutor.multi_user.identity import set_password as _set_password
@@ -1781,6 +1791,9 @@ def _create_admin_user(
                 detail="The learner preset could not be initialized.",
             ) from exc
 
+    from deeptutor.multi_user.identity import set_must_change_password
+
+    set_must_change_password(body.username, True)
     logger.info(
         "Admin '%s' created user '%s' (role=%r, preset=%r)",
         actor,
@@ -1795,6 +1808,7 @@ def _create_admin_user(
         "role": role,
         "is_admin": False,
         "preset": preset,
+        "must_change_password": True,
     }
 
 
@@ -1809,15 +1823,7 @@ async def admin_create_user(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Auth is disabled — user creation is not available.",
         )
-    created = _create_admin_user(body, current)
-
-    # An admin-chosen password is temporary by definition: flag the account so
-    # the UI sends its owner to the password form on first use.
-    from deeptutor.multi_user.identity import set_must_change_password
-
-    set_must_change_password(body.username, True)
-    created["must_change_password"] = True
-    return created
+    return _create_admin_user(body, current)
 
 
 @router.post("/users/import")
@@ -2036,12 +2042,16 @@ async def admin_reset_password(
     Intended for colleagues who forgot theirs. An admin changing their own
     password should use PUT /profile/password, which also checks the old one.
     """
+    _require_local_password_auth()
+
+    from deeptutor.multi_user.identity import set_must_change_password
     from deeptutor.multi_user.identity import set_password as _set_password
     from deeptutor.services.auth import hash_password
 
     if _set_password(username, hash_password(body.new_password)) is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
+    set_must_change_password(username, True)
     logger.info(
         f"Admin '{current.username if current else 'local'}' reset the password for '{username}'"
     )

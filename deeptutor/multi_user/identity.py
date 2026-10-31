@@ -276,6 +276,7 @@ def list_user_info(  # nosec B107 - empty defaults mean "no env fallback supplie
             "disabled": bool(record.get("disabled", False)),
             "avatar": str(record.get("avatar") or ""),
             "preset": str(record.get("preset") or "standard"),
+            "must_change_password": bool(record.get("must_change_password", False)),
             "book_permission": public_permission_dict(
                 normalize_book_permission(record.get("book_permission"))
             ),

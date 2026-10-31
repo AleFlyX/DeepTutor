@@ -35,13 +35,14 @@ def alice(monkeypatch):
     from deeptutor.multi_user import identity
 
     monkeypatch.setattr(auth_router, "AUTH_ENABLED", True)
+    monkeypatch.setattr(auth_router, "POCKETBASE_ENABLED", False)
 
     store = {"alice": {"hash": "HASH_OF_oldpassword", "role": "user"}}
     monkeypatch.setattr(identity, "get_user", lambda u: store.get(u))
     monkeypatch.setattr(
-        identity, "set_password", lambda u, h: store[u].update({"hash": h}) or store[u]
-        if u in store
-        else None
+        identity,
+        "set_password",
+        lambda u, h: store[u].update({"hash": h}) or store[u] if u in store else None,
     )
     monkeypatch.setattr(
         "deeptutor.services.auth.verify_password",
@@ -211,3 +212,55 @@ def test_failed_change_leaves_the_flag_alone(alice, monkeypatch) -> None:
 
     assert resp.status_code == 400
     assert calls == [], "校验失败时不能清标记"
+
+
+@pytest.mark.parametrize("admin", [False, True])
+def test_password_endpoints_reject_pocketbase(alice, monkeypatch, admin):
+    from deeptutor.api.routers import auth as router
+
+    monkeypatch.setattr(router, "POCKETBASE_ENABLED", True)
+    endpoint = router.admin_reset_password if admin else router.change_password
+    path = "/users/{username}/password" if admin else "/profile/password"
+    client = _client(
+        endpoint, path, "password", TokenPayload(username="alice", role="admin", user_id="u1")
+    )
+    response = client.put(
+        path.replace("{username}", "alice"),
+        json={"current_password": "oldpassword", "new_password": "new-password"},
+    )
+    assert response.status_code == 400
+    assert alice["alice"]["hash"] == "HASH_OF_oldpassword"
+
+
+def test_admin_reset_sets_temporary_password_flag(alice, monkeypatch):
+    from deeptutor.api.routers import auth as router
+    from deeptutor.multi_user import identity
+
+    calls = []
+    monkeypatch.setattr(
+        identity, "set_must_change_password", lambda u, v: calls.append((u, v)) or True
+    )
+    client = _client(
+        router.admin_reset_password,
+        "/users/{username}/password",
+        "password",
+        TokenPayload(username="root", role="admin", user_id="u0"),
+    )
+    response = client.put("/users/alice/password", json={"new_password": "new-password"})
+    assert response.status_code == 200
+    assert calls == [("alice", True)]
+
+
+def test_public_identity_exposes_temporary_password_flag(monkeypatch):
+    from deeptutor.multi_user import identity
+
+    monkeypatch.setattr(
+        identity,
+        "load_users",
+        lambda *args, **kwargs: {
+            "alice": {"id": "u1", "hash": "secret", "role": "user", "must_change_password": True}
+        },
+    )
+    info = identity.list_user_info()[0]
+    assert info["must_change_password"] is True
+    assert "hash" not in info
