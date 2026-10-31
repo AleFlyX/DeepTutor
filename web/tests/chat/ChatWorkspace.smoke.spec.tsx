@@ -244,6 +244,7 @@ function emptyChatState(): ChatState {
     masteryPathId: null,
     masterySessionMode: null,
     noteDocumentId: null,
+    createTarget: null,
     workspaceId: null,
     personaSelection: '',
     answerBy: null,
