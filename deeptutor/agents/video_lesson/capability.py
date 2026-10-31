@@ -136,6 +136,11 @@ class VideoLessonCapability(TurnCapability):
                         self._layout_issues, base_dir, build, context.language
                     )
                     timings["render_check"] += round(time.perf_counter() - started, 3)
+                    if issues is None:
+                        attempts.append(
+                            {"attempt": attempt, "stage": "layout_unavailable", "errors": []}
+                        )
+                        break
                     if not issues:
                         break
                     attempts.append({"attempt": attempt, "stage": "layout", "errors": issues})
@@ -227,8 +232,8 @@ class VideoLessonCapability(TurnCapability):
         )
 
     @staticmethod
-    def _layout_issues(base_dir: Path, build: Any, language: str) -> list[str]:
-        """Browser layout check of the freshly built bundle; empty when clean or unavailable."""
+    def _layout_issues(base_dir: Path, build: Any, language: str) -> list[str] | None:
+        """Browser layout check of the freshly built bundle; empty when clean, None when unavailable."""
         from deeptutor.agents.video_lesson.layout_check import check_layout, sample_frames
         from deeptutor.agents.video_lesson.runtime import write_page
 
@@ -238,9 +243,9 @@ class VideoLessonCapability(TurnCapability):
             write_page(
                 base_dir / "source" / "player.js", page, title="layout check", language=language
             )
-            return check_layout(page, sample_frames(total)) or []
+            return check_layout(page, sample_frames(total))
         except Exception:  # the check is advisory; a broken probe must not fail the lesson
-            return []
+            return None
         finally:
             page.unlink(missing_ok=True)
 

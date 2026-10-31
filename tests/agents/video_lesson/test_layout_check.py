@@ -67,3 +67,12 @@ def test_stroke_through_text_and_caption_band_are_reported(tmp_path: Path) -> No
     assert issues is not None
     assert any('cross the text "Image layer"' in i for i in issues)
     assert any("caption band" in i for i in issues)
+
+
+def test_browser_executable_can_be_configured(monkeypatch, tmp_path):
+    browser = tmp_path / "custom-chrome"
+    browser.write_text("browser", encoding="utf-8")
+    monkeypatch.setenv("DEEPTUTOR_CHROME_EXECUTABLE", str(browser))
+    assert chrome_path() == str(browser)
+    monkeypatch.setenv("DEEPTUTOR_CHROME_EXECUTABLE", str(tmp_path / "missing"))
+    assert chrome_path() is None

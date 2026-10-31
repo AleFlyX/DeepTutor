@@ -10,6 +10,7 @@ samples points along every visible SVG stroke, and reports collisions in the
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import re
 import shutil
@@ -148,11 +149,38 @@ addEventListener("message", (e) => {
 
 
 def chrome_path() -> str | None:
-    for name in ("google-chrome", "google-chrome-stable", "chromium", "chromium-browser"):
+    """Use an explicit browser first, then standard cross-platform installs."""
+    configured = os.environ.get("DEEPTUTOR_CHROME_EXECUTABLE", "").strip()
+    if configured:
+        path = Path(configured).expanduser()
+        return str(path) if path.is_file() else None
+    for name in (
+        "google-chrome",
+        "google-chrome-stable",
+        "chromium",
+        "chromium-browser",
+        "chrome",
+        "msedge",
+    ):
         found = shutil.which(name)
         if found:
             return found
-    return None
+    candidates = [
+        Path("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"),
+        Path.home() / "Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        Path("/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"),
+    ]
+    for name in ("PROGRAMFILES", "PROGRAMFILES(X86)", "LOCALAPPDATA"):
+        root = os.environ.get(name)
+        if root:
+            candidates.extend(
+                Path(root) / suffix
+                for suffix in (
+                    "Google/Chrome/Application/chrome.exe",
+                    "Microsoft/Edge/Application/msedge.exe",
+                )
+            )
+    return next((str(path) for path in candidates if path.is_file()), None)
 
 
 def sample_frames(total: int, fps: int = 30, every_s: float = 4.0) -> list[int]:
@@ -189,16 +217,26 @@ def check_layout(page: Path, frames: list[int], timeout_s: int = 180) -> list[st
             proc = subprocess.run(argv, capture_output=True, text=True, timeout=timeout_s)  # nosec B603
         except subprocess.TimeoutExpired:
             return None
+    if proc.returncode != 0:
+        return None
     m = re.search(r'<pre id="out">(.*?)</pre>', proc.stdout, re.S)
     if not m or not m.group(1).strip():
         return None
-    data = json.loads(
-        m.group(1)
-        .replace("&quot;", '"')
-        .replace("&lt;", "<")
-        .replace("&gt;", ">")
-        .replace("&amp;", "&")
-    )
+    try:
+        data = json.loads(
+            m.group(1)
+            .replace("&quot;", '"')
+            .replace("&lt;", "<")
+            .replace("&gt;", ">")
+            .replace("&amp;", "&")
+        )
+    except (ValueError, TypeError):
+        return None
+    if not isinstance(data, dict) or any(
+        not isinstance(data.get(str(frame)), dict) or data[str(frame)].get("error")
+        for frame in frames
+    ):
+        return None
     seen: dict[str, list[int]] = {}
     for frame in sorted(data, key=lambda f: int(f)):
         for issue in data[frame].get("issues") or []:
