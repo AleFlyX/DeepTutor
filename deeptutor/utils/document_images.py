@@ -540,10 +540,7 @@ def _extract_pptx_rich_ooxml(data: bytes, *, budget: ImageBudget | None = None) 
     slides: list[str] = []
     with zipfile.ZipFile(io.BytesIO(data)) as zf:
         names = set(zf.namelist())
-        slide_members = sorted(
-            (name for name in names if _SLIDE_MEMBER_PATTERN.fullmatch(name)),
-            key=_natural_slide_key,
-        )
+        slide_members = ordered_pptx_slide_members(zf)
         for member in slide_members:
             rel_targets = _office_rels(zf, _rels_for(member))
             lines: list[str] = []
@@ -552,7 +549,16 @@ def _extract_pptx_rich_ooxml(data: bytes, *, budget: ImageBudget | None = None) 
             except Exception:
                 slides.append("")
                 continue
+            handled_blips: set[Any] = set()
             for node in root.iter():
+                if _local_name(node.tag) == "blip":
+                    if node not in handled_blips:
+                        image = _load_office_image(
+                            zf, names, rel_targets.get(_blip_embed_rid(node), ""), budget, images
+                        )
+                        if image is not None:
+                            lines.append(build_marker(image))
+                    continue
                 if _local_name(node.tag) != "p":
                     continue
                 text_parts: list[str] = []
@@ -567,6 +573,7 @@ def _extract_pptx_rich_ooxml(data: bytes, *, budget: ImageBudget | None = None) 
                     elif name in {"br", "cr"}:
                         text_parts.append("\n")
                     elif name == "blip":
+                        handled_blips.add(child)
                         rid = _blip_embed_rid(child)
                         if not rid or rid in seen_rids:
                             continue
@@ -587,6 +594,43 @@ def _extract_pptx_rich_ooxml(data: bytes, *, budget: ImageBudget | None = None) 
 
 
 _SLIDE_MEMBER_PATTERN = re.compile(r"ppt/slides/slide\d+\.xml")
+
+
+def ordered_pptx_slide_members(zf: zipfile.ZipFile) -> list[str]:
+    """Resolve slide parts in presentation order, with a metadata-free fallback."""
+    names = set(zf.namelist())
+    try:
+        root = _parse_xml(zf.read("ppt/presentation.xml"))
+    except Exception:
+        root = None
+    if root is not None and _local_name(root.tag) == "presentation":
+        slide_ids = [node for node in root.iter() if _local_name(node.tag) == "sldId"]
+        if not slide_ids:
+            return []
+        rels_member = "ppt/_rels/presentation.xml.rels"
+        try:
+            # An empty mapping can mean valid-but-unresolved relationships or
+            # unreadable metadata. Only unreadable metadata permits fallback.
+            _parse_xml(zf.read(rels_member))
+        except Exception:
+            pass
+        else:
+            targets = _office_rels(zf, rels_member)
+            ordered: list[str] = []
+            for node in slide_ids:
+                rid = node.get(
+                    "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id"
+                )
+                target = targets.get(rid or "", "").lstrip("/")
+                if target in names:
+                    ordered.append(target)
+            return ordered
+    # Keep best-effort extraction for older/minimal archives without usable
+    # presentation metadata, rather than requiring python-pptx to read them.
+    return sorted(
+        (name for name in names if _SLIDE_MEMBER_PATTERN.fullmatch(name)),
+        key=_natural_slide_key,
+    )
 
 
 def _natural_slide_key(name: str) -> list[int]:
@@ -699,5 +743,6 @@ __all__ = [
     "reading_image_budget",
     "extract_docx_rich",
     "extract_pptx_rich",
+    "ordered_pptx_slide_members",
     "extract_pdf_images",
 ]

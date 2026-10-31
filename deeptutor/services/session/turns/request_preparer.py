@@ -65,6 +65,7 @@ _REPLAY_SNAPSHOT_FIELDS: dict[str, str] = {
     "skills": "skills",
     "mcp": "mcp",
     "persona": "persona",
+    "create_target": "createTarget",
     "llm_selection": "llmSelection",
     "workspace_mode": "workspaceMode",
     "workspace_id": "workspaceId",
@@ -152,6 +153,7 @@ class TurnRequestPreparer:
         payload: dict[str, Any],
         *,
         replace_assistant_message_id: int | str | None = None,
+        persist_llm_selection_only: bool = False,
     ) -> tuple[dict[str, Any], dict[str, Any]]:
         await self._ensure_accepting_turns()
         from deeptutor.services.workspace.context import get_workspace_scope
@@ -691,6 +693,11 @@ class TurnRequestPreparer:
         if persona_explicit:
             # Persist explicit set AND explicit clear ("" = back to Default).
             preference_update["persona"] = persona_pref
+        if "create_target" in payload:
+            # Same explicit-set-and-explicit-clear shape as persona: the web
+            # client sends create_target on every turn, so its presence alone
+            # (including an empty/null clear) is what makes it durable.
+            preference_update["create_target"] = payload.get("create_target") or ""
         if skills_explicit:
             preference_update["skills"] = selected_skills
         if mcp_explicit:
@@ -739,6 +746,15 @@ class TurnRequestPreparer:
         try:
             if not payload.get("preserve_session_preferences"):
                 await self.store.update_session_preferences(session["id"], preference_update)
+            elif persist_llm_selection_only and preference_update.get("llm_selection"):
+                # A recovered turn keeps the failed turn's context, but the model
+                # it ran with is the one the user selected now. Persist just
+                # that, so the choice survives a reload, and leave the failed
+                # turn's other preferences where they are (#2105).
+                await self.store.update_session_preferences(
+                    session["id"],
+                    {"llm_selection": preference_update["llm_selection"]},
+                )
             submission_kwargs = {}
             if (
                 payload.get("client_submission_id")
@@ -1100,6 +1116,17 @@ class TurnRequestPreparer:
                 if "mastery_session_mode" in overrides
                 else preferences.get("mastery_session_mode")
             ),
+            # The create-mode chip is a durable session preference like
+            # persona, but — unlike persona — ordinary chat turns always send
+            # it explicitly, so an un-set key here would read as "leave it to
+            # start_turn's own fallback" and silently drop it. Restore it
+            # explicitly so a plain Regenerate keeps authoring the same draft.
+            "create_target": (
+                overrides.get("create_target")
+                if "create_target" in overrides
+                else snapshot.get("createTarget") or preferences.get("create_target")
+            )
+            or None,
             # Recovered from the original turn's snapshot so the regenerate runs
             # against the same document. An explicit override wins (the reader
             # may have moved on), and the viewport is deliberately not restored —
@@ -1168,8 +1195,13 @@ class TurnRequestPreparer:
             if last_message is not None and last_message.get("role") == "assistant"
             else None
         )
+        # A Resend runs with the model the user has selected now, so that one
+        # choice is written back to the conversation. The failed turn's other
+        # preferences are not (#2105).
         if replace_assistant_message_id is None:
-            return await self.start_turn(payload)
+            return await self.start_turn(payload, persist_llm_selection_only=replay_snapshot)
         return await self.start_turn(
-            payload, replace_assistant_message_id=replace_assistant_message_id
+            payload,
+            replace_assistant_message_id=replace_assistant_message_id,
+            persist_llm_selection_only=replay_snapshot,
         )
