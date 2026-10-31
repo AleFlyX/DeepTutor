@@ -37,22 +37,21 @@ _COPY: dict[str, dict[str, Any]] = {
         "chapter_title": "Como ler este livro",
         "chapter_summary": "Visão geral gerada automaticamente do grafo de conceitos e do índice de capítulos do livro.",
         "objectives": [
-            "Ver o mapa completo de capítulos rapidamente",
+            "Ter uma visão rápida do mapa completo de capítulos",
             "Entender como os conceitos dependem uns dos outros",
             "Escolher o caminho de leitura que melhor atende aos seus objetivos",
         ],
         "intro_title": "Como ler este livro",
         "intro_body": (
             "O diagrama abaixo mapeia os {concepts} conceitos principais deste livro e como eles dependem uns dos outros. "
-            "O índice de capítulos a seguir lista todos os {chapters} capítulos — leia de cima para baixo para o caminho recomendado, "
-            "ou vá direto ao que tiver mais curiosidade."
+            "O índice a seguir lista todos os {chapters} capítulos — leia de cima para baixo para seguir a ordem recomendada, "
+            "ou vá direto ao capítulo que mais despertar sua curiosidade."
         ),
         "untitled_book": "Este livro",
         "concept_map_title": "Mapa de conceitos",
         "chapter_index_title": "Índice de capítulos",
         "chapter_index_heading": "## Índice de capítulos",
     },
-
     "en": {
         "chapter_title": "How to read this book",
         "chapter_summary": (

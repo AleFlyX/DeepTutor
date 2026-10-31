@@ -29,7 +29,7 @@ _SAFE_FILENAME = re.compile(r"[^\w.-]+")
 # uses (deeptutor/services/prompt/language.py), falling back to English.
 _LABELS: dict[str, dict[str, str]] = {
     "pt": {
-        "takeaway": "Ponto principal",
+        "takeaway": "Ideia principal",
         "answer": "Resposta",
         "front": "Frente",
         "back": "Verso",
@@ -41,7 +41,6 @@ _LABELS: dict[str, dict[str, str]] = {
         "not_generated": "(Este capítulo ainda não foi gerado.)",
         "omitted": "({kind} omitido — não possui representação em texto.)",
     },
-
     "en": {
         "takeaway": "Key takeaway",
         "answer": "Answer",

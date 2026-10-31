@@ -67,7 +67,7 @@ _TOOL_HINT_MAX_CHARS = 120
 # Channels that post the "thinking…" notice and retract it when the answer
 # starts arriving. Opt-in: a channel that cannot retract would leave it behind.
 _THINKING_NOTICE_CHANNELS = frozenset({"feishu"})
-_THINKING_NOTICES = {"zh": "🤔 正在思考…", "en": "🤔 Thinking…"}
+_THINKING_NOTICES = {"zh": "🤔 正在思考…", "en": "🤔 Thinking…", "pt": "🤔 Pensando…"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -919,7 +919,11 @@ class PartnerRunner:
 
     def _language(self) -> str:
         lang = str(getattr(self.config, "language", "") or "").strip().lower()
-        return "zh" if lang.startswith("zh") else "en"
+        if lang.startswith("zh"):
+            return "zh"
+        if lang.replace("_", "-").split("-", 1)[0] == "pt" or lang in {"portuguese", "português"}:
+            return "pt"
+        return "en"
 
     def _channel_delivery_flag(self, channel_name: str, name: str, *, default: bool) -> bool:
         channels = getattr(self.config, "channels", None) or {}

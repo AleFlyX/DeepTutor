@@ -58,6 +58,20 @@ class TestTurnExecution:
         assert notice.metadata["_progress"] is True
 
     @pytest.mark.asyncio
+    @pytest.mark.parametrize("language", ["pt", "pt-BR", "pt_PT", "Português"])
+    async def test_feishu_turn_announces_thinking_in_portuguese(
+        self, partners_root, fake_orchestrator, language
+    ):
+        fake_orchestrator.script = finish("Pronto")
+        runner = _runner(partners_root, PartnerConfig(name="Ada", language=language))
+
+        await runner.process_message(_msg(channel="feishu"))
+
+        notice = await runner.bus.outbound.get()
+        assert notice.content == "🤔 Pensando…"
+        assert notice.metadata["_thinking_notice"] is True
+
+    @pytest.mark.asyncio
     async def test_web_turn_never_announces_thinking(self, partners_root, fake_orchestrator):
         fake_orchestrator.script = finish("done")
         runner = _runner(partners_root, PartnerConfig(name="Ada", language="zh"))
