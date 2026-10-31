@@ -15,7 +15,7 @@ from deeptutor.services.generation_http import (
     join_api_path,
     raise_for_provider,
 )
-from deeptutor.services.videogen.base import BaseVideogenAdapter, ProgressFn
+from deeptutor.services.videogen.base import BaseVideogenAdapter, ProgressFn, video_poll_budget
 from deeptutor.services.videogen.config import VideogenConfig
 
 logger = logging.getLogger(__name__)
@@ -197,39 +197,40 @@ class DashScopeVideogenAdapter(BaseVideogenAdapter):
         task_id: str,
         progress: ProgressFn | None,
     ) -> str:
-        poll_url = join_api_path(config.base_url, f"tasks/{task_id}")
-        deadline = time.monotonic() + config.poll_timeout
-        polls = 0
-        while True:
-            resp = await client.get(poll_url, headers=headers)
-            raise_for_provider(resp, "DashScope video task status")
-            data = resp.json()
-            if not isinstance(data, dict):
-                raise GenerationProviderError("Malformed DashScope video task response.")
-            self._raise_dashscope_error(data, "DashScope video task status")
-            output = data.get("output")
-            if not isinstance(output, dict):
-                raise GenerationProviderError("Malformed DashScope video task response.")
-            status = str(output.get("task_status") or "").lower()
-            video_url = output.get("video_url")
-            if status in {"succeeded", "success"}:
-                if not isinstance(video_url, str) or not video_url:
-                    raise GenerationProviderError("Successful DashScope video task had no URL.")
-                return video_url
-            if status in {"failed", "canceled", "cancelled", "expired", "unknown"}:
-                message = output.get("message") or "no detail provided"
-                raise GenerationProviderError(f"DashScope video task {status}: {message}")
-            if time.monotonic() >= deadline:
-                raise GenerationProviderError(
-                    f"DashScope video task {task_id} timed out after {config.poll_timeout}s "
-                    f"(last status: {status or 'unknown'})."
-                )
-            polls += 1
-            if polls % 3 == 0:
-                await self._notify(
-                    progress, f"Still rendering video... (status: {status or 'pending'})"
-                )
-            await asyncio.sleep(config.poll_interval)
+        async with video_poll_budget(config.poll_timeout, task_id):
+            poll_url = join_api_path(config.base_url, f"tasks/{task_id}")
+            deadline = time.monotonic() + config.poll_timeout
+            polls = 0
+            while True:
+                resp = await client.get(poll_url, headers=headers)
+                raise_for_provider(resp, "DashScope video task status")
+                data = resp.json()
+                if not isinstance(data, dict):
+                    raise GenerationProviderError("Malformed DashScope video task response.")
+                self._raise_dashscope_error(data, "DashScope video task status")
+                output = data.get("output")
+                if not isinstance(output, dict):
+                    raise GenerationProviderError("Malformed DashScope video task response.")
+                status = str(output.get("task_status") or "").lower()
+                video_url = output.get("video_url")
+                if status in {"succeeded", "success"}:
+                    if not isinstance(video_url, str) or not video_url:
+                        raise GenerationProviderError("Successful DashScope video task had no URL.")
+                    return video_url
+                if status in {"failed", "canceled", "cancelled", "expired", "unknown"}:
+                    message = output.get("message") or "no detail provided"
+                    raise GenerationProviderError(f"DashScope video task {status}: {message}")
+                if time.monotonic() >= deadline:
+                    raise GenerationProviderError(
+                        f"DashScope video task {task_id} timed out after {config.poll_timeout}s "
+                        f"(last status: {status or 'unknown'})."
+                    )
+                polls += 1
+                if polls % 3 == 0:
+                    await self._notify(
+                        progress, f"Still rendering video... (status: {status or 'pending'})"
+                    )
+                await asyncio.sleep(config.poll_interval)
 
     @staticmethod
     async def _notify(progress: ProgressFn | None, message: str) -> None:
