@@ -6357,5 +6357,15 @@
   "language.vietnamese": "Tiếng Việt",
   "Composer": "Ô soạn tin nhắn",
   "Suggest my next message": "Gợi ý tin nhắn tiếp theo của tôi",
-  "After each reply, the input box shows a guess at what you might type next; Tab accepts it. Turn this off when practicing in chat — the likeliest next message to a question is its answer.": "Sau mỗi câu trả lời, ô nhập liệu hiển thị dự đoán về nội dung bạn có thể nhập tiếp theo; nhấn Tab để chấp nhận. Hãy tắt tính năng này khi luyện tập trong cuộc trò chuyện — tin nhắn tiếp theo có khả năng cao nhất sau một câu hỏi chính là câu trả lời cho câu hỏi đó."
+  "After each reply, the input box shows a guess at what you might type next; Tab accepts it. Turn this off when practicing in chat — the likeliest next message to a question is its answer.": "Sau mỗi câu trả lời, ô nhập liệu hiển thị dự đoán về nội dung bạn có thể nhập tiếp theo; nhấn Tab để chấp nhận. Hãy tắt tính năng này khi luyện tập trong cuộc trò chuyện — tin nhắn tiếp theo có khả năng cao nhất sau một câu hỏi chính là câu trả lời cho câu hỏi đó.",
+  "The tutor thread could not be detached.": "Không thể tách cuộc trò chuyện với gia sư.",
+  "Detach from this message": "Tách khỏi tin nhắn này",
+  "Delete tutor thread": "Xóa cuộc trò chuyện với gia sư",
+  "Open tutor thread": "Mở cuộc trò chuyện với gia sư",
+  "Little Tutor ×{{count}}": "Gia sư nhỏ ×{{count}}",
+  "Delete this tutor thread?": "Xóa cuộc trò chuyện với gia sư này?",
+  "The tutor thread could not be deleted.": "Không thể xóa cuộc trò chuyện với gia sư.",
+  "Tutor threads on this message": "Các cuộc trò chuyện với gia sư trên tin nhắn này",
+  "Model ID is required.": "Cần có ID mô hình.",
+  "Add a model ID for {{name}} on the {{page}} page before applying changes.": "Thêm ID mô hình cho {{name}} trên trang {{page}} trước khi áp dụng thay đổi."
 }
