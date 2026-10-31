@@ -3,6 +3,7 @@
 import React, { useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { rehypeDirAuto } from "@/lib/rehype-dir-auto";
 import { findCitationAnchor } from "@/lib/markdown-anchors";
 import {
   citationAnchorIdFor,
@@ -82,7 +83,7 @@ export default function SimpleMarkdownRenderer({
         {children}
       </div>
     ),
-    pre: ({ children }: any) => <>{children}</>,
+    pre: ({ children }: any) => <div dir="ltr">{children}</div>,
     code: ({ node, children }: any) => (
       <code className="rounded bg-[var(--muted)] px-1 py-0.5 font-mono text-[0.95em] text-[var(--foreground)]">
         {String(children).replace(/\n$/, "")}
@@ -250,7 +251,7 @@ export default function SimpleMarkdownRenderer({
     ),
     th: ({ node, ...props }: any) => (
       <th
-        className={`border-b border-[var(--border)] text-left font-semibold text-[var(--foreground)] ${cellPad}`}
+        className={`border-b border-[var(--border)] text-start font-semibold text-[var(--foreground)] ${cellPad}`}
         {...props}
       />
     ),
@@ -269,7 +270,7 @@ export default function SimpleMarkdownRenderer({
     tr: ({ node, ...props }: any) => (
       <tr className="transition-colors hover:bg-[var(--muted)]/60" {...props} />
     ),
-    pre: ({ children }: any) => <>{children}</>,
+    pre: ({ children }: any) => <div dir="ltr">{children}</div>,
     code: ({ node, children, ...props }: any) => {
       const raw = String(children).replace(/\n$/, "");
 
@@ -293,6 +294,7 @@ export default function SimpleMarkdownRenderer({
 
       return (
         <code
+          dir="ltr"
           className="md-inline-code rounded bg-[var(--muted)] px-1.5 py-0.5 font-mono text-[0.875em] text-[var(--foreground)]"
           {...props}
         >
@@ -402,7 +404,7 @@ export default function SimpleMarkdownRenderer({
     },
     blockquote: ({ node, ...props }: any) => (
       <blockquote
-        className={`${gap} border-l-[3px] border-[var(--muted-foreground)] pl-4 italic text-[var(--muted-foreground)] [&>p]:mb-1`}
+        className={`${gap} border-s-[3px] border-[var(--muted-foreground)] ps-4 italic text-[var(--muted-foreground)] [&>p]:mb-1`}
         {...props}
       />
     ),
@@ -486,6 +488,7 @@ export default function SimpleMarkdownRenderer({
     >
       <ReactMarkdown
         remarkPlugins={remarkPlugins}
+        rehypePlugins={[rehypeDirAuto]}
         components={components}
         urlTransform={markdownUrlTransform}
       >

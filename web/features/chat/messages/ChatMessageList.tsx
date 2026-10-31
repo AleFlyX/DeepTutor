@@ -413,6 +413,7 @@ function SentMidTurn({ messages }: { messages: string[] }) {
       {messages.map((text, index) => (
         <div
           key={index}
+          dir="auto"
           className="max-w-[85%] whitespace-pre-wrap rounded-2xl bg-[var(--secondary)] px-3.5 py-2 text-[13.5px] leading-relaxed text-[var(--foreground)]"
         >
           <LearningText size={13.5}>{text}</LearningText>
@@ -2015,7 +2016,7 @@ export const UserMessage = memo(function UserMessage({
                 {quoteText(a)}
               </div>
             ))}
-            <div className="whitespace-pre-wrap"><LearningText size={14}>{msg.content}</LearningText></div>
+            <div dir="auto" className="whitespace-pre-wrap"><LearningText size={14}>{msg.content}</LearningText></div>
           </div>
         )}
         {/* Recovery records are local to this browser. Keep their actions
