@@ -38,6 +38,8 @@ it("labels Auto with the account response language and offers every language", a
   ).toBeInTheDocument();
   expect(
     screen.getByRole("option", { name: "Tiếng Việt" }),
+  ).toBeInTheDocument();
+  expect(
     screen.getByRole("option", { name: "Türkçe" }),
   ).toBeInTheDocument();
 });
