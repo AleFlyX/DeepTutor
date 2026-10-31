@@ -35,9 +35,11 @@ import {
 } from "@/lib/theme";
 import {
   detachProfileConnection,
+  firstIncompleteModel,
   modelTestKey,
   reconcileProviderSave,
   modelTestFingerprint,
+  type IncompleteModel,
   type ModelTestState,
 } from "@/lib/model-settings";
 import {
@@ -99,28 +101,10 @@ export type UiSettings = {
   code_block_wrap_long_lines: boolean;
 };
 
-export type ResponseLanguageOption = {
-  value: ResponseLanguage;
-  label: string;
-};
-
-export const RESPONSE_LANGUAGE_OPTIONS: readonly ResponseLanguageOption[] = [
-  { value: "en", label: "English" },
-  { value: "zh", label: "简体中文" },
-  { value: "zh-tw", label: "繁體中文" },
-  { value: "ja", label: "日本語" },
-  { value: "ko", label: "한국어" },
-  { value: "es", label: "Español" },
-  { value: "fr", label: "Français" },
-  { value: "de", label: "Deutsch" },
-  { value: "ru", label: "Русский" },
-  { value: "pt", label: "Português" },
-  { value: "it", label: "Italiano" },
-  { value: "ar", label: "العربية" },
-  { value: "pl", label: "Polski" },
-  { value: "uk", label: "Українська" },
-  { value: "ms", label: "Bahasa Melayu" },
-];
+export {
+  RESPONSE_LANGUAGE_OPTIONS,
+  type ResponseLanguageOption,
+} from "./response-language-options";
 
 type CodeBlockUiSettings = Pick<
   UiSettings,
@@ -479,6 +463,9 @@ export type SettingsContextValue = {
   codeBlockWrapLongLines: UiSettings["code_block_wrap_long_lines"];
   toast: string;
   setToast: (value: string) => void;
+  /** A blank model Apply refused, so its own page can open that row. */
+  focusModel: IncompleteModel | null;
+  clearFocusModel: () => void;
 
   // UI prefs
   updateTheme: (next: UiSettings["theme"]) => Promise<void>;
@@ -683,6 +670,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState("");
   const [saving, setSaving] = useState(false);
   const [applying, setApplying] = useState(false);
+  const [focusModel, setFocusModel] = useState<IncompleteModel | null>(null);
+  const clearFocusModel = useCallback(() => setFocusModel(null), []);
   // Empty string is the "no diagnostics yet" sentinel; the editor renders
   // a localized placeholder when logs is falsy. Don't seed an English
   // literal here — older code did, then read it back via .startsWith.
@@ -1787,6 +1776,29 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   /** Apply — move everything into the live files and clear the draft. */
   const applyCatalog = useCallback(async () => {
+    // Name the culprit and take the user to the field that can fix it. The
+    // old check only threw a generic message, so a blank model created on
+    // another page blocked Apply with nothing on screen to act on.
+    if (catalogEditable) {
+      const incomplete = firstIncompleteModel(draft);
+      if (incomplete) {
+        setToast(
+          t(
+            "Add a model ID for {{name}} on the {{page}} page before applying changes.",
+            {
+              name: incomplete.name || t("New model"),
+              page: t(incomplete.page.labelKey),
+            },
+          ),
+        );
+        setFocusModel(incomplete);
+        router.push(
+          `${incomplete.page.path}?profile=${encodeURIComponent(incomplete.profileId)}&model=${encodeURIComponent(incomplete.modelId)}`,
+        );
+        return;
+      }
+    }
+
     setApplying(true);
     // Save the payloads and callbacks represented by this Apply. Edits made
     // during a request remain a new draft, including on the same page.
@@ -1795,20 +1807,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       return { key, payload, save: ext?.dirty ? ext.save : null };
     });
     try {
-      if (catalogEditable) {
-        for (const [service, bucket] of Object.entries(draft.services)) {
-          for (const profile of bucket.profiles) {
-            for (const model of profile.models) {
-              const original = catalog.services[service as ServiceName].profiles
-                .find((item) => item.id === profile.id)?.models.find((item) => item.id === model.id);
-              if (JSON.stringify(original) !== JSON.stringify(model) && !model.model.trim()) {
-                throw new Error(t("Enter a model ID before applying changes."));
-              }
-            }
-          }
-        }
-      }
-
       // Park the current state server-side first so Apply promotes exactly
       // what is on screen, and so credentials typed into a draft never have
       // to round-trip through the browser as placeholders.
@@ -1869,7 +1867,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     } finally {
       setApplying(false);
     }
-  }, [catalog, draft, catalogEditable, clearPending, draftEnvelope, applyUi, t]);
+  }, [draft, catalogEditable, clearPending, draftEnvelope, applyUi, router, t]);
 
   /** Stage a named preset over the current draft without applying anything. */
   const stagePreset = useCallback(
@@ -2239,6 +2237,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       codeBlockWrapLongLines: editedUi.code_block_wrap_long_lines,
       toast,
       setToast,
+      focusModel,
+      clearFocusModel,
       updateTheme,
       updateLanguage,
       updateResponseLanguage,
@@ -2349,6 +2349,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       status,
       testRunning,
       toast,
+      focusModel,
+      clearFocusModel,
       tourStepIndex,
       updateCodeBlockShowLineNumbers,
       updateCodeBlockTheme,

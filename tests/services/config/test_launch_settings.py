@@ -55,6 +55,10 @@ def test_launch_settings_reads_ports_from_system_json_and_ignores_env_json(
         ("polish", "pl"),
         ("polski", "pl"),
         ("pl-PL", "pl"),
+        ("vietnamese", "vi"),
+        ("tiếng việt", "vi"),
+        ("vi-VN", "vi"),
+        ("vi_VN", "vi"),
     ],
 )
 def test_launch_settings_reads_supported_languages_from_interface_json(
