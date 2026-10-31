@@ -639,6 +639,7 @@ def test_registered_cloud_openai_compat_providers_enable_native_tools() -> None:
         "y_api",
         "onomeo",
         "runcrate",
+        "llmtr",
         "edenai",
         "novita",
         "volcengine_coding_plan",
