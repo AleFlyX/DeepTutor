@@ -40,8 +40,13 @@ on:
 # Keep Linux runners on the LTS supported by the pinned browser toolchain.
 jobs:
   desktop:
-    name: macOS Desktop Shell
-    runs-on: ubuntu-24.04
+    name: Desktop Shell (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        # Windows exercises taskkill-based shutdown; the others process groups.
+        os: [ubuntu-24.04, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -51,6 +56,7 @@ jobs:
           cache-dependency-path: apps/desktop/package-lock.json
       - name: Check and test the shell
         working-directory: apps/desktop
+        shell: bash
         env:
           ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
         run: npm ci && npm run check && npm test

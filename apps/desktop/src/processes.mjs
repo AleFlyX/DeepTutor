@@ -1,14 +1,25 @@
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
 import http from 'node:http';
 import net from 'node:net';
+import path from 'node:path';
+import { WINDOWS } from './platform.mjs';
+
+/** Windows has no process groups or POSIX signals; taskkill ends a process and all its descendants. */
+export function killTree(pid, log = () => {}) {
+  const taskkill = path.join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'taskkill.exe');
+  const result = spawnSync(taskkill, ['/PID', String(pid), '/T', '/F'], { windowsHide: true, encoding: 'utf8' });
+  // 128: the process already exited.
+  if (result.status !== 0 && result.status !== 128) log(`${result.stderr || result.error?.message || 'taskkill failed'}\n`);
+}
 
 export class ProcessGroup {
   constructor(log = () => {}) { this.children = new Set(); this.log = log; this.stopping = false; }
 
   spawn(command, args, options = {}) {
     if (this.stopping) throw new Error('Startup was cancelled');
-    const child = spawn(command, args, { ...options, detached: true, shell: false, stdio: ['ignore', 'pipe', 'pipe'] });
+    // POSIX children lead their own process group; Windows children stay in this tree for taskkill /T.
+    const child = spawn(command, args, { ...options, detached: !WINDOWS, windowsHide: true, shell: false, stdio: ['ignore', 'pipe', 'pipe'] });
     this.children.add(child);
     child.on('error', error => { child.failure = error; });
     child.stdout.on('data', chunk => this.log(chunk));
@@ -37,8 +48,13 @@ export class ProcessGroup {
 
   signal(child, signal) {
     if (!child.pid) return;
+    if (WINDOWS) return void killTree(child.pid, this.log);
     try { process.kill(-child.pid, signal); }
     catch (error) { if (error.code !== 'ESRCH') this.log(`${error.message}\n`); }
+  }
+
+  running(child) {
+    try { process.kill(WINDOWS ? child.pid : -child.pid, 0); return true; } catch { return false; }
   }
 
   alive(child) { return !child.failure && child.exitCode === null && child.signalCode === null; }
@@ -52,9 +68,7 @@ export class ProcessGroup {
       // A leader can exit before its children. Check process groups, not just PIDs.
       const deadline = Date.now() + 5000;
       while (Date.now() < deadline) {
-        if (!children.some(child => {
-          try { process.kill(-child.pid, 0); return true; } catch { return false; }
-        })) break;
+        if (!children.some(child => child.pid && this.running(child))) break;
         await delay(100);
       }
       for (const child of children) this.signal(child, 'SIGKILL');
