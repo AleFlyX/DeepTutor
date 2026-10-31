@@ -54,6 +54,8 @@ test("response language accepts and normalizes the extended registry", () => {
   assert.equal(resolveResponseLanguage("Japanese", "en"), "ja");
   assert.equal(resolveResponseLanguage("zh-cn", "en"), "zh");
   assert.equal(resolveResponseLanguage("pt-BR", "en"), "pt");
+  assert.equal(resolveResponseLanguage("pt_PT", "en"), "pt");
+  assert.equal(resolveResponseLanguage("vi_VN", "en"), "vi");
   assert.equal(resolveResponseLanguage("Português", "en"), "pt");
   assert.equal(resolveResponseLanguage("ms-MY", "en"), "ms");
   assert.equal(resolveResponseLanguage("Malay", "en"), "ms");
