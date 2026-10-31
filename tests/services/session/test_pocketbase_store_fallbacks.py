@@ -750,3 +750,40 @@ async def test_cross_loop_move_wins_over_a_backfill(fake_pb) -> None:
         session = await store.get_session("s_race_move")
     assert session is not None
     assert session["preferences"][TUTOR_SOURCE_KEY] == 9
+
+
+async def test_regenerate_delete_detaches_only_owned_anchored_threads(fake_pb):
+    store = PocketBaseSessionStore()
+    with as_user("alice"):
+        await store.create_session(session_id="parent")
+        mid = await store.add_message("parent", "assistant", "answer")
+        for sid, anchor in [("thread", mid), ("unrelated", "other")]:
+            await store.create_session(session_id=sid)
+            await store.update_session_preferences(
+                sid,
+                {
+                    "parent_session_id": "parent",
+                    "tutor_source_message_id": anchor,
+                    "retained": "value",
+                },
+            )
+    with as_user("bob"):
+        await store.create_session(session_id="foreign")
+        await store.update_session_preferences(
+            "foreign",
+            {
+                "parent_session_id": "parent",
+                "tutor_source_message_id": mid,
+            },
+        )
+    with as_user("alice"):
+        assert await store.delete_message(mid)
+        prefs = (await store.get_session("thread"))["preferences"]
+        assert prefs["tutor_source_message_id"] == ""
+        assert prefs["tutor_source_backfill_attempted"] is True
+        assert prefs["retained"] == "value"
+        assert (await store.get_session("unrelated"))["preferences"][
+            "tutor_source_message_id"
+        ] == "other"
+    with as_user("bob"):
+        assert (await store.get_session("foreign"))["preferences"]["tutor_source_message_id"] == mid

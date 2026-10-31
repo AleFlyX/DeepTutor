@@ -981,12 +981,52 @@ class PocketBaseSessionStore:
             logger.warning(f"add_message failed: {exc}")
             return 0
 
+    def _detach_message_threads_sync(self, session_id: str, message_id: str, uid: str) -> None:
+        from .thread_attribution import BACKFILL_ATTEMPTED_KEY, TUTOR_SOURCE_KEY
+
+        sessions = _pb().collection("sessions")
+        rows = sessions.get_full_list(
+            query_params={"filter": _workspace_filter(f'user_id="{uid}"')}
+        )
+        for row in rows:
+            sid = str(getattr(row, "session_id", ""))
+            if not sid or sid == session_id:
+                continue
+            with self._prefs_lock(sid, uid):
+                # Re-read under the same lock used by preference writes; a
+                # thread moved while the list was loading must keep its anchor.
+                current = _find_session_record(_pb(), sid, uid, recycled=False)
+                if current is None:
+                    continue
+                prefs = _json_loads(getattr(current, "preferences_json", None), {})
+                if not isinstance(prefs, dict):
+                    continue
+                if prefs.get("parent_session_id") != session_id:
+                    continue
+                if str(prefs.get(TUTOR_SOURCE_KEY) or "") != message_id:
+                    continue
+                sessions.update(
+                    current.id,
+                    {
+                        "preferences_json": {
+                            **prefs,
+                            TUTOR_SOURCE_KEY: "",
+                            BACKFILL_ATTEMPTED_KEY: True,
+                        }
+                    },
+                )
+
     @_captured_store_context
     async def delete_message(self, message_id: int | str) -> bool:
         def _delete():
             row = _pb().collection("messages").get_one(_validate_id(str(message_id)))
             if _find_session_record(_pb(), str(row.session_id), _current_user_id()) is None:
                 return False
+            # Detach before deletion: failed preference writes must not leave
+            # a deleted message as the only way to reach its tutor threads.
+            self._detach_message_threads_sync(
+                str(row.session_id), str(message_id), _current_user_id()
+            )
             _pb().collection("messages").delete(str(message_id))
             return True
 
