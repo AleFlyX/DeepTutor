@@ -76,7 +76,7 @@ async def test_ui_languages_are_persisted_independently(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("language", ["fr", "uk", "pl"])
+@pytest.mark.parametrize("language", ["fr", "uk", "pl", "ja"])
 async def test_ui_settings_persist_supported_languages_independently(
     monkeypatch: pytest.MonkeyPatch, tmp_path, language: str
 ) -> None:
@@ -726,11 +726,11 @@ def test_llm_provider_choices_include_runcrate() -> None:
     assert llm["runcrate"]["base_url"] == "https://api.runcrate.ai/v1"
 
 
-def test_llm_provider_choices_include_cloudgpu() -> None:
+def test_llm_provider_choices_include_llmtr() -> None:
     llm = {item["value"]: item for item in settings_router._provider_choices()["llm"]}
 
-    assert llm["cloudgpu"]["label"] == "CloudGPU"
-    assert llm["cloudgpu"]["base_url"] == "https://cloudgpu.app/v1"
+    assert llm["llmtr"]["label"] == "LLMTR"
+    assert llm["llmtr"]["base_url"] == "https://llmtr.com/v1"
 
 
 def test_llm_provider_choices_include_novita() -> None:
@@ -2027,3 +2027,10 @@ def test_llm_provider_choices_include_opper() -> None:
 
     assert llm["opper"]["label"] == "Opper"
     assert llm["opper"]["base_url"] == "https://api.opper.ai/v3/compat"
+
+
+def test_llm_provider_choices_include_cloudgpu() -> None:
+    llm = {item["value"]: item for item in settings_router._provider_choices()["llm"]}
+
+    assert llm["cloudgpu"]["label"] == "CloudGPU"
+    assert llm["cloudgpu"]["base_url"] == "https://cloudgpu.app/v1"

@@ -214,6 +214,7 @@ RUN mkdir -p \
 # skipped (no CAP_SETUID) and UID 1000 matches the typical host user.
 RUN groupadd --system --gid 1000 deeptutor \
     && useradd --system --uid 1000 --gid 1000 --no-create-home --shell /usr/sbin/nologin deeptutor \
+    && install -d -o deeptutor -g deeptutor -m 0755 /home/deeptutor \
     && chown -R deeptutor:deeptutor /app/data /app/web/.next
 
 # supervisord config is split into two files so the production and development
@@ -259,7 +260,7 @@ stdout_logfile=/dev/fd/1
 stdout_logfile_maxbytes=0
 stderr_logfile=/dev/fd/2
 stderr_logfile_maxbytes=0
-environment=PYTHONPATH="/app",PYTHONUNBUFFERED="1"
+environment=PYTHONPATH="/app",PYTHONUNBUFFERED="1",HOME="/home/deeptutor"
 
 [program:frontend]
 command=/bin/bash /app/start-frontend.sh
@@ -272,7 +273,7 @@ stdout_logfile=/dev/fd/1
 stdout_logfile_maxbytes=0
 stderr_logfile=/dev/fd/2
 stderr_logfile_maxbytes=0
-environment=NODE_ENV="production"
+environment=NODE_ENV="production",HOME="/home/deeptutor"
 EOF
 
 RUN sed -i 's/\r$//' /etc/supervisor/conf.d/programs.conf
@@ -599,7 +600,7 @@ stdout_logfile=/dev/fd/1
 stdout_logfile_maxbytes=0
 stderr_logfile=/dev/fd/2
 stderr_logfile_maxbytes=0
-environment=PYTHONPATH="/app",PYTHONUNBUFFERED="1"
+environment=PYTHONPATH="/app",PYTHONUNBUFFERED="1",HOME="/home/deeptutor"
 
 [program:frontend]
 command=/bin/bash -c "cd /app/web && node scripts/dev.mjs -H 0.0.0.0 -p ${FRONTEND_PORT:-3782}"
@@ -612,7 +613,7 @@ stdout_logfile=/dev/fd/1
 stdout_logfile_maxbytes=0
 stderr_logfile=/dev/fd/2
 stderr_logfile_maxbytes=0
-environment=NODE_ENV="development"
+environment=NODE_ENV="development",HOME="/home/deeptutor"
 EOF
 
 RUN sed -i 's/\r$//' /etc/supervisor/conf.d/programs.conf

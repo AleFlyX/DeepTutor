@@ -183,3 +183,38 @@ async def test_retry_manager_returns_best_effort_result_when_visual_review_still
     assert status_messages[-1] == (
         "Visual review still found issues after all retries. Returning the best available result with a warning."
     )
+
+
+@pytest.mark.asyncio
+async def test_visual_review_timeout_respects_retry_limit() -> None:
+    class Renderer:
+        async def render(self, *, code, output_mode, quality):
+            return RenderResult(output_mode=output_mode, quality=quality)
+
+    review_calls = 0
+    repair_calls = 0
+
+    async def slow_review(code, result):
+        nonlocal review_calls
+        review_calls += 1
+        await asyncio.sleep(1)
+
+    async def repair(code, error, attempt):
+        nonlocal repair_calls
+        repair_calls += 1
+        assert "Visual quality review timed out" in error
+        return GeneratedCode(code=code)
+
+    manager = CodeRetryManager(
+        renderer=Renderer(),
+        repair_callback=repair,
+        review_callback=slow_review,
+        review_timeout_seconds=0.01,
+        max_retries=1,
+    )
+    with pytest.raises(ManimRenderError, match="Visual quality review timed out"):
+        await manager.render_with_retries(
+            initial_code="pass", output_mode="video", quality="medium"
+        )
+    assert review_calls == 2
+    assert repair_calls == 1

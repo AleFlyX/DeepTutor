@@ -608,21 +608,21 @@ def test_llm_runcrate_base_url_detection_preserves_openai_binding_compatibility(
     assert resolved.effective_url == "https://api.runcrate.ai/v1"
 
 
-def test_llm_cloudgpu_binding_uses_default_openai_compatible_endpoint() -> None:
+def test_llm_llmtr_binding_uses_default_openai_compatible_endpoint() -> None:
     catalog = _build_catalog(
         llm_profile={
             "id": "llm-p",
-            "name": "CloudGPU",
-            "binding": "cloudgpu",
+            "name": "LLMTR",
+            "binding": "llmtr",
             "base_url": "",
-            "api_key": "cloudgpu-key",
+            "api_key": "llmtr-key",
             "api_version": "",
             "extra_headers": {},
             "models": [
                 {
                     "id": "llm-m",
-                    "name": "DeepSeek V4.1 Flash",
-                    "model": "deepseek-v4.1-flash",
+                    "name": "Qwen 3.8 27B",
+                    "model": "llmtr/qwen3-8-27b",
                 }
             ],
         }
@@ -630,29 +630,29 @@ def test_llm_cloudgpu_binding_uses_default_openai_compatible_endpoint() -> None:
 
     resolved = resolve_llm_runtime_config(catalog=catalog)
 
-    assert resolved.provider_name == "cloudgpu"
+    assert resolved.provider_name == "llmtr"
     assert resolved.provider_mode == "gateway"
-    assert resolved.binding == "cloudgpu"
-    assert resolved.model == "deepseek-v4.1-flash"
-    assert resolved.api_key == "cloudgpu-key"
-    assert resolved.effective_url == "https://cloudgpu.app/v1"
+    assert resolved.binding == "llmtr"
+    assert resolved.model == "llmtr/qwen3-8-27b"
+    assert resolved.api_key == "llmtr-key"
+    assert resolved.effective_url == "https://llmtr.com/v1"
 
 
-def test_llm_cloudgpu_base_url_detection_preserves_openai_binding_compatibility() -> None:
+def test_llm_llmtr_base_url_detection_preserves_openai_binding_compatibility() -> None:
     catalog = _build_catalog(
         llm_profile={
             "id": "llm-p",
             "name": "OpenAI Compatible",
             "binding": "openai",
-            "base_url": "https://cloudgpu.app/v1",
-            "api_key": "cloudgpu-key",
+            "base_url": "https://llmtr.com/v1",
+            "api_key": "llmtr-key",
             "api_version": "",
             "extra_headers": {},
             "models": [
                 {
                     "id": "llm-m",
-                    "name": "DeepSeek V4.1 Flash",
-                    "model": "deepseek-v4.1-flash",
+                    "name": "Qwen 3.8 27B",
+                    "model": "llmtr/qwen3-8-27b",
                 }
             ],
         }
@@ -660,9 +660,10 @@ def test_llm_cloudgpu_base_url_detection_preserves_openai_binding_compatibility(
 
     resolved = resolve_llm_runtime_config(catalog=catalog)
 
-    assert resolved.provider_name == "cloudgpu"
+    assert resolved.provider_name == "llmtr"
     assert resolved.provider_mode == "gateway"
-    assert resolved.effective_url == "https://cloudgpu.app/v1"
+    assert resolved.model == "llmtr/qwen3-8-27b"
+    assert resolved.effective_url == "https://llmtr.com/v1"
 
 
 def test_llm_novita_binding_uses_default_openai_compatible_endpoint() -> None:
@@ -1286,3 +1287,60 @@ def test_llm_opper_base_url_detection_preserves_openai_binding_compatibility() -
     assert resolved.provider_name == "opper"
     assert resolved.provider_mode == "gateway"
     assert resolved.effective_url == "https://api.opper.ai/v3/compat"
+
+
+def test_llm_cloudgpu_binding_uses_default_openai_compatible_endpoint() -> None:
+    catalog = _build_catalog(
+        llm_profile={
+            "id": "llm-p",
+            "name": "CloudGPU",
+            "binding": "cloudgpu",
+            "base_url": "",
+            "api_key": "cloudgpu-key",
+            "api_version": "",
+            "extra_headers": {},
+            "models": [
+                {
+                    "id": "llm-m",
+                    "name": "DeepSeek V4.1 Flash",
+                    "model": "deepseek-v4.1-flash",
+                }
+            ],
+        }
+    )
+
+    resolved = resolve_llm_runtime_config(catalog=catalog)
+
+    assert resolved.provider_name == "cloudgpu"
+    assert resolved.provider_mode == "gateway"
+    assert resolved.binding == "cloudgpu"
+    assert resolved.model == "deepseek-v4.1-flash"
+    assert resolved.api_key == "cloudgpu-key"
+    assert resolved.effective_url == "https://cloudgpu.app/v1"
+
+
+def test_llm_cloudgpu_base_url_detection_preserves_openai_binding_compatibility() -> None:
+    catalog = _build_catalog(
+        llm_profile={
+            "id": "llm-p",
+            "name": "OpenAI Compatible",
+            "binding": "openai",
+            "base_url": "https://cloudgpu.app/v1",
+            "api_key": "cloudgpu-key",
+            "api_version": "",
+            "extra_headers": {},
+            "models": [
+                {
+                    "id": "llm-m",
+                    "name": "DeepSeek V4.1 Flash",
+                    "model": "deepseek-v4.1-flash",
+                }
+            ],
+        }
+    )
+
+    resolved = resolve_llm_runtime_config(catalog=catalog)
+
+    assert resolved.provider_name == "cloudgpu"
+    assert resolved.provider_mode == "gateway"
+    assert resolved.effective_url == "https://cloudgpu.app/v1"

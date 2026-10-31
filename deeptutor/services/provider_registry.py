@@ -182,8 +182,20 @@ ANTHROPIC_EFFORT_BASED_FAMILIES: tuple[str, ...] = (
     "claude-opus-4-8",
     "claude-opus-5",
     "claude-sonnet-5",
+    "claude-haiku-5",
     "claude-fable-5",
     "claude-mythos-5",
+)
+
+# OpenAI reasoning models accept only their default temperature and answer
+# HTTP 400 to any other value, on Azure deployments as on OpenAI itself. The
+# services providers' ``_supports_temperature`` skips it for the same names;
+# the agentic Chat Completions path relies on these overrides (#2181).
+OPENAI_REASONING_FAMILIES: tuple[str, ...] = ("gpt-5", "o1", "o3", "o4")
+# ``find_by_model`` maps gpt-* names to OpenAI but not bare o-series ids such
+# as ``o3-mini``, so the bindings that serve them carry the rule themselves.
+_OPENAI_REASONING_OVERRIDES: tuple[tuple[str, dict[str, Any]], ...] = tuple(
+    (family, {"temperature": None}) for family in OPENAI_REASONING_FAMILIES
 )
 
 
@@ -200,6 +212,7 @@ PROVIDERS: tuple[ProviderSpec, ...] = (
         display_name="Custom",
         backend="openai_compat",
         is_direct=True,
+        model_overrides=_OPENAI_REASONING_OVERRIDES,
     ),
     ProviderSpec(
         name="custom_anthropic",
@@ -217,6 +230,7 @@ PROVIDERS: tuple[ProviderSpec, ...] = (
         display_name="Azure OpenAI",
         backend="azure_openai",
         is_direct=True,
+        model_overrides=_OPENAI_REASONING_OVERRIDES,
     ),
     # === Gateways (detected by api_key / api_base, route any model) ========
     ProviderSpec(
@@ -374,6 +388,17 @@ PROVIDERS: tuple[ProviderSpec, ...] = (
         default_api_base="https://api.runcrate.ai/v1",
     ),
     ProviderSpec(
+        name="llmtr",
+        keywords=("llmtr",),
+        env_key="LLMTR_API_KEY",
+        display_name="LLMTR",
+        backend="openai_compat",
+        is_gateway=True,
+        detect_by_key_prefix="llmtr-",
+        detect_by_base_keyword="llmtr",
+        default_api_base="https://llmtr.com/v1",
+    ),
+    ProviderSpec(
         name="cloudgpu",
         keywords=("cloudgpu",),
         env_key="CLOUDGPU_API_KEY",
@@ -451,6 +476,9 @@ PROVIDERS: tuple[ProviderSpec, ...] = (
         backend="openai_compat",
         default_api_base="https://api.openai.com/v1",
         supports_max_completion_tokens=True,
+        # This model rule also applies when GPT-5 is reached through a
+        # generic OpenAI-compatible binding or gateway.
+        model_overrides=_OPENAI_REASONING_OVERRIDES,
     ),
     ProviderSpec(
         name="openai_codex",

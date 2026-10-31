@@ -22,9 +22,11 @@ export function initI18n(language?: unknown) {
     fallbackLng: "en",
     // Use a single default namespace to keep lookups simple.
     // We intentionally keep keySeparator disabled so keys like "Generating..." remain valid.
+    // nsSeparator too: keys like "Query:" or "http://localhost:8080" would otherwise split as ns:key.
     defaultNS: "app",
     ns: ["app"],
     keySeparator: false,
+    nsSeparator: false,
     interpolation: {
       escapeValue: false,
     },
@@ -62,5 +64,10 @@ export async function ensureLanguage(language: AppLanguage) {
   if (language === "pl") {
     const plApp = (await import("@/locales/pl/app.json")).default;
     i18n.addResourceBundle("pl", "app", plApp, true, true);
+  }
+
+  if (language === "ja") {
+    const jaApp = (await import("@/locales/ja/app.json")).default;
+    i18n.addResourceBundle("ja", "app", jaApp, true, true);
   }
 }

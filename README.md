@@ -228,11 +228,9 @@
 
 ### 📰 News
 
-- **2026-09-20** 🎉 40k stars in 9 months! We'll keep expanding DeepTutor's learning ecosystem.
+- **2026-10-28** 🚀 [**DeepTutor v1.7.0**](https://github.com/HKUDS/DeepTutor/releases/tag/v1.7.0) is here! A fresh look, smoother navigation, and learning tools that work better together.
 - **2026-05-22** 🌐 Official docs site live at [**deeptutor.info**](https://deeptutor.info/) — guides, references, and capability tours in one place.
-- **2026-04-19** 🎉 20k stars in 111 days! Thank you for the support toward truly personalized, intelligent tutoring.
 - **2026-04-10** 📄 Our paper is live on arXiv — read the [preprint](https://arxiv.org/abs/2604.26962) for the design and ideas behind DeepTutor.
-- **2026-02-06** 🚀 10k stars in just 39 days! A huge thank you to our incredible community.
 - **2026-01-01** 🎊 Happy New Year! Join our [Discord](https://discord.gg/eRsjPgMU4t), [WeChat](https://github.com/HKUDS/DeepTutor/issues/78), or [Discussions](https://github.com/HKUDS/DeepTutor/discussions) — let's shape DeepTutor together.
 - **2025-12-29** 🎓 DeepTutor is officially released!
 
@@ -254,6 +252,22 @@ DeepTutor is an agent-native learning workspace that connects tutoring, problem 
 
 ## 🚀 Get Started
 
+### Desktop Apps — macOS and Windows (Preview)
+
+**Open DeepTutor** runs the full learning workspace in a desktop window, with Python, Node.js, and the DeepTutor runtime bundled. No terminal or separate Python/Node installation is needed.
+
+Desktop apps are currently previews on `dev`; the **v1.7.0 Release does not include desktop installers**. For preview downloads, open a completed successful [Desktop Release workflow run](https://github.com/HKUDS/DeepTutor/actions/workflows/desktop-release.yml?query=branch%3Adev), scroll to **Artifacts**, and download the matching target (`macos-arm64`, `macos-x64`, or `windows-x64`). GitHub sign-in is required, and these artifacts expire after seven days. Extract the downloaded artifact ZIP to find the installer. Published desktop installers will appear under **Assets** on the corresponding [GitHub Release](https://github.com/HKUDS/DeepTutor/releases).
+
+| Your computer | Installer inside the download | Installation |
+| --- | --- | --- |
+| **Mac with Apple Silicon** (M-series) | `Open-DeepTutor-MacOS-Apple-Silicon-v<version>.dmg` | Open the DMG, drag **Open DeepTutor** into **Applications**, then launch it. |
+| **Mac with Intel** | `Open-DeepTutor-MacOS-Intel-v<version>.dmg` | Open the DMG, drag **Open DeepTutor** into **Applications**, then launch it. |
+| **Windows x64** | `Open-DeepTutor-Windows-v<version>-Setup.exe` | Run the installer, then open **Open DeepTutor** from the Start menu or desktop shortcut. |
+
+Windows also offers `Open-DeepTutor-Windows-v<version>-Portable.zip`: extract the entire ZIP and launch `Open DeepTutor.exe` from the extracted folder.
+
+On first launch, wait for the bundled runtime to initialize, then configure your model provider and API key in **Settings → Providers**, and select a model under **Language models**. Preview signing status varies; Windows builds are currently unsigned and may show a SmartScreen warning. See the [desktop guide](apps/desktop/README.md) for signing, local data locations, optional external tools, and source builds.
+
 ### Let Your Agent Set Up DeepTutor
 
 Copy this prompt into your terminal-capable AI agent (such as Codex or Claude Code):
@@ -274,7 +288,7 @@ The [developer and agent handbook](docs-for-dev/README.md) is the documentation 
 Claude Code connected-agent model Sync can use the optional `claude-code` extra for SDK-based model discovery. See [Claude model sync](docs-for-dev/CLAUDE_MODEL_SYNC.md)
 for versioned catalogs, CLI authentication, and the legacy fallback.
 
-DeepTutor ships four installation paths. They all share one runtime-home layout: private settings live in `data/user/settings/` under the directory you launch from (or under `DEEPTUTOR_HOME` / `deeptutor start --home` if you set one explicitly). See [Local Data Persistence](./docs-for-dev/DATA_STORAGE.md) for the complete storage layout, database support, and backup notes. For the full app, the recommended flow is **pick a runtime-home directory → install → `deeptutor init` → `deeptutor start`**.
+The four terminal-based installation paths below share one runtime-home layout: private settings live in `data/user/settings/` under the directory you launch from (or under `DEEPTUTOR_HOME` / `deeptutor start --home` if you set one explicitly). See [Local Data Persistence](./docs-for-dev/DATA_STORAGE.md) for the complete storage layout, database support, and backup notes. For these installations, the recommended full-app flow is **pick a runtime-home directory → install → `deeptutor init` → `deeptutor start`**.
 
 ### One-Command Docker Trial
 
@@ -1026,6 +1040,39 @@ deeptutor run deep_question "Quiz me on that survey" --session "$SID" --format j
 ```
 
 The repo ships a root [`SKILL.md`](SKILL.md) — a compact handover doc for the CLI. Ask your agent to read it explicitly; its [Agent Setup guide](docs-for-dev/AGENT_SETUP.md) covers installation and configuration. You can also wrap `deeptutor run` as a tool in a LangChain / AutoGen loop. Full recipes: [Agent Handoff](https://deeptutor.info/docs/cli/agent-handoff/).
+
+</details>
+
+<details>
+<summary><b>Opt-in visual review for Manim animations</b></summary>
+
+Set `enable_visual_review=true` to inspect rendered frames for overlap, readability,
+and framing, then feed detected issues into the existing code repair loop:
+
+```bash
+deeptutor run math_animator "Animate a sine wave" --config enable_visual_review=true
+deeptutor run visualize "Animate a sine wave" \
+  --config render_mode=manim_video --config enable_visual_review=true
+```
+
+The option defaults to `false`. It also works with `output_mode=image` for
+`math_animator` and `render_mode=manim_image` for `visualize`. Other visualizers,
+including the general `auto` loop, ignore it. Manim's optional dependencies are
+still required.
+
+For SDK turns, pass `config={"enable_visual_review": True}` in the `TurnRequest`
+sent to `DeepTutorApp.start_turn()`. API clients use the same `config` object with
+JSON `true`. For book animation blocks, set
+`params={"enable_visual_review": True}` on the animation `Block`.
+
+Review adds vision model calls and may add repair calls and re-renders, increasing
+cost and latency. It uses the existing limit of four retries, with a 120-second
+review timeout and a 180-second repair timeout. If no frames are available or the
+configured review model cannot inspect images, review is skipped with a summary.
+An unsuccessful review after all retries returns the best available render and its
+failed review result; a review timeout follows the existing render error/retry path.
+Capability results expose `render.visual_review`; book blocks retain the same
+review data in `metadata.visual_review` (`null` when review did not run).
 
 </details>
 

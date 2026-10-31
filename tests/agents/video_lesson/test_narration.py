@@ -33,3 +33,24 @@ def test_voice_module_inlines_audio() -> None:
     assert module.startswith("export const VOICE = ")
     assert '"src": "data:audio/mpeg;base64,SUQz"' in module
     assert module.count('"src"') == 1
+
+
+def _tts(monkeypatch, **config) -> None:
+    from types import SimpleNamespace
+
+    from deeptutor.services.config import provider_runtime
+
+    monkeypatch.setattr(
+        provider_runtime, "resolve_tts_runtime_config", lambda: SimpleNamespace(**config)
+    )
+
+
+def test_settings_edge_voice_is_used_for_its_language(monkeypatch) -> None:
+    _tts(monkeypatch, provider_name="edge", voice="en-US-AndrewMultilingualNeural")
+    assert narration._configured_voice("en") == "en-US-AndrewMultilingualNeural"
+    assert narration._configured_voice("zh") is None
+
+
+def test_non_edge_tts_settings_keep_the_default_voice(monkeypatch) -> None:
+    _tts(monkeypatch, provider_name="openai", voice="alloy")
+    assert narration._configured_voice("en") is None

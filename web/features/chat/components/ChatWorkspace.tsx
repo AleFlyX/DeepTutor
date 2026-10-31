@@ -289,6 +289,7 @@ export default function ChatWorkspace() {
     setPersonaSelection,
     setAnswerBy,
     setResourceSelection,
+    setCreateTarget,
     setReplyLanguageOverride,
     sendMessage,
     queueMessage,
@@ -1466,8 +1467,13 @@ export default function ChatWorkspace() {
       // the new capability has its own form that needs explicit confirm.
       setCapabilityConfigConfirmed(false);
       setCapMenuOpen(false);
+      // Create mode only makes sense on the plain chat loop (`cap.value`
+      // empty); any other mode drops it. Picking Create itself goes through
+      // `setCreateTarget` → the tray's `onChange`, which calls back here
+      // with `""` — a no-op for this guard.
+      if (cap.value) setCreateTarget(null);
     },
-    [capabilities, setCapability, setTools, userEnabledTools],
+    [capabilities, setCapability, setTools, setCreateTarget, userEnabledTools],
   );
 
   const fileToAttachment = fileToPendingAttachment;
@@ -2511,6 +2517,7 @@ export default function ChatWorkspace() {
                       />
                     ) : (
                       <Tooltip
+                        className="min-w-0 max-w-full"
                         label={canRenameSession
                           ? t("Click to rename session")
                           : t("Start a conversation to rename")}
@@ -2854,6 +2861,8 @@ export default function ChatWorkspace() {
                 resourceCatalog={resourceCatalog}
                 resourceSelection={state.resourceSelection}
                 onResourceSelectionChange={setResourceSelection}
+                createTarget={state.createTarget}
+                onCreateTargetChange={setCreateTarget}
                 onToggleMemoryFile={handleToggleMemoryFile}
                 onSend={handleSend}
                 awaitingUserReply={awaitingUserReply}

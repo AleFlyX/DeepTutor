@@ -73,13 +73,27 @@ async def speak(text: str, voice: str) -> Clip:
     return Clip(text, frames, captions or [(0, text)], bytes(audio))
 
 
+def _configured_voice(language: str) -> str | None:
+    """The Edge voice chosen in Settings > Text-to-Speech, when it speaks this language."""
+    try:
+        from deeptutor.services.config.provider_runtime import resolve_tts_runtime_config
+
+        config = resolve_tts_runtime_config()
+    except Exception:
+        return None
+    voice = getattr(config, "voice", "") or ""
+    if getattr(config, "provider_name", "") != "edge" or not voice:
+        return None
+    return voice if voice.lower().startswith(_lang(language)) else None
+
+
 async def narrate(
     lines: list[NarrationLine], language: str, cache: dict[str, Clip] | None = None
 ) -> dict[str, Clip]:
     """Record every line; ``cache`` keeps clips across retries of the same lesson."""
     cache = {} if cache is None else cache
     voiced = importlib.util.find_spec("edge_tts") is not None
-    voice = VOICES[_lang(language)]
+    voice = _configured_voice(language) or VOICES[_lang(language)]
     gate = asyncio.Semaphore(_PARALLEL)
 
     async def one(text: str) -> Clip:
