@@ -99,8 +99,12 @@ checkout. `npm start` runs the shell against this computer's bundled core.
   the public key. Keep a secure backup: losing it means shipped apps can no
   longer accept core updates. `--new-key` deliberately starts a new identity.
 - **The MacOS apps** are signed ad hoc by default. Set `APPLE_SIGNING_IDENTITY`
-  to a Developer ID Application identity for a hardened-runtime signature
-  (`assets/entitlements.mac.plist`), then notarize the DMG.
+  to a Developer ID Application identity during both runtime building and app
+  packaging. Native code in the bundled Python, Node and Web dependencies is
+  signed with secure timestamps before the core archive is sealed; interpreter
+  entitlements live in `assets/entitlements.runtime.mac.plist`. The outer app
+  uses `assets/entitlements.mac.plist`. Then notarize the DMG with
+  `node scripts/notarize.mjs`; only an Accepted result is stapled and validated.
 - **The Windows app** is unsigned; SmartScreen asks for confirmation on first
   open until an Authenticode certificate is added.
 

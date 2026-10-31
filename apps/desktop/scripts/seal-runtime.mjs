@@ -6,6 +6,7 @@ import { canonicalManifest, sha256 } from '../src/bundles.mjs';
 import { systemTar } from '../src/platform.mjs';
 import { appRoot, loadTarget } from './lib/target.mjs';
 import { assertSigningKey } from './lib/signing.mjs';
+import { signMacRuntime } from './lib/macos-runtime-signing.mjs';
 
 // One signing identity covers every platform; the manifest binds platform and architecture.
 const target = await loadTarget();
@@ -32,6 +33,11 @@ const coreVersion = /__version__\s*=\s*['"]([^'"]+)/.exec(await readFile(path.jo
 const commit = (await readFile(path.join(target.runtime, 'BUILD_COMMIT'), 'utf8')).trim();
 const runtimeId = `${coreVersion}-${commit.slice(0, 9)}-${target.arch}`;
 const archive = `open-deeptutor-core-${runtimeId}.tar.gz`;
+// Sign native code before computing the archive hash and Ed25519 signature.
+if (target.platform === 'darwin') {
+  await signMacRuntime(target.runtime, process.env.APPLE_SIGNING_IDENTITY,
+    path.join(appRoot, 'assets/entitlements.runtime.mac.plist'));
+}
 execFileSync(systemTar(), ['-czf', path.join(target.seed, archive), '-C', target.runtime, '.'], { stdio: 'inherit', env: { ...process.env, COPYFILE_DISABLE: '1' } });
 const manifest = {
   formatVersion: 1, protocolVersion: 1, platform: target.platform, arch: target.arch,
