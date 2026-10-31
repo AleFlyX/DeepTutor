@@ -228,11 +228,9 @@
 
 ### 📰 News
 
-- **2026-09-20** 🎉 40k stars in 9 months! We'll keep expanding DeepTutor's learning ecosystem.
+- **2026-10-28** 🚀 [**DeepTutor v1.7.0**](https://github.com/HKUDS/DeepTutor/releases/tag/v1.7.0) is here! A fresh look, smoother navigation, and learning tools that work better together.
 - **2026-05-22** 🌐 Official docs site live at [**deeptutor.info**](https://deeptutor.info/) — guides, references, and capability tours in one place.
-- **2026-04-19** 🎉 20k stars in 111 days! Thank you for the support toward truly personalized, intelligent tutoring.
 - **2026-04-10** 📄 Our paper is live on arXiv — read the [preprint](https://arxiv.org/abs/2604.26962) for the design and ideas behind DeepTutor.
-- **2026-02-06** 🚀 10k stars in just 39 days! A huge thank you to our incredible community.
 - **2026-01-01** 🎊 Happy New Year! Join our [Discord](https://discord.gg/eRsjPgMU4t), [WeChat](https://github.com/HKUDS/DeepTutor/issues/78), or [Discussions](https://github.com/HKUDS/DeepTutor/discussions) — let's shape DeepTutor together.
 - **2025-12-29** 🎓 DeepTutor is officially released!
 
@@ -242,6 +240,7 @@ DeepTutor is an agent-native learning workspace that connects tutoring, problem 
 
 - **One runtime for every mode** — Chat, Ask Questions, Quiz, Research, Visualize, Solve, Mastery Path, Immersive Reading, and Audio Overview share one capability runtime and session context while keeping purpose-built loops and pipelines.
 - **Task Board** — Track study tasks in To do, In progress, and Done, with notes, drag-and-drop or keyboard-accessible move buttons, and an archive you can restore from. Cards stay in the current workspace and follow the existing appearance and language settings; no model configuration is required.
+- **Calendar** — Keep study sessions on a personal calendar with repeating events and reminders, and download one calendar or all of them as an `.ics` file for Apple Calendar, Google Calendar, Outlook, and Thunderbird. Workspace overlays such as task due dates and reviews stay in DeepTutor.
 - **Connected learning context** — Knowledge bases, books, Learning notebook pages, Favorites, question banks, personas, and Memory can be reused across the workflows that support them, subject to account grants and learning policies.
 - **Immersive video learning** — add YouTube or Bilibili links to Reading for native playback, transcript search, timestamp-grounded tutoring, saved notes, and resumable progress; YouTube captions and browsing can use an administrator-configured Invidious instance.
 - **Subagents and Partners** — from Chat, consult a live agent harness (Claude Code, Codex, Grok CLI, Antigravity, Kimi, opencode, MiMo, Hermes, OpenClaw, or DeepSeek) or a Partner, import past conversations, and run persistent IM companions on the same brain.
@@ -252,6 +251,22 @@ DeepTutor is an agent-native learning workspace that connects tutoring, problem 
 ---
 
 ## 🚀 Get Started
+
+### Desktop Apps — macOS and Windows (Preview)
+
+**Open DeepTutor** runs the full learning workspace in a desktop window, with Python, Node.js, and the DeepTutor runtime bundled. No terminal or separate Python/Node installation is needed.
+
+Desktop apps are currently previews on `dev`; the **v1.7.0 Release does not include desktop installers**. For preview downloads, open a completed successful [Desktop Release workflow run](https://github.com/HKUDS/DeepTutor/actions/workflows/desktop-release.yml?query=branch%3Adev), scroll to **Artifacts**, and download the matching target (`macos-arm64`, `macos-x64`, or `windows-x64`). GitHub sign-in is required, and these artifacts expire after seven days. Extract the downloaded artifact ZIP to find the installer. Published desktop installers will appear under **Assets** on the corresponding [GitHub Release](https://github.com/HKUDS/DeepTutor/releases).
+
+| Your computer | Installer inside the download | Installation |
+| --- | --- | --- |
+| **Mac with Apple Silicon** (M-series) | `Open-DeepTutor-MacOS-Apple-Silicon-v<version>.dmg` | Open the DMG, drag **Open DeepTutor** into **Applications**, then launch it. |
+| **Mac with Intel** | `Open-DeepTutor-MacOS-Intel-v<version>.dmg` | Open the DMG, drag **Open DeepTutor** into **Applications**, then launch it. |
+| **Windows x64** | `Open-DeepTutor-Windows-v<version>-Setup.exe` | Run the installer, then open **Open DeepTutor** from the Start menu or desktop shortcut. |
+
+Windows also offers `Open-DeepTutor-Windows-v<version>-Portable.zip`: extract the entire ZIP and launch `Open DeepTutor.exe` from the extracted folder.
+
+On first launch, wait for the bundled runtime to initialize, then configure your model provider and API key in **Settings → Providers**, and select a model under **Language models**. Preview signing status varies; Windows builds are currently unsigned and may show a SmartScreen warning. See the [desktop guide](apps/desktop/README.md) for signing, local data locations, optional external tools, and source builds.
 
 ### Let Your Agent Set Up DeepTutor
 
@@ -270,7 +285,10 @@ with the access URL and the results of your checks.
 
 The [developer and agent handbook](docs-for-dev/README.md) is the documentation entry point for setup, architecture, extension development, testing, and troubleshooting. Its [Agent Setup guide](docs-for-dev/AGENT_SETUP.md) covers the full installation flow, including non-interactive CLI configuration. To install it yourself, choose one of the paths below.
 
-DeepTutor ships four installation paths. They all share one runtime-home layout: private settings live in `data/user/settings/` under the directory you launch from (or under `DEEPTUTOR_HOME` / `deeptutor start --home` if you set one explicitly). See [Local Data Persistence](./docs-for-dev/DATA_STORAGE.md) for the complete storage layout, database support, and backup notes. For the full app, the recommended flow is **pick a runtime-home directory → install → `deeptutor init` → `deeptutor start`**.
+Claude Code connected-agent model Sync can use the optional `claude-code` extra for SDK-based model discovery. See [Claude model sync](docs-for-dev/CLAUDE_MODEL_SYNC.md)
+for versioned catalogs, CLI authentication, and the legacy fallback.
+
+The four terminal-based installation paths below share one runtime-home layout: private settings live in `data/user/settings/` under the directory you launch from (or under `DEEPTUTOR_HOME` / `deeptutor start --home` if you set one explicitly). See [Local Data Persistence](./docs-for-dev/DATA_STORAGE.md) for the complete storage layout, database support, and backup notes. For these installations, the recommended full-app flow is **pick a runtime-home directory → install → `deeptutor init` → `deeptutor start`**.
 
 ### One-Command Docker Trial
 
@@ -286,6 +304,12 @@ docker run --rm --name deeptutor \
 Open [http://127.0.0.1:3782](http://127.0.0.1:3782), configure model providers in **Settings → Providers**, and press `Ctrl+C` when you are done. The named `deeptutor-data` volume keeps settings and local data for the next run.
 
 ### Content Workspace
+
+In a new conversation, open the workspace menu and **Choose a server folder**
+to browse into a project and select it without typing a path. The same picker
+is available in workspace settings. Remote deployments browse server folders;
+see the [server folder picker guide](docs-for-dev/SERVER_WORKSPACE_PICKER.md)
+for Docker mounts and configurable browsing roots.
 
 The **Content Workspace** is separate from DeepTutor's private runtime home. It
 is the folder agents may read, with generated files under
@@ -397,6 +421,19 @@ python scripts/install_extras.py edge-tts        # Optional free speech provider
 ```
 
 **Video Lesson:** choose Video Lesson in chat or run `deeptutor run video_lesson "Explain a concept"`. The backend needs Node.js 22+ and npm. First use downloads pinned Remotion packages and a WebAssembly JavaScript interpreter; Docker is not required. Frame checks run inside the interpreter with no host filesystem, credentials, network or process APIs, under memory and execution limits. Cancellation stops the build process. Local and container deployments use the same execution path, with no unsandboxed fallback. The resulting lesson plays in the browser, with captions when optional narration is unavailable.
+
+Generated Math Animator videos include an **Output files** panel below the player.
+It shows the saved server path and file size, supports copying the path, and can
+reveal the original file in Finder from a local macOS browser.
+**Clean render files** previews the reclaimable size and asks for confirmation
+before removing that generation's reproducible render directory. Final outputs,
+source code, and published playback snapshots are retained. Cleanup is blocked
+while conversations are running or the reviewed files have changed. In a remote
+deployment, the displayed path belongs to the server.
+
+Generated chat-tool file attachments also expose an **Output files** panel with
+the saved path, copy and Finder actions, and a confirmed option to remove the
+workspace copy. The immutable chat attachment remains available after removal.
 
 </details>
 
@@ -796,6 +833,8 @@ container; a CLI installed only on the browser's computer is not reachable.
 
 The Learning notebook, formerly Co-Writer, organizes your own writing into pages, subpages, and blocks within the active workspace. Import Word documents, arrange a page tree, and insert original records from Favorites as evidence. Pages keep their save status visible and export as Markdown or Word; interactive content becomes static in Word.
 
+**Export flashcards to Anki.** Notebook pages can include Flash Cards. On a page that has them, open the page menu and choose **Export flashcards (Anki)**. From the notebook review queue, choose **Export all for Anki**. In Anki, use **File → Import** and select the downloaded `.txt` file. Cards land in a deck named `DeepTutor::<note title>` with front/back fields, tags, and math preserved. Re-importing the same file updates existing cards instead of duplicating them. DeepTutor's own review schedule is not included.
+
 <div align="center">
 <img src="assets/figs/web-dev/notebook-detail.png" alt="Learning notebook block editor and Dito" width="900">
 </div>
@@ -896,6 +935,8 @@ The Memory Graph shows the whole pyramid — L3 synthesis at the centre, L2 in t
 </div>
 
 Settings is the operational control plane, opening on **General** for interface and model output language. Its searchable navigator links to independent pages: **Personal** covers Workspaces, Data migration, Appearance, and Usage statistics; **Learning & conversation** covers starting points, attachments, Video Learning, learner and guardian controls, Learning progress, and Memory; **Models & services** covers Providers, Language models, Task models, Embedding, Search, Voice, and Multimodal generation; **Features & integrations** covers tools, capability parameters, Partners & agents, and Knowledge & documents. **System** holds Network, Runtime status, and About; **Archived chats** lets you search, restore, or permanently delete archived conversations. Runtime status contains backend health, resident memory, and the **Readiness** matrix grading capability blockers, warnings, and suggestions. Workspaces keeps topic files and learning state separate, with verified migration and export under Data migration. A **provider** holds a vendor's address and credential for reuse by its service models; the model pages choose saved providers and configure model names and capabilities. **Task models** pin a small, fast model for background work — naming conversations and writing starting points — and resolve to the active default when empty. Voice groups speech synthesis and transcription; Multimodal generation groups image and video models. Partners & agents configures local harnesses and a remote Hermes gateway.
+
+**Vietnamese:** In **Settings → General**, choose **Tiếng Việt** for **Interface language** and select **Apply changes**. **Model output language** is independent: choose **Tiếng Việt** there for Vietnamese replies, or keep another reply language while using the Vietnamese interface. Reply quality depends on the selected model's Vietnamese support.
 
 **Xiaomi MiMo speech.** Add a Xiaomi MiMo provider with `https://api.xiaomimimo.com/v1` and its API key, then add `mimo-v2.5-tts` under Settings → Voice. Choose a preset such as `mimo_default`, `冰糖`, or `苏打`, use `wav` or `pcm16` output, and audition it before applying. Voice instructions control style and speaking speed. This adapter supports preset speech only; voice design and voice cloning require separate models and are not supported. If an older MiMo speech model was configured through the generic OpenAI-compatible adapter, recreate its speech entry using the Xiaomi MiMo provider so it uses the chat-completions protocol. See the [official MiMo speech guide](https://mimo.mi.com/docs/zh-CN/quick-start/usage-guide/audio/speech-synthesis-v2.5).
 

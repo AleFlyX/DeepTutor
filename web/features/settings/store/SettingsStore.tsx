@@ -29,7 +29,10 @@ import { asJsonOrThrow } from "@/shared/api/client";
 import { invalidateLLMOptionsCache } from "@/lib/llm-options";
 import { setModelReasoningEffort } from "@/lib/reasoning-effort";
 import { applyExtensionPayload } from "@/lib/settings-extensions";
-import { setTheme as applyThemePreference } from "@/lib/theme";
+import {
+  getStoredThemePreference,
+  setTheme as applyThemePreference,
+} from "@/lib/theme";
 import {
   detachProfileConnection,
   firstIncompleteModel,
@@ -90,7 +93,7 @@ export type {
 // ─── Domain types ─────────────────────────────────────────────────────────
 
 export type UiSettings = {
-  theme: "light" | "dark" | "glass" | "snow";
+  theme: "system" | "light" | "dark" | "glass" | "snow";
   language: AppLanguage;
   response_language: ResponseLanguage;
   code_block_theme: string;
@@ -98,28 +101,10 @@ export type UiSettings = {
   code_block_wrap_long_lines: boolean;
 };
 
-export type ResponseLanguageOption = {
-  value: ResponseLanguage;
-  label: string;
-};
-
-export const RESPONSE_LANGUAGE_OPTIONS: readonly ResponseLanguageOption[] = [
-  { value: "en", label: "English" },
-  { value: "zh", label: "简体中文" },
-  { value: "zh-tw", label: "繁體中文" },
-  { value: "ja", label: "日本語" },
-  { value: "ko", label: "한국어" },
-  { value: "es", label: "Español" },
-  { value: "fr", label: "Français" },
-  { value: "de", label: "Deutsch" },
-  { value: "ru", label: "Русский" },
-  { value: "pt", label: "Português" },
-  { value: "it", label: "Italiano" },
-  { value: "ar", label: "العربية" },
-  { value: "pl", label: "Polski" },
-  { value: "uk", label: "Українська" },
-  { value: "ms", label: "Bahasa Melayu" },
-];
+export {
+  RESPONSE_LANGUAGE_OPTIONS,
+  type ResponseLanguageOption,
+} from "./response-language-options";
 
 type CodeBlockUiSettings = Pick<
   UiSettings,
@@ -129,6 +114,12 @@ type CodeBlockUiSettings = Pick<
 >;
 
 type UiSettingsPatch = Partial<UiSettings>;
+
+/** Drop theme so an unconfirmed placeholder cannot be staged or applied. */
+function withoutUnconfirmedTheme(ui: UiSettings): Omit<UiSettings, "theme"> {
+  const { theme: _theme, ...rest } = ui;
+  return rest;
+}
 
 export function syncLoadedCodeBlockSettingsToAppShell(
   ui: Partial<CodeBlockUiSettings>,
@@ -642,7 +633,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   } = useAppShell();
 
   const [status, setStatus] = useState<SystemStatus | null>(null);
-  const [theme, setTheme] = useState<UiSettings["theme"]>("snow");
+  const [theme, setTheme] = useState<UiSettings["theme"]>("system");
+  // Stays false until GET /api/settings returns a theme. The "system"
+  // placeholder above must not be written over a palette this browser chose.
+  const serverThemeLoadedRef = useRef(false);
+  // Latest stageUi, so a confirmed load can rebuild a draft that omitted theme.
+  const stageUiRef = useRef<(patch: Partial<UiSettings>) => Promise<void>>(
+    async () => {},
+  );
   const [language, setLanguage] = useState<UiSettings["language"]>("en");
   const [responseLanguage, setResponseLanguage] =
     useState<UiSettings["response_language"]>("en");
@@ -779,7 +777,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       } else {
         setCatalogEditable(false);
       }
-      setTheme(payload.ui.theme);
+      const loadedTheme = payload.ui.theme;
+      serverThemeLoadedRef.current = true;
+      setTheme(loadedTheme);
       setLanguage(payload.ui.language);
       const loadedResponseLanguage =
         payload.ui.response_language ?? payload.ui.language;
@@ -844,6 +844,20 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         // No draft is the normal case and a failed read must not block the
         // page; the live settings above are already in hand.
       }
+      // A UI draft staged while this GET was failing omitted theme so a
+      // placeholder could not be saved. Once the server confirms a theme,
+      // put that value on the draft; Apply otherwise keeps the closed-over
+      // payload and leaves localStorage and the document unchanged.
+      const pendingUi = pendingRef.current.get("ui");
+      if (
+        loadedTheme &&
+        extensionsRef.current.get("ui")?.dirty &&
+        pendingUi &&
+        typeof pendingUi === "object" &&
+        !("theme" in pendingUi)
+      ) {
+        await stageUiRef.current({ theme: loadedTheme });
+      }
       settingsLoaded = true;
     } catch (err) {
       console.error("Failed to load settings:", err);
@@ -894,6 +908,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     }
   }, [loadSettings]);
 
+  // Paint a stored palette while the server theme is still unknown. A missing
+  // key stays on the placeholder and is not persisted.
+  useEffect(() => {
+    if (serverThemeLoadedRef.current) return;
+    const stored = getStoredThemePreference();
+    if (stored) setTheme(stored);
+  }, []);
+
   // A language change recreates loadSettings; it must not close an ongoing test.
   useEffect(() => () => eventSourceRef.current?.close(), []);
 
@@ -923,23 +945,37 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     code_block_show_line_numbers: codeBlockShowLineNumbers,
     code_block_wrap_long_lines: codeBlockWrapLongLines,
   }), [theme, language, responseLanguage, codeBlockTheme, codeBlockShowLineNumbers, codeBlockWrapLongLines]);
-  const applyUi = useCallback((ui: UiSettings) => {
-    setTheme(ui.theme);
-    setLanguage(ui.language);
-    setResponseLanguage(ui.response_language);
-    applyThemePreference(ui.theme);
-    writeStoredLanguage(ui.language);
-    writeStoredResponseLanguage(ui.response_language);
+  const applyUi = useCallback((ui: Partial<UiSettings>) => {
+    if (serverThemeLoadedRef.current && ui.theme) {
+      setTheme(ui.theme);
+      applyThemePreference(ui.theme);
+    }
+    if (ui.language) {
+      setLanguage(ui.language);
+      writeStoredLanguage(ui.language);
+    }
+    if (ui.response_language) {
+      setResponseLanguage(ui.response_language);
+      writeStoredResponseLanguage(ui.response_language);
+    }
     syncLoadedCodeBlockSettingsToAppShell(ui);
   }, []);
   const stageUi = useCallback(async (patch: Partial<UiSettings>) => {
-    const next = { ...liveUi, ...(pendingRef.current.get("ui") as Partial<UiSettings> | undefined), ...patch };
+    const merged: UiSettings = {
+      ...liveUi,
+      ...(pendingRef.current.get("ui") as Partial<UiSettings> | undefined),
+      ...patch,
+    };
+    // Do not stage or apply a theme until the server has confirmed one.
+    const next = serverThemeLoadedRef.current ? merged : withoutUnconfirmedTheme(merged);
+    const baseline = serverThemeLoadedRef.current ? liveUi : withoutUnconfirmedTheme(liveUi);
     registerExtension("ui", {
-      dirty: JSON.stringify(next) !== JSON.stringify(liveUi),
+      dirty: JSON.stringify(next) !== JSON.stringify(baseline),
       payload: next,
       save: async () => { await applyExtensionPayload("ui", next); applyUi(next); },
     });
   }, [liveUi, registerExtension, applyUi]);
+  stageUiRef.current = stageUi;
   const updateTheme = useCallback(async (theme: UiSettings["theme"]) => stageUi({ theme }), [stageUi]);
   const updateLanguage = useCallback(async (language: UiSettings["language"]) => stageUi({ language }), [stageUi]);
   const updateResponseLanguage = useCallback(async (response_language: UiSettings["response_language"]) => stageUi({ response_language }), [stageUi]);

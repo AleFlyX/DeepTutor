@@ -41,6 +41,8 @@ installation before deciding to reinstall it.
   progress and process-local notifications.
 - [Runtime design](RUNTIME_DESIGN.md): lazy loading, isolated parsing, private
   model history and prompt-cache observability.
+- [Claude model synchronization](CLAUDE_MODEL_SYNC.md): SDK discovery, model
+  catalogs and isolated provider sessions.
 - [Remote Hermes backend](remote-hermes-backend.md): gateway protocol and
   Connected Agents integration.
 
@@ -48,6 +50,8 @@ installation before deciding to reinstall it.
 
 - [Data storage](DATA_STORAGE.md) and [workspaces](workspaces.md): runtime
   home, account/workspace scope, backups, resource assignment and migration.
+- [Server workspace picker](SERVER_WORKSPACE_PICKER.md): browsing allowed
+  server folders and selecting a workspace root.
 - [Containerization](CONTAINERIZATION.md) and [request screening](SECURITY_GUARD.md):
   deployment configuration, OAuth callback ports and proxy boundaries.
 - [Knowledge migration](KNOWLEDGE_MIGRATION.md), [indexing recovery](INDEXING_RECOVERY.md),

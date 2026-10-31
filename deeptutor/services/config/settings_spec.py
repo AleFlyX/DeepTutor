@@ -132,6 +132,7 @@ _LANGUAGE_CHOICES: tuple[tuple[str, str, str], ...] = (
     ("de", "Deutsch", "Interface and replies in German."),
     ("uk", "Українська", "Interface and replies in Ukrainian."),
     ("pl", "Polski", "Interface and replies in Polish."),
+    ("vi", "Tiếng Việt", "Interface and replies in Vietnamese."),
 )
 
 _RESPONSE_LANGUAGE_CHOICES: tuple[tuple[str, str, str], ...] = (
@@ -149,9 +150,11 @@ _RESPONSE_LANGUAGE_CHOICES: tuple[tuple[str, str, str], ...] = (
     ("ar", "العربية", "Replies in Arabic."),
     ("pl", "Polski", "Replies in Polish."),
     ("ms", "Bahasa Melayu", "Replies in Malay."),
+    ("vi", "Tiếng Việt", "Replies in Vietnamese."),
 )
 
 _THEME_CHOICES: tuple[tuple[str, str, str], ...] = (
+    ("system", "System", "Follow the operating system appearance."),
     ("snow", "Default", "Pure-white neutral theme."),
     ("light", "Light", "Warm light theme."),
     ("dark", "Dark", "Dark theme."),
@@ -195,7 +198,7 @@ def _static_choices(
 def _interface_specs() -> list[SettingSpec]:
     language_read = _read_ui("language", "en")
     response_read = _read_ui("response_language", "en")
-    theme_read = _read_ui("theme", "snow")
+    theme_read = _read_ui("theme", "system")
     return [
         SettingSpec(
             key="interface.language",

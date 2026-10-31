@@ -76,7 +76,7 @@ async def test_ui_languages_are_persisted_independently(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("language", ["fr", "uk", "pl"])
+@pytest.mark.parametrize("language", ["fr", "uk", "pl", "vi"])
 async def test_ui_settings_persist_supported_languages_independently(
     monkeypatch: pytest.MonkeyPatch, tmp_path, language: str
 ) -> None:
@@ -127,6 +127,42 @@ async def test_ui_accepts_extended_response_languages(
     )
     assert response["response_language"] == "ms"
     assert settings_router.load_ui_settings()["response_language"] == "ms"
+
+    response = await settings_router.update_ui_settings(
+        settings_router.UISettingsUpdate(response_language="vi")
+    )
+    assert response["response_language"] == "vi"
+    assert settings_router.load_ui_settings()["response_language"] == "vi"
+
+
+@pytest.mark.asyncio
+async def test_changing_ui_language_to_vietnamese_keeps_an_existing_response_preference(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    settings_file = tmp_path / "interface.json"
+    monkeypatch.setattr(settings_router, "_settings_file", lambda: settings_file)
+
+    await settings_router.update_ui_settings(
+        settings_router.UISettingsUpdate(language="en", response_language="ja")
+    )
+    response = await settings_router.update_ui_settings(
+        settings_router.UISettingsUpdate(language="vi")
+    )
+
+    assert response["language"] == "vi"
+    assert response["response_language"] == "ja"
+
+    response = await settings_router.update_ui_settings(
+        settings_router.UISettingsUpdate(response_language="vi")
+    )
+    assert response["language"] == "vi"
+    assert response["response_language"] == "vi"
+
+    response = await settings_router.update_ui_settings(
+        settings_router.UISettingsUpdate(language="en")
+    )
+    assert response["language"] == "en"
+    assert response["response_language"] == "vi"
 
 
 class _FakeEmbeddingAdapter:
@@ -409,6 +445,33 @@ async def test_chat_attachment_settings_roundtrip(
     stored = service.load_system(include_process_overrides=False)
     assert stored["backend_port"] == 8001
     assert stored["chat_attachment_max_chars_per_doc"] == 400_000
+
+
+@pytest.mark.asyncio
+async def test_chat_starter_settings_keep_ask_hint_when_omitted(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    from deeptutor.services.settings import starter_settings
+
+    monkeypatch.setattr(
+        starter_settings,
+        "get_path_service",
+        lambda: SimpleNamespace(get_settings_file=lambda name: tmp_path / f"{name}.json"),
+    )
+
+    initial = await settings_router.get_chat_starter_settings()
+    assert initial["settings"]["ask_hint_enabled"] is True
+
+    turned_off = await settings_router.update_chat_starter_settings(
+        settings_router.ChatStarterSettingsUpdate(trace_count=20, ask_hint_enabled=False)
+    )
+    assert turned_off["settings"]["ask_hint_enabled"] is False
+
+    # A client that predates the switch only sends trace_count.
+    legacy = await settings_router.update_chat_starter_settings(
+        settings_router.ChatStarterSettingsUpdate(trace_count=30)
+    )
+    assert legacy["settings"] == {"version": 1, "trace_count": 30, "ask_hint_enabled": False}
 
 
 @pytest.mark.asyncio
@@ -717,6 +780,13 @@ def test_llm_provider_choices_include_onomeo() -> None:
 
     assert llm["onomeo"]["label"] == "onomeo"
     assert llm["onomeo"]["base_url"] == "https://onomeo.com/v1"
+
+
+def test_llm_provider_choices_include_runcrate() -> None:
+    llm = {item["value"]: item for item in settings_router._provider_choices()["llm"]}
+
+    assert llm["runcrate"]["label"] == "Runcrate"
+    assert llm["runcrate"]["base_url"] == "https://api.runcrate.ai/v1"
 
 
 def test_llm_provider_choices_include_novita() -> None:
@@ -1775,7 +1845,7 @@ async def test_update_ui_settings_persists_explicit_theme_and_language_defaults(
         }
     )
 
-    # When: the frontend explicitly provides the full-model default values.
+    # When: the frontend explicitly provides a palette and language.
     await settings_router.update_ui_settings(
         settings_router.UISettingsUpdate(theme="snow", language="en")
     )
@@ -1784,6 +1854,25 @@ async def test_update_ui_settings_persists_explicit_theme_and_language_defaults(
     persisted = settings_router.load_ui_settings()
     assert persisted["theme"] == "snow"
     assert persisted["language"] == "en"
+
+
+@pytest.mark.asyncio
+async def test_ui_updates_accept_system_theme(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
+    """System is a stored preference, not only a client-side fallback."""
+    settings_file = tmp_path / "interface.json"
+    monkeypatch.setattr(settings_router, "_settings_file", lambda: settings_file)
+    settings_router.save_ui_settings({**settings_router.DEFAULT_UI_SETTINGS, "theme": "dark"})
+
+    await settings_router.update_ui_settings(
+        settings_router.UISettingsUpdate(theme="system", language="en")
+    )
+    assert settings_router.load_ui_settings()["theme"] == "system"
+
+    await settings_router.update_theme(settings_router.ThemeUpdate(theme="glass"))
+    await settings_router.update_theme(settings_router.ThemeUpdate(theme="system"))
+
+    stored = json.loads(settings_file.read_text(encoding="utf-8"))
+    assert stored["theme"] == "system"
 
 
 def test_get_ui_settings_is_public_without_auth(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:

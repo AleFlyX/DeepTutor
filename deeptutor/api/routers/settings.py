@@ -116,6 +116,7 @@ ResponseLanguage = Literal[
     "pl",
     "uk",
     "ms",
+    "vi",
 ]
 
 
@@ -177,7 +178,7 @@ class SidebarNavOrder(BaseModel):
 
 
 class UISettings(BaseModel):
-    theme: Literal["light", "dark", "glass", "snow"] = "snow"
+    theme: Literal["system", "light", "dark", "glass", "snow"] = "system"
     language: UiLanguage = "en"
     response_language: ResponseLanguage = "en"
     sidebar_description: Optional[str] = None
@@ -200,7 +201,7 @@ class UISettingsUpdate(BaseModel):
     # Same Literal domains as UISettings — a None default keeps them optional
     # for exclude_unset partial merges, but an explicit value is still validated
     # so PUT /ui cannot persist a theme/language the app can't render.
-    theme: Literal["light", "dark", "glass", "snow"] | None = None
+    theme: Literal["system", "light", "dark", "glass", "snow"] | None = None
     language: UiLanguage | None = None
     response_language: ResponseLanguage | None = None
     sidebar_description: str | None = None
@@ -223,7 +224,7 @@ class ChatResponseTimeoutUpdate(BaseModel):
 
 
 class ThemeUpdate(BaseModel):
-    theme: Literal["light", "dark", "glass", "snow"]
+    theme: Literal["system", "light", "dark", "glass", "snow"]
 
 
 class LanguageUpdate(BaseModel):
@@ -392,13 +393,17 @@ class ChatAttachmentSettingsUpdate(BaseModel):
 
 
 class ChatStarterSettingsUpdate(BaseModel):
-    """How much recent activity shapes the home screen's starting points.
+    """How much recent activity shapes the home screen's starting points, and
+    whether the chat composer offers a predicted next line.
 
     Bounds mirror ``starter_settings.TRACE_COUNT_RANGE`` so the API rejects
-    loudly what the file layer would silently clamp.
+    loudly what the file layer would silently clamp. ``ask_hint_enabled`` left
+    out (``None``) keeps the stored value, so a client that only knows
+    ``trace_count`` cannot switch the hint back on by accident.
     """
 
     trace_count: int = Field(ge=STARTER_TRACE_COUNT_RANGE[0], le=STARTER_TRACE_COUNT_RANGE[1])
+    ask_hint_enabled: Optional[bool] = None
 
 
 class MinerUSettingsUpdate(BaseModel):
@@ -1127,11 +1132,12 @@ async def get_chat_attachment_settings():
 
 @router.get("/chat-starters")
 async def get_chat_starter_settings():
-    """How many recent activities shape the home screen's starting points.
+    """How many recent activities shape the home screen's starting points, and
+    whether the chat composer offers a predicted next line.
 
-    Per user and not admin-gated, unlike the attachment caps next door: this
-    changes the size of one prompt built from the caller's own memory, not any
-    resource other people share.
+    Per user and not admin-gated, unlike the attachment caps next door: these
+    change one prompt built from the caller's own memory, or skip one call, not
+    any resource other people share.
     """
     from deeptutor.services.settings.starter_settings import (
         TRACE_COUNT_RANGE,
@@ -1148,7 +1154,7 @@ async def update_chat_starter_settings(payload: ChatStarterSettingsUpdate):
         save_starter_settings,
     )
 
-    saved = save_starter_settings({"trace_count": payload.trace_count})
+    saved = save_starter_settings(payload.model_dump(exclude_none=True))
     return {"settings": saved, "bounds": {"trace_count": TRACE_COUNT_RANGE}}
 
 
@@ -2019,8 +2025,9 @@ async def fetch_models_from_provider(payload: FetchModelsPayload):
 
     base_url = (payload.base_url or "").strip()
     binding = (payload.binding or "").strip().lower() or "openai"
-    is_copilot = canonical_provider_name(binding) == "github_copilot"
-    if not base_url and binding != "codebuddy" and not is_copilot:
+    canonical = canonical_provider_name(binding)
+    is_copilot = canonical == "github_copilot"
+    if not base_url and canonical not in {"codebuddy", "claude_code"} and not is_copilot:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="base_url is required for this provider.",
@@ -2040,6 +2047,13 @@ async def fetch_models_from_provider(payload: FetchModelsPayload):
             api_key = profile.get("api_key") if profile else None
         if not api_format and profile:
             api_format = str(profile.get("api_format") or "")
+
+    if canonical == "claude_code":
+        from deeptutor.services.llm.provider_core.claude_code_provider import (
+            fetch_claude_code_catalog,
+        )
+
+        return {"models": await fetch_claude_code_catalog()}
 
     try:
         model_ids = await fetch_llm_models(binding, base_url, api_key, api_format or "auto")
@@ -2211,6 +2225,7 @@ async def reset_settings():
 async def get_themes():
     return {
         "themes": [
+            {"id": "system", "name": "System"},
             {"id": "snow", "name": "Default"},
             {"id": "light", "name": "Cream"},
             {"id": "dark", "name": "Dark"},
