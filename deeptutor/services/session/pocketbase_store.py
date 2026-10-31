@@ -995,7 +995,9 @@ class PocketBaseSessionStore:
             with self._prefs_lock(sid, uid):
                 # Re-read under the same lock used by preference writes; a
                 # thread moved while the list was loading must keep its anchor.
-                current = _find_session_record(_pb(), sid, uid, recycled=False)
+                # Recycled threads can be restored later and need the same
+                # detach as active threads when their source is removed.
+                current = _find_session_record(_pb(), sid, uid)
                 if current is None:
                     continue
                 prefs = _json_loads(getattr(current, "preferences_json", None), {})

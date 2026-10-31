@@ -787,3 +787,26 @@ async def test_regenerate_delete_detaches_only_owned_anchored_threads(fake_pb):
         ] == "other"
     with as_user("bob"):
         assert (await store.get_session("foreign"))["preferences"]["tutor_source_message_id"] == mid
+
+
+async def test_restored_tutor_thread_does_not_keep_a_deleted_source_message(fake_pb):
+    store = PocketBaseSessionStore()
+    with as_user("alice"):
+        await store.create_session(session_id="parent")
+        message_id = await store.add_message("parent", "assistant", "answer")
+        await store.create_session(session_id="thread")
+        await store.update_session_preferences(
+            "thread",
+            {
+                "parent_session_id": "parent",
+                "tutor_source_message_id": message_id,
+                "retained": "value",
+            },
+        )
+        assert await store.soft_delete_session("thread")
+        assert await store.delete_message(message_id)
+        assert await store.restore_session("thread")
+        preferences = (await store.get_session("thread"))["preferences"]
+        assert preferences["tutor_source_message_id"] == ""
+        assert preferences["tutor_source_backfill_attempted"] is True
+        assert preferences["retained"] == "value"
