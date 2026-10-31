@@ -331,6 +331,31 @@ export interface paths {
     readonly patch?: never;
     readonly trace?: never;
   };
+  readonly "/api/auth/profile/password": {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    readonly get?: never;
+    /**
+     * Change Password
+     * @description Change the current user's own password.
+     *
+     *     The current password is required so that a stolen session alone cannot
+     *     take the account over. Existing JWTs remain valid until they expire —
+     *     tokens are stateless, which is the same trade-off the rest of the app
+     *     already makes.
+     */
+    readonly put: operations["change_password_api_auth_profile_password_put"];
+    readonly post?: never;
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
   readonly "/api/auth/register": {
     readonly parameters: {
       readonly query?: never;
@@ -495,6 +520,29 @@ export interface paths {
     readonly get: operations["get_learner_profile_api_auth_users__username__learner_profile_get"];
     /** Put Learner Profile */
     readonly put: operations["put_learner_profile_api_auth_users__username__learner_profile_put"];
+    readonly post?: never;
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly "/api/auth/users/{username}/password": {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    readonly get?: never;
+    /**
+     * Admin Reset Password
+     * @description Reset another account's password (admin only).
+     *
+     *     Intended for colleagues who forgot theirs. An admin changing their own
+     *     password should use PUT /profile/password, which also checks the old one.
+     */
+    readonly put: operations["admin_reset_password_api_auth_users__username__password_put"];
     readonly post?: never;
     readonly delete?: never;
     readonly options?: never;
@@ -8112,6 +8160,10 @@ export interface paths {
     /**
      * List Session Threads
      * @description Little Tutor threads opened from this conversation, newest first.
+     *
+     *     Threads from before the source message was recorded are attributed here
+     *     once, when their passage can be found unambiguously in the parent
+     *     transcript (see ``thread_attribution``).
      */
     readonly get: operations["list_session_threads_api_sessions__session_id__threads_get"];
     readonly put?: never;
@@ -8378,15 +8430,36 @@ export interface paths {
     };
     /**
      * Get Chat Starter Settings
-     * @description How many recent activities shape the home screen's starting points.
+     * @description How many recent activities shape the home screen's starting points, and
+     *     whether the chat composer offers a predicted next line.
      *
-     *     Per user and not admin-gated, unlike the attachment caps next door: this
-     *     changes the size of one prompt built from the caller's own memory, not any
-     *     resource other people share.
+     *     Per user and not admin-gated, unlike the attachment caps next door: these
+     *     change one prompt built from the caller's own memory, or skip one call, not
+     *     any resource other people share.
      */
     readonly get: operations["get_chat_starter_settings_api_settings_chat_starters_get"];
     /** Update Chat Starter Settings */
     readonly put: operations["update_chat_starter_settings_api_settings_chat_starters_put"];
+    readonly post?: never;
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly "/api/settings/display": {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    /**
+     * Get Display Settings
+     * @description Read learning typography through the authenticated, request-scoped router.
+     */
+    readonly get: operations["get_display_settings_api_settings_display_get"];
+    readonly put?: never;
     readonly post?: never;
     readonly delete?: never;
     readonly options?: never;
@@ -8447,11 +8520,10 @@ export interface paths {
     readonly put?: never;
     /**
      * Start Document Parsing Install
-     * @description Kick off a one-click ``pip install`` of an optional engine's package(s).
+     * @description Return offline Docker/source/wheel guidance; never install into a live server.
      *
-     *     Returns ``{ok, message}`` immediately; progress is polled via the shared job
-     *     status endpoint. Only one job runs at a time (process-wide singleton). The
-     *     engine must be in the install allow-list (``ENGINE_PIP_SPECS``).
+     *     Keeps the existing ``{ok, message}`` response and engine allow-list for
+     *     compatibility. Model downloads use their separate background-job endpoint.
      */
     readonly post: operations["start_document_parsing_install_api_settings_document_parsing_install_post"];
     readonly delete?: never;
@@ -11832,6 +11904,14 @@ export interface components {
       /** Username */
       readonly username: string;
     };
+    /**
+     * AdminResetPasswordRequest
+     * @description Payload for the admin PUT /users/{username}/password endpoint.
+     */
+    readonly AdminResetPasswordRequest: {
+      /** New Password */
+      readonly new_password: string;
+    };
     /** AnchorThreadRequest */
     readonly AnchorThreadRequest: {
       /** Block Id */
@@ -12719,6 +12799,16 @@ export interface components {
         readonly [key: string]: unknown;
       } | null;
     };
+    /**
+     * ChangePasswordRequest
+     * @description Payload for the PUT /profile/password endpoint.
+     */
+    readonly ChangePasswordRequest: {
+      /** Current Password */
+      readonly current_password: string;
+      /** New Password */
+      readonly new_password: string;
+    };
     /** ChannelOnboardingStartRequest */
     readonly ChannelOnboardingStartRequest: {
       /**
@@ -12839,12 +12929,17 @@ export interface components {
     };
     /**
      * ChatStarterSettingsUpdate
-     * @description How much recent activity shapes the home screen's starting points.
+     * @description How much recent activity shapes the home screen's starting points, and
+     *     whether the chat composer offers a predicted next line.
      *
      *     Bounds mirror ``starter_settings.TRACE_COUNT_RANGE`` so the API rejects
-     *     loudly what the file layer would silently clamp.
+     *     loudly what the file layer would silently clamp. ``ask_hint_enabled`` left
+     *     out (``None``) keeps the stored value, so a client that only knows
+     *     ``trace_count`` cannot switch the hint back on by accident.
      */
     readonly ChatStarterSettingsUpdate: {
+      /** Ask Hint Enabled */
+      readonly ask_hint_enabled?: boolean | null;
       /** Trace Count */
       readonly trace_count: number;
     };
@@ -13578,6 +13673,24 @@ export interface components {
       readonly pairing_code: string;
       /** Pin */
       readonly pin: string;
+    };
+    /**
+     * DisplaySettings
+     * @description Account-scoped learning text preferences; no interface chrome settings.
+     */
+    readonly DisplaySettings: {
+      /**
+       * Content Font Scale
+       * @default 100
+       * @enum {integer}
+       */
+      readonly content_font_scale: 90 | 100 | 110 | 125 | 150;
+      /**
+       * Content Line Spacing
+       * @default normal
+       * @enum {string}
+       */
+      readonly content_line_spacing: "compact" | "normal" | "relaxed";
     };
     /**
      * DoclingRemoteTest
@@ -14419,7 +14532,8 @@ export interface components {
        * Language
        * @enum {string}
        */
-      readonly language: "en" | "zh" | "fr" | "de" | "uk" | "pl" | "ja";
+      readonly language:
+        "en" | "zh" | "fr" | "de" | "uk" | "pl" | "pt" | "vi" | "ja" | "tr";
     };
     /** LearnerOverrideRequest */
     readonly LearnerOverrideRequest: {
@@ -16845,6 +16959,8 @@ export interface components {
       /** Session Kind */
       readonly session_kind?:
         ("chat" | "selection_tutor" | "immersive_reading") | null;
+      /** Tutor Source Message Id */
+      readonly tutor_source_message_id?: number | string | null;
       /** Workspace Id */
       readonly workspace_id?: string | null;
     };
@@ -17801,8 +17917,8 @@ export interface components {
      * UISettingsUpdate
      * @description Partial UI settings for user-initiated PATCH/PUT updates via /api/settings/ui.
      *
-     *     All fields have None defaults so `model_dump(exclude_unset=True)` naturally
-     *     excludes fields not provided in the frontend payload, while explicitly provided
+     *     `model_dump(exclude_unset=True)` excludes fields not provided in the
+     *     frontend payload, while explicitly provided
      *     defaults (e.g., `theme: "snow"`) still update the backend. This separates
      *     the semantic contract: `/ui` endpoint only merges whatever explicitly arrives
      *     from the frontend.
@@ -17814,9 +17930,22 @@ export interface components {
       readonly code_block_theme?: string | null;
       /** Code Block Wrap Long Lines */
       readonly code_block_wrap_long_lines?: boolean | null;
+      /**
+       * Content Font Scale
+       * @default 100
+       * @enum {integer}
+       */
+      readonly content_font_scale: 90 | 100 | 110 | 125 | 150;
+      /**
+       * Content Line Spacing
+       * @default normal
+       * @enum {string}
+       */
+      readonly content_line_spacing: "compact" | "normal" | "relaxed";
       /** Language */
       readonly language?:
-        ("en" | "zh" | "fr" | "de" | "uk" | "pl" | "ja") | null;
+        | ("en" | "zh" | "fr" | "de" | "uk" | "pl" | "pt" | "vi" | "ja" | "tr")
+        | null;
       /** Response Language */
       readonly response_language?:
         | (
@@ -17835,6 +17964,8 @@ export interface components {
             | "pl"
             | "uk"
             | "ms"
+            | "vi"
+            | "tr"
           )
         | null;
       /** Sidebar Description */
@@ -18317,6 +18448,11 @@ export interface components {
        * @default
        */
       readonly avatar: string;
+      /**
+       * Can Change Password
+       * @default false
+       */
+      readonly can_change_password: boolean;
       /** Created At */
       readonly created_at: string;
       /**
@@ -18329,6 +18465,11 @@ export interface components {
        * @default
        */
       readonly id: string;
+      /**
+       * Must Change Password
+       * @default false
+       */
+      readonly must_change_password: boolean;
       /**
        * Preset
        * @default standard
@@ -18620,6 +18761,8 @@ export type SchemaAdminBatchDeleteRequest =
   components["schemas"]["AdminBatchDeleteRequest"];
 export type SchemaAdminCreateUserRequest =
   components["schemas"]["AdminCreateUserRequest"];
+export type SchemaAdminResetPasswordRequest =
+  components["schemas"]["AdminResetPasswordRequest"];
 export type SchemaAnchorThreadRequest =
   components["schemas"]["AnchorThreadRequest"];
 export type SchemaAnnotationInfo = components["schemas"]["AnnotationInfo"];
@@ -18705,6 +18848,8 @@ export type SchemaCategoryRenameRequest =
   components["schemas"]["CategoryRenameRequest"];
 export type SchemaChangeBlockTypeRequest =
   components["schemas"]["ChangeBlockTypeRequest"];
+export type SchemaChangePasswordRequest =
+  components["schemas"]["ChangePasswordRequest"];
 export type SchemaChannelOnboardingStartRequest =
   components["schemas"]["ChannelOnboardingStartRequest"];
 export type SchemaChapterImport = components["schemas"]["ChapterImport"];
@@ -18804,6 +18949,7 @@ export type SchemaDeviceCredentialCreateRequest =
 export type SchemaDeviceInfo = components["schemas"]["DeviceInfo"];
 export type SchemaDeviceLoginRequest =
   components["schemas"]["DeviceLoginRequest"];
+export type SchemaDisplaySettings = components["schemas"]["DisplaySettings"];
 export type SchemaDoclingRemoteTest =
   components["schemas"]["DoclingRemoteTest"];
 export type SchemaDocumentParsingInstall =
@@ -19892,6 +20038,45 @@ export interface operations {
       };
     };
   };
+  readonly change_password_api_auth_profile_password_put: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: {
+        readonly Authorization?: string | null;
+      };
+      readonly path?: never;
+      readonly cookie?: {
+        readonly dt_token?: string | null;
+      };
+    };
+    readonly requestBody: {
+      readonly content: {
+        readonly "application/json": components["schemas"]["ChangePasswordRequest"];
+      };
+    };
+    readonly responses: {
+      /** @description Successful Response */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly "application/json": {
+            readonly [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      readonly 422: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   readonly register_api_auth_register_post: {
     readonly parameters: {
       readonly query?: never;
@@ -20231,6 +20416,47 @@ export interface operations {
     readonly requestBody: {
       readonly content: {
         readonly "application/json": components["schemas"]["LearnerProfileRequest"];
+      };
+    };
+    readonly responses: {
+      /** @description Successful Response */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly "application/json": {
+            readonly [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      readonly 422: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  readonly admin_reset_password_api_auth_users__username__password_put: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: {
+        readonly Authorization?: string | null;
+      };
+      readonly path: {
+        readonly username: string;
+      };
+      readonly cookie?: {
+        readonly dt_token?: string | null;
+      };
+    };
+    readonly requestBody: {
+      readonly content: {
+        readonly "application/json": components["schemas"]["AdminResetPasswordRequest"];
       };
     };
     readonly responses: {
@@ -38041,6 +38267,39 @@ export interface operations {
         };
         content: {
           readonly "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      readonly 422: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  readonly get_display_settings_api_settings_display_get: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: {
+        readonly Authorization?: string | null;
+      };
+      readonly path?: never;
+      readonly cookie?: {
+        readonly dt_token?: string | null;
+      };
+    };
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description Successful Response */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly "application/json": components["schemas"]["DisplaySettings"];
         };
       };
       /** @description Validation Error */

@@ -133,6 +133,8 @@ PROVIDER_ALIASES = {
     "azureopenai": "azure_openai",
     "google": "gemini",
     "google_genai": "gemini",
+    "x_ai": "xai",
+    "grok": "xai",
     "claude": "anthropic",
     "openai_compatible": "custom",
     "openai-compatible": "custom",
@@ -399,6 +401,16 @@ PROVIDERS: tuple[ProviderSpec, ...] = (
         default_api_base="https://llmtr.com/v1",
     ),
     ProviderSpec(
+        name="cloudgpu",
+        keywords=("cloudgpu",),
+        env_key="CLOUDGPU_API_KEY",
+        display_name="CloudGPU",
+        backend="openai_compat",
+        is_gateway=True,
+        detect_by_base_keyword="cloudgpu",
+        default_api_base="https://cloudgpu.app/v1",
+    ),
+    ProviderSpec(
         name="volcengine",
         keywords=("volcengine", "volces", "ark"),
         env_key="OPENAI_API_KEY",
@@ -602,6 +614,18 @@ PROVIDERS: tuple[ProviderSpec, ...] = (
         display_name="Mistral",
         backend="openai_compat",
         default_api_base="https://api.mistral.ai/v1",
+    ),
+    # xAI's OpenAI-compatible surface serves the full Grok language-model
+    # catalog from https://api.x.ai/v1; model ids are discovered from
+    # GET /v1/models, so new Grok releases appear without a catalog update.
+    ProviderSpec(
+        name="xai",
+        keywords=("xai", "grok"),
+        env_key="XAI_API_KEY",
+        display_name="xAI (Grok)",
+        backend="openai_compat",
+        default_api_base="https://api.x.ai/v1",
+        model_id_families=("grok",),
     ),
     ProviderSpec(
         name="stepfun",

@@ -602,3 +602,27 @@ def test_the_answer_so_far_is_only_built_for_events_that_anchor_layout() -> None
     _stamp_content_offset(tool, answer)
     assert built == [1]
     assert tool["metadata"]["assistant_content_offset"] == len("Some answer text.")
+
+
+@pytest.mark.asyncio
+async def test_side_chat_resolves_the_quoted_messages_role() -> None:
+    class FakeStore:
+        async def get_messages_for_context(self, session_id, leaf_message_id):
+            assert session_id == "main-1"
+            return [
+                {"id": 2, "role": "user", "content": "What does fork() return?"},
+                {"id": 9, "role": "assistant", "content": "The child sees 0."},
+            ]
+
+    resolved = await _resolve_selection_tutor_context(
+        FakeStore(),
+        {
+            "scope": "conversation",
+            "selected_text": "",
+            "parent_session_id": "main-1",
+            "source_message_id": 9,
+            "quoted_message_id": 2,
+        },
+    )
+
+    assert resolved["source_message_role"] == "user"

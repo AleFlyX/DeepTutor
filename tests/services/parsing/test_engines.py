@@ -12,6 +12,10 @@ from deeptutor.services.parsing.engines import factory
 from deeptutor.services.parsing.engines.docling.config import DoclingConfig
 from deeptutor.services.parsing.engines.tika.config import TikaConfig
 from deeptutor.services.parsing.types import ParserError
+from tests.docx_math_fixture import (
+    EXPECTED_EQUATION_PARAGRAPHS,
+    native_equation_docx_bytes,
+)
 
 
 def test_known_engines() -> None:
@@ -76,6 +80,20 @@ def test_text_only_parser_extracts_docx_text(tmp_path) -> None:
     parser.parse(docx, workdir, config={})
 
     assert (workdir / "lesson.md").read_text(encoding="utf-8") == "Hello DeepTutor"
+
+
+def test_text_only_parser_preserves_native_word_equations(tmp_path) -> None:
+    parser = factory.get_parser("text_only")
+    docx = tmp_path / "equations.docx"
+    docx.write_bytes(native_equation_docx_bytes())
+    workdir = tmp_path / "parsed"
+    workdir.mkdir()
+
+    parser.parse(docx, workdir, config={})
+
+    markdown = (workdir / "equations.md").read_text(encoding="utf-8")
+    assert markdown == "\n\n".join(EXPECTED_EQUATION_PARAGRAPHS)
+    assert "Fraction: 12 + 13." not in markdown
 
 
 def test_text_only_parser_converts_bibtex_to_structured_markdown(tmp_path) -> None:
@@ -987,16 +1005,40 @@ def test_install_manager_spec_allowlist() -> None:
     assert "mineru" not in ENGINE_PIP_SPECS
 
 
-def test_install_manager_requires_offline_module_change(monkeypatch) -> None:
+@pytest.mark.parametrize("engine", ["docling", "markitdown", "pymupdf4llm", "liteparse"])
+def test_install_manager_requires_offline_module_change(monkeypatch, engine) -> None:
     from deeptutor.services.parsing.engines import _install
 
     manager = _install.BackgroundJobManager()
     monkeypatch.setattr(
-        manager, "_launch", lambda **kwargs: pytest.fail("mutated live environment")
+        _install.subprocess,
+        "Popen",
+        lambda *args, **kwargs: pytest.fail("mutated live environment"),
     )
-    result = manager.start_install(engine="docling", specs=_install.ENGINE_PIP_SPECS["docling"])
+    result = manager.start_install(engine=engine, specs=_install.ENGINE_PIP_SPECS[engine])
     assert result["ok"] is False
-    assert "deeptutor module install parser-docling" in result["message"]
+    assert f"parse-{engine} to DEEPTUTOR_EXTRAS" in result["message"]
+    assert f"python scripts/install_extras.py parse-{engine}" in result["message"]
+    assert f"deeptutor module install parser-{engine}" in result["message"]
+    assert "preserving other extras" in result["message"]
+    assert "inspect startup logs" in result["message"]
+    assert "not installed Python packages" in result["message"]
+    assert manager.status()["state"] == "idle"
+
+
+@pytest.mark.parametrize(
+    "engine,specs", [("unknown", ["docling"]), ("docling", ["untrusted-package"])]
+)
+def test_install_manager_rejects_unknown_or_changed_specs(monkeypatch, engine, specs) -> None:
+    from deeptutor.services.parsing.engines import _install
+
+    monkeypatch.setattr(
+        _install.subprocess,
+        "Popen",
+        lambda *args, **kwargs: pytest.fail("mutated live environment"),
+    )
+    result = _install.BackgroundJobManager().start_install(engine=engine, specs=specs)
+    assert result == {"ok": False, "message": "Unknown parser installation request."}
 
 
 def test_model_download_allowlist() -> None:

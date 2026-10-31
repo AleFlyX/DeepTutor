@@ -9,11 +9,14 @@ import pytest
 from deeptutor.services.generation_http import GenerationProviderError
 from deeptutor.services.videogen.adapters.async_task import AsyncTaskVideogenAdapter
 from deeptutor.services.videogen.adapters.dashscope import DashScopeVideogenAdapter
+from deeptutor.services.videogen.adapters.xai import XaiVideogenAdapter
 from deeptutor.services.videogen.config import VideogenConfig
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("adapter_type", [AsyncTaskVideogenAdapter, DashScopeVideogenAdapter])
+@pytest.mark.parametrize(
+    "adapter_type", [AsyncTaskVideogenAdapter, DashScopeVideogenAdapter, XaiVideogenAdapter]
+)
 @pytest.mark.parametrize("stall", [False, True])
 async def test_poll_timeout_bounds_network_wait_and_interval(
     adapter_type: type, stall: bool
@@ -72,7 +75,9 @@ async def test_poll_timeout_bounds_network_wait_and_interval(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("adapter_type", [AsyncTaskVideogenAdapter, DashScopeVideogenAdapter])
+@pytest.mark.parametrize(
+    "adapter_type", [AsyncTaskVideogenAdapter, DashScopeVideogenAdapter, XaiVideogenAdapter]
+)
 async def test_caller_cancellation_still_propagates_and_drains_request(adapter_type: type) -> None:
     started = asyncio.Event()
     drained = asyncio.Event()
@@ -98,7 +103,9 @@ async def test_caller_cancellation_still_propagates_and_drains_request(adapter_t
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("adapter_type", [AsyncTaskVideogenAdapter, DashScopeVideogenAdapter])
+@pytest.mark.parametrize(
+    "adapter_type", [AsyncTaskVideogenAdapter, DashScopeVideogenAdapter, XaiVideogenAdapter]
+)
 async def test_callback_timeout_is_not_misclassified_as_poll_budget(adapter_type: type) -> None:
     async def pending(_request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json={"status": "running", "output": {"task_status": "RUNNING"}})
