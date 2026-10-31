@@ -39,6 +39,7 @@ const BOOK_LANGUAGES: Array<{ code: string; label: string }> = [
   { code: 'pt', label: 'Português' },
   { code: 'it', label: 'Italiano' },
   { code: 'tr', label: 'Türkçe' },
+  { code: 'vi', label: 'Tiếng Việt' },
 ]
 
 const DEPTH_OPTIONS: Array<{ value: BookDepth; label: string; hint: string }> = [

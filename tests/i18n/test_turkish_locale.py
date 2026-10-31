@@ -80,6 +80,7 @@ def test_cli_banner_is_fully_translated() -> None:
     assert set(LABELS["tr"]) == set(LABELS["en"])
     assert labels_for("tr") is LABELS["tr"]
     assert _pick_language("tr-TR") == "tr"
+    assert _pick_language("tr_TR") == "tr"
 
 
 def test_cli_banner_keeps_format_placeholders() -> None:
@@ -133,8 +134,8 @@ def test_web_locale_keeps_interpolation_placeholders() -> None:
 
 
 def test_every_locale_can_name_turkish() -> None:
-    for locale in ("en", "zh", "fr", "de", "uk", "pl", "tr"):
-        assert "language.turkish" in _catalog(locale)
+    for path in (WEB / "locales").glob("*/app.json"):
+        assert _catalog(path.parent.name)["language.turkish"] == "Türkçe"
 
 
 def test_frontend_registers_turkish() -> None:
@@ -145,3 +146,22 @@ def test_frontend_registers_turkish() -> None:
     assert 'fallbackLng: "en"' in init
     datetime = (WEB / "lib/datetime.ts").read_text(encoding="utf-8")
     assert '"tr-TR"' in datetime
+
+
+@pytest.mark.parametrize("raw", ["tr", "tr-TR", "tr_TR", "turkish", "Türkçe"])
+def test_backend_messages_select_turkish(raw: str) -> None:
+    from deeptutor.services.i18n import _parse_language, t
+
+    assert _parse_language(raw) == "tr"
+    assert (
+        t("api.partner_already_exists", language=raw, name="Ada") == "'Ada' adlı partner zaten var"
+    )
+
+
+def test_backend_turkish_messages_cover_english_and_preserve_format_fields() -> None:
+    from deeptutor.services.i18n import _MESSAGES
+
+    assert set(_MESSAGES["tr"]) == set(_MESSAGES["en"])
+    pattern = re.compile(r"\{[^{}]*\}")
+    for key, text in _MESSAGES["en"].items():
+        assert Counter(pattern.findall(text)) == Counter(pattern.findall(_MESSAGES["tr"][key])), key

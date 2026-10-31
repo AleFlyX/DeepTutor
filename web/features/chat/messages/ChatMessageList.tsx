@@ -41,6 +41,7 @@ import { useTranslation } from "react-i18next";
 import type { SelectedHistorySession } from "@/components/chat/HistorySessionPicker";
 import type { SelectedQuestionEntry } from "@/components/chat/QuestionBankPicker";
 import { ActivityFold, FoldCaret } from "@/components/activity";
+import { LearningText } from "@/components/common/LearningText";
 import AssistantResponse from "@/components/common/AssistantResponse";
 import {
   InlineFileCardProvider,
@@ -77,6 +78,8 @@ import { extractVisualizeResult } from "@/lib/visualize-types";
 import type { StreamEvent } from "@/features/chat/model/protocol";
 import { hasVisibleMarkdownContent } from "@/lib/markdown-display";
 import type { SelectedBookReference } from "@/lib/book-references";
+import type { SessionSummary } from "@/lib/session-api";
+import MessageThreadMarker from "./MessageThreadMarker";
 import { buildVisiblePath, type SiblingInfo } from "@/lib/message-branches";
 import { turnAnchorKey } from "@/lib/chat-outline";
 import { readingPassageHref } from "@/lib/reading-citations";
@@ -103,6 +106,8 @@ import { SetupCredentialCard } from "@/components/chat/home/SetupCredentialCard"
 import { extractSetupCredential } from "@/lib/setup-signals";
 import { PartnerDraftCard } from "@/components/chat/home/PartnerDraftCard";
 import { extractPartnerDraft } from "@/lib/partner-draft";
+import { CreationDraftCard } from "@/components/chat/home/CreationDraftCard";
+import { extractCreationDraft } from "@/lib/creation-draft";
 import { extractMasteryHandoffs } from "@/lib/mastery-handoff";
 import ContextReferenceTree, {
   type ContextTreeItem,
@@ -136,6 +141,10 @@ const MasteryQuestionCard = dynamic(
 );
 const MasterySourcePresentation = dynamic(
   () => import("@/components/chat/home/MasterySourcePresentation").then(module => module.MasterySourcePresentation),
+  { ssr: false },
+);
+const MasterySourcePages = dynamic(
+  () => import("@/components/chat/home/MasterySourcePresentation").then(module => module.MasterySourcePages),
   { ssr: false },
 );
 const MasteryHandoffCards = dynamic(
@@ -406,7 +415,7 @@ function SentMidTurn({ messages }: { messages: string[] }) {
           key={index}
           className="max-w-[85%] whitespace-pre-wrap rounded-2xl bg-[var(--secondary)] px-3.5 py-2 text-[13.5px] leading-relaxed text-[var(--foreground)]"
         >
-          {text}
+          <LearningText size={13.5}>{text}</LearningText>
         </div>
       ))}
     </div>
@@ -469,6 +478,8 @@ function buildMessageBlocks(
     if (
       (segment.kind === "ask_user" && !segment.data.resolved) ||
       segment.kind === "mastery_question" ||
+      // A presented lesson page is part of the lesson, not working-out.
+      segment.kind === "source_view" ||
       // The learner's own words are conversation, not working-out to fold.
       segment.kind === "user_input"
     ) {
@@ -938,6 +949,11 @@ export const AssistantMessage = memo(function AssistantMessage({
     [msg.events],
   );
 
+  const creationDraft = useMemo(
+    () => extractCreationDraft(msg.events),
+    [msg.events],
+  );
+
 
   // Set by the mastery navigation tools when the learner asked to be taken
   // back to something they are studying. The offer carries a
@@ -971,6 +987,16 @@ export const AssistantMessage = memo(function AssistantMessage({
         : [],
     [useInlineSegments, msg.events, msg.content, isStreaming],
   );
+  // Pages already drawn at the tool call that presented them; the fallback
+  // below only stacks the ones this layout had no place for.
+  const placedSourcePages = useMemo(() => {
+    const urls = new Set<string>();
+    if (!useInlineSegments) return urls;
+    for (const seg of messageSegments) {
+      if (seg.kind === "source_view") seg.pages.forEach(page => urls.add(page.preview_url));
+    }
+    return urls;
+  }, [useInlineSegments, messageSegments]);
   // Either card kind: a clarifying ask_user, or a posed mastery question.
   const hasInlineCards =
     useInlineSegments &&
@@ -1233,6 +1259,8 @@ export const AssistantMessage = memo(function AssistantMessage({
               <div key={block.key}>
                 {renderMasteryCard(block.segment.question)}
               </div>
+            ) : block.segment.kind === "source_view" ? (
+              <MasterySourcePages key={block.key} pages={block.segment.pages} />
             ) : block.segment.kind === "ask_user" ? (
               <AskUserOptions
                 key={block.key}
@@ -1268,7 +1296,7 @@ export const AssistantMessage = memo(function AssistantMessage({
         Array.isArray(event.metadata.sources) && event.metadata.sources.some(source =>
           source && typeof source === "object" &&
           (source.presentation === "teaching" || source.presentation === "reveal"))) &&
-        <MasterySourcePresentation events={events} />}
+        <MasterySourcePresentation events={events} placed={placedSourcePages} />}
       {/* Non-default branches (quiz, math animator, visualize) keep the
           card below the body. The default branch inlines it via
           ``messageSegments``; the research branch renders its own card
@@ -1287,6 +1315,7 @@ export const AssistantMessage = memo(function AssistantMessage({
           replacing it, and applies to every branch. */}
       {setupCredential ? <SetupCredentialCard data={setupCredential} /> : null}
       {partnerDraft ? <PartnerDraftCard data={partnerDraft} /> : null}
+      {creationDraft ? <CreationDraftCard data={creationDraft} /> : null}
       {masteryHandoffs.length > 0 && <MasteryHandoffCards handoffs={masteryHandoffs} />}
     </>
   );
@@ -1986,7 +2015,7 @@ export const UserMessage = memo(function UserMessage({
                 {quoteText(a)}
               </div>
             ))}
-            <div className="whitespace-pre-wrap">{msg.content}</div>
+            <div className="whitespace-pre-wrap"><LearningText size={14}>{msg.content}</LearningText></div>
           </div>
         )}
         {/* Recovery records are local to this browser. Keep their actions
@@ -2116,6 +2145,10 @@ export const ChatMessageList = memo(function ChatMessageList({
   onReleaseMessageTrace,
   assistantActions,
   compactActions = false,
+  threadsByMessageId,
+  onOpenThread,
+  onDeleteThread,
+  onDetachThread,
 }: {
   messages: ChatMessageItem[];
   isStreaming: boolean;
@@ -2192,8 +2225,22 @@ export const ChatMessageList = memo(function ChatMessageList({
   /** A narrow side surface keeps only copy, regenerate and its own actions:
    *  read-aloud, delete and the usage line belong to the full chat. */
   compactActions?: boolean;
+  /** Little Tutor threads opened from a message, keyed by that message id
+   *  (``String(message.id)`` so SQLite and PocketBase ids group alike).
+   *  Omitted where the surface has no message-level thread entry point. */
+  threadsByMessageId?: ReadonlyMap<string, SessionSummary[]>;
+  onOpenThread?: (thread: SessionSummary) => void;
+  onDeleteThread?: (thread: SessionSummary) => Promise<void>;
+  /** Detach a thread from this message without deleting its conversation. */
+  onDetachThread?: (thread: SessionSummary) => Promise<void>;
 }) {
   const { t } = useTranslation();
+  // One lookup for both bubbles; the map is memoized by the chat page, so a
+  // message without threads costs a miss and no render branch.
+  const threadsForMessage = (messageId?: number) =>
+    messageId != null && threadsByMessageId
+      ? threadsByMessageId.get(String(messageId))
+      : undefined;
   // Visible path: when no branching has happened the result is identical
   // to the input. After an edit, sibling branches are filtered out so the
   // UI shows exactly one continuous thread, with arrow nav exposed on the
@@ -2455,6 +2502,18 @@ export const ChatMessageList = memo(function ChatMessageList({
                   ) : null}
                 </div>
               ) : null}
+              {(() => {
+                const threads = threadsForMessage(msg.id);
+                return threads?.length && onOpenThread && onDeleteThread ? (
+                  <MessageThreadMarker
+                    threads={threads}
+                    align="right"
+                    onOpen={onOpenThread}
+                    onDelete={onDeleteThread}
+                    onDetach={onDetachThread}
+                  />
+                ) : null;
+              })()}
             </div>
           );
         }
@@ -2648,6 +2707,18 @@ export const ChatMessageList = memo(function ChatMessageList({
                 )}
               </div>
             )}
+            {(() => {
+              const threads = threadsForMessage(msg.id);
+              return threads?.length && onOpenThread && onDeleteThread ? (
+                <MessageThreadMarker
+                  threads={threads}
+                  align="left"
+                  onOpen={onOpenThread}
+                  onDelete={onDeleteThread}
+                  onDetach={onDetachThread}
+                />
+              ) : null;
+            })()}
           </div>
         );
       })}

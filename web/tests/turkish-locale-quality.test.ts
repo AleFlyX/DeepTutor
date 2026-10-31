@@ -109,7 +109,9 @@ test('Turkish UI avoids the em and en dash', () => {
 })
 
 test('every catalog names Turkish by its endonym', () => {
-  for (const locale of ['en', 'zh', 'fr', 'de', 'uk', 'pl', 'tr']) {
+  for (const locale of fs.readdirSync(localesRoot).filter(name =>
+    fs.existsSync(path.join(localesRoot, name, 'app.json'))
+  )) {
     assert.equal(readCatalog(locale)['language.turkish'], 'Türkçe', locale)
   }
 })

@@ -81,6 +81,7 @@ async def test_explicit_reply_language_stays_with_one_conversation(
         "pl",
         "uk",
         "ms",
+        "vi",
         "tr",
     ],
 )
