@@ -252,6 +252,22 @@ DeepTutor is an agent-native learning workspace that connects tutoring, problem 
 
 ## 🚀 Get Started
 
+### Desktop Apps — macOS and Windows (Preview)
+
+**Open DeepTutor** runs the full learning workspace in a desktop window, with Python, Node.js, and the DeepTutor runtime bundled. No terminal or separate Python/Node installation is needed.
+
+Desktop apps are currently previews on `dev`; the **v1.7.0 Release does not include desktop installers**. For preview downloads, open a completed successful [Desktop Release workflow run](https://github.com/HKUDS/DeepTutor/actions/workflows/desktop-release.yml?query=branch%3Adev), scroll to **Artifacts**, and download the matching target (`macos-arm64`, `macos-x64`, or `windows-x64`). GitHub sign-in is required, and these artifacts expire after seven days. Extract the downloaded artifact ZIP to find the installer. Published desktop installers will appear under **Assets** on the corresponding [GitHub Release](https://github.com/HKUDS/DeepTutor/releases).
+
+| Your computer | Installer inside the download | Installation |
+| --- | --- | --- |
+| **Mac with Apple Silicon** (M-series) | `Open-DeepTutor-MacOS-Apple-Silicon-v<version>.dmg` | Open the DMG, drag **Open DeepTutor** into **Applications**, then launch it. |
+| **Mac with Intel** | `Open-DeepTutor-MacOS-Intel-v<version>.dmg` | Open the DMG, drag **Open DeepTutor** into **Applications**, then launch it. |
+| **Windows x64** | `Open-DeepTutor-Windows-v<version>-Setup.exe` | Run the installer, then open **Open DeepTutor** from the Start menu or desktop shortcut. |
+
+Windows also offers `Open-DeepTutor-Windows-v<version>-Portable.zip`: extract the entire ZIP and launch `Open DeepTutor.exe` from the extracted folder.
+
+On first launch, wait for the bundled runtime to initialize, then configure your model provider and API key in **Settings → Providers**, and select a model under **Language models**. Preview signing status varies; Windows builds are currently unsigned and may show a SmartScreen warning. See the [desktop guide](apps/desktop/README.md) for signing, local data locations, optional external tools, and source builds.
+
 ### Let Your Agent Set Up DeepTutor
 
 Copy this prompt into your terminal-capable AI agent (such as Codex or Claude Code):
@@ -272,7 +288,7 @@ The [developer and agent handbook](docs-for-dev/README.md) is the documentation 
 Claude Code connected-agent model Sync can use the optional `claude-code` extra for SDK-based model discovery. See [Claude model sync](docs-for-dev/CLAUDE_MODEL_SYNC.md)
 for versioned catalogs, CLI authentication, and the legacy fallback.
 
-DeepTutor ships four installation paths. They all share one runtime-home layout: private settings live in `data/user/settings/` under the directory you launch from (or under `DEEPTUTOR_HOME` / `deeptutor start --home` if you set one explicitly). See [Local Data Persistence](./docs-for-dev/DATA_STORAGE.md) for the complete storage layout, database support, and backup notes. For the full app, the recommended flow is **pick a runtime-home directory → install → `deeptutor init` → `deeptutor start`**.
+The four terminal-based installation paths below share one runtime-home layout: private settings live in `data/user/settings/` under the directory you launch from (or under `DEEPTUTOR_HOME` / `deeptutor start --home` if you set one explicitly). See [Local Data Persistence](./docs-for-dev/DATA_STORAGE.md) for the complete storage layout, database support, and backup notes. For these installations, the recommended full-app flow is **pick a runtime-home directory → install → `deeptutor init` → `deeptutor start`**.
 
 ### One-Command Docker Trial
 
