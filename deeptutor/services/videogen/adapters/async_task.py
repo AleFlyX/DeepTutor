@@ -98,30 +98,38 @@ class AsyncTaskVideogenAdapter(BaseVideogenAdapter):
         progress: ProgressFn | None,
     ) -> str:
         async with video_poll_budget(config.poll_timeout, task_id):
-            poll_url = join_api_path(config.base_url, f"{_SUBMIT_PATH}/{task_id}")
-            deadline = time.monotonic() + config.poll_timeout
-            polls = 0
-            while True:
-                resp = await client.get(poll_url, headers=headers)
-                raise_for_provider(resp, "Video task status")
-                status, video_url, error = self._extract_status(resp)
-                if status in _SUCCESS_STATES and video_url:
-                    return video_url
-                if status in _FAILURE_STATES:
-                    raise GenerationProviderError(
-                        f"Video task {task_id} {status}: {error or 'no detail provided'}"
-                    )
-                if time.monotonic() >= deadline:
-                    raise GenerationProviderError(
-                        f"Video task {task_id} timed out after {config.poll_timeout}s "
-                        f"(last status: {status or 'unknown'})."
-                    )
-                polls += 1
-                if progress and polls % 3 == 0:
-                    await self._notify(
-                        progress, f"Still rendering video… (status: {status or '…'})"
-                    )
-                await asyncio.sleep(config.poll_interval)
+            return await self._poll_until_complete(client, config, headers, task_id, progress)
+
+    async def _poll_until_complete(
+        self,
+        client: httpx.AsyncClient,
+        config: VideogenConfig,
+        headers: dict[str, str],
+        task_id: str,
+        progress: ProgressFn | None,
+    ) -> str:
+        poll_url = join_api_path(config.base_url, f"{_SUBMIT_PATH}/{task_id}")
+        deadline = time.monotonic() + config.poll_timeout
+        polls = 0
+        while True:
+            resp = await client.get(poll_url, headers=headers)
+            raise_for_provider(resp, "Video task status")
+            status, video_url, error = self._extract_status(resp)
+            if status in _SUCCESS_STATES and video_url:
+                return video_url
+            if status in _FAILURE_STATES:
+                raise GenerationProviderError(
+                    f"Video task {task_id} {status}: {error or 'no detail provided'}"
+                )
+            if time.monotonic() >= deadline:
+                raise GenerationProviderError(
+                    f"Video task {task_id} timed out after {config.poll_timeout}s "
+                    f"(last status: {status or 'unknown'})."
+                )
+            polls += 1
+            if progress and polls % 3 == 0:
+                await self._notify(progress, f"Still rendering video… (status: {status or '…'})")
+            await asyncio.sleep(config.poll_interval)
 
     # --- provider-specific shaping -------------------------------------------
 
