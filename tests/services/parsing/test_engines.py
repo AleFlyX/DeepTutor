@@ -987,16 +987,40 @@ def test_install_manager_spec_allowlist() -> None:
     assert "mineru" not in ENGINE_PIP_SPECS
 
 
-def test_install_manager_requires_offline_module_change(monkeypatch) -> None:
+@pytest.mark.parametrize("engine", ["docling", "markitdown", "pymupdf4llm", "liteparse"])
+def test_install_manager_requires_offline_module_change(monkeypatch, engine) -> None:
     from deeptutor.services.parsing.engines import _install
 
     manager = _install.BackgroundJobManager()
     monkeypatch.setattr(
-        manager, "_launch", lambda **kwargs: pytest.fail("mutated live environment")
+        _install.subprocess,
+        "Popen",
+        lambda *args, **kwargs: pytest.fail("mutated live environment"),
     )
-    result = manager.start_install(engine="docling", specs=_install.ENGINE_PIP_SPECS["docling"])
+    result = manager.start_install(engine=engine, specs=_install.ENGINE_PIP_SPECS[engine])
     assert result["ok"] is False
-    assert "deeptutor module install parser-docling" in result["message"]
+    assert f"parse-{engine} to DEEPTUTOR_EXTRAS" in result["message"]
+    assert f"python scripts/install_extras.py parse-{engine}" in result["message"]
+    assert f"deeptutor module install parser-{engine}" in result["message"]
+    assert "preserving other extras" in result["message"]
+    assert "inspect startup logs" in result["message"]
+    assert "not installed Python packages" in result["message"]
+    assert manager.status()["state"] == "idle"
+
+
+@pytest.mark.parametrize(
+    "engine,specs", [("unknown", ["docling"]), ("docling", ["untrusted-package"])]
+)
+def test_install_manager_rejects_unknown_or_changed_specs(monkeypatch, engine, specs) -> None:
+    from deeptutor.services.parsing.engines import _install
+
+    monkeypatch.setattr(
+        _install.subprocess,
+        "Popen",
+        lambda *args, **kwargs: pytest.fail("mutated live environment"),
+    )
+    result = _install.BackgroundJobManager().start_install(engine=engine, specs=specs)
+    assert result == {"ok": False, "message": "Unknown parser installation request."}
 
 
 def test_model_download_allowlist() -> None:

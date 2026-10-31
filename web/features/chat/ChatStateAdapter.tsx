@@ -41,6 +41,7 @@ import type {
 } from "@/features/chat/model/protocol";
 import { UnifiedTurnClient } from "@/features/chat/transport/UnifiedTurnClient";
 import { buildStartTurnInput } from "@/features/chat/controllers/buildStartTurnInput";
+import { notifySessionsChanged } from "@/lib/session-events";
 import {
   getSession,
   replaceSubmission,
@@ -52,6 +53,7 @@ import {
   type MessageTracePage,
   type SessionMessage,
   type OrphanedFailedTurn,
+  type DeleteMessageResult,
 } from "@/lib/session-api";
 import {
   TraceCache,
@@ -1772,7 +1774,7 @@ interface ChatContextValue {
    *  now; an unconfirmed submission is replayed with its own parameters so
    *  its idempotency key still matches. */
   resendLastMessage: () => void;
-  deleteTurn: (messageId: number) => Promise<void>;
+  deleteTurn: (messageId: number) => Promise<DeleteMessageResult>;
   /** Forget only this browser's unsent recovery copy; never mutate a server turn. */
   discardFailedSubmission: (messageId: number) => boolean;
   /** Re-send a user message under a new branch (sibling of the original).
@@ -4120,14 +4122,18 @@ export function ChatStateAdapterProvider({
   );
 
   const deleteTurn = useCallback(
-    async (messageId: number) => {
+    async (messageId: number): Promise<DeleteMessageResult> => {
       const generation = runtimeGeneration.current;
       const currentState = stateRef.current;
       const key = currentState.selectedKey;
-      if (!key) return;
+      const empty = (): DeleteMessageResult => ({
+        detachedThreadIds: [],
+        deletedMessageIds: [],
+      });
+      if (!key) return empty();
       const session = currentState.sessions[key];
-      if (!session || !session.sessionId) return;
-      if (session.isStreaming) return;
+      if (!session || !session.sessionId) return empty();
+      if (session.isStreaming) return empty();
       // Same optimistic-id race as editMessage (#739): after loadSession
       // dispatches, stateRef can still hold the negative sentinel until
       // React commits. Resolve from the returned snapshot instead.
@@ -4143,15 +4149,28 @@ export function ChatStateAdapterProvider({
               : undefined,
         );
       } catch {
-        return;
+        return empty();
       }
-      if (!target || typeof target.id !== "number" || target.id < 0 || generation !== runtimeGeneration.current) return;
+      if (
+        !target ||
+        typeof target.id !== "number" ||
+        target.id < 0 ||
+        generation !== runtimeGeneration.current
+      ) {
+        return empty();
+      }
       const effectiveId = target.id;
       try {
-        await deleteMessage(session.sessionId, effectiveId);
+        const result = await deleteMessage(session.sessionId, effectiveId);
         dispatch({ type: "DELETE_TURN", key, messageId: effectiveId });
+        // The server detached any Little Tutor thread filed under the deleted
+        // message. Both the thread list and the open side-chat tabs subscribe
+        // to this bus, so marker/popover/context state refresh together.
+        notifySessionsChanged();
+        return result;
       } catch (err) {
         console.error("Failed to delete turn:", err);
+        return empty();
       }
     },
     [loadSession],
