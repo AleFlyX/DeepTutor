@@ -19,7 +19,7 @@ from deeptutor.response_languages import SUPPORTED_RESPONSE_LANGUAGES
 from deeptutor.services.path_service import get_path_service
 from deeptutor.tools.builtin import USER_TOGGLEABLE_TOOL_NAMES
 
-UiLanguage = Literal["en", "zh", "fr", "de", "uk", "pl"]
+UiLanguage = Literal["en", "zh", "fr", "de", "uk", "pl", "vi"]
 
 DEFAULT_UI_SETTINGS: dict[str, Any] = {
     # "system" follows the OS. "snow" is the pure-white Default palette.
@@ -46,6 +46,8 @@ _RESPONSE_LANGUAGE_ALIASES: dict[str, str] = {
     "korean": "ko",
     "spanish": "es",
     "french": "fr",
+    "français": "fr",
+    "francais": "fr",
     "german": "de",
     "russian": "ru",
     "portuguese": "pt",
@@ -54,6 +56,9 @@ _RESPONSE_LANGUAGE_ALIASES: dict[str, str] = {
     "polish": "pl",
     "malay": "ms",
     "bahasa melayu": "ms",
+    "vietnamese": "vi",
+    "tiếng việt": "vi",
+    "tieng viet": "vi",
 }
 
 
@@ -94,10 +99,11 @@ def _normalize_language(language: Any, default: str = "en") -> str:
     Normalize language codes:
     - en/english -> en
     - zh/chinese/cn -> zh
-    - fr/french -> fr
+    - fr/french/français -> fr
     - de/german/deutsch -> de
     - uk/ukrainian/ua -> uk
     - pl/polish/polski -> pl
+    - vi/vietnamese/tiếng việt -> vi
 
     An unknown code falls back to ``default`` rather than raising, so this is
     also the gate that decides which languages exist at all: a locale shipped
@@ -113,7 +119,7 @@ def _normalize_language(language: Any, default: str = "en") -> str:
             return "en"
         if s == "chinese" or base in {"zh", "cn"}:
             return "zh"
-        if s == "french" or base == "fr":
+        if s in {"french", "français", "francais"} or base == "fr":
             return "fr"
         if s in {"german", "deutsch"} or base == "de":
             return "de"
@@ -121,6 +127,8 @@ def _normalize_language(language: Any, default: str = "en") -> str:
             return "uk"
         if s in {"polish", "polski"} or base == "pl":
             return "pl"
+        if s in {"vietnamese", "tiếng việt", "tieng viet"} or base == "vi":
+            return "vi"
 
     # Fall back to default
     if isinstance(default, str):

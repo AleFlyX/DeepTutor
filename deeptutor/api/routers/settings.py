@@ -117,6 +117,7 @@ ResponseLanguage = Literal[
     "pl",
     "uk",
     "ms",
+    "vi",
 ]
 
 
@@ -411,13 +412,17 @@ class ChatAttachmentSettingsUpdate(BaseModel):
 
 
 class ChatStarterSettingsUpdate(BaseModel):
-    """How much recent activity shapes the home screen's starting points.
+    """How much recent activity shapes the home screen's starting points, and
+    whether the chat composer offers a predicted next line.
 
     Bounds mirror ``starter_settings.TRACE_COUNT_RANGE`` so the API rejects
-    loudly what the file layer would silently clamp.
+    loudly what the file layer would silently clamp. ``ask_hint_enabled`` left
+    out (``None``) keeps the stored value, so a client that only knows
+    ``trace_count`` cannot switch the hint back on by accident.
     """
 
     trace_count: int = Field(ge=STARTER_TRACE_COUNT_RANGE[0], le=STARTER_TRACE_COUNT_RANGE[1])
+    ask_hint_enabled: Optional[bool] = None
 
 
 class MinerUSettingsUpdate(BaseModel):
@@ -1151,11 +1156,12 @@ async def get_chat_attachment_settings():
 
 @router.get("/chat-starters")
 async def get_chat_starter_settings():
-    """How many recent activities shape the home screen's starting points.
+    """How many recent activities shape the home screen's starting points, and
+    whether the chat composer offers a predicted next line.
 
-    Per user and not admin-gated, unlike the attachment caps next door: this
-    changes the size of one prompt built from the caller's own memory, not any
-    resource other people share.
+    Per user and not admin-gated, unlike the attachment caps next door: these
+    change one prompt built from the caller's own memory, or skip one call, not
+    any resource other people share.
     """
     from deeptutor.services.settings.starter_settings import (
         TRACE_COUNT_RANGE,
@@ -1172,7 +1178,7 @@ async def update_chat_starter_settings(payload: ChatStarterSettingsUpdate):
         save_starter_settings,
     )
 
-    saved = save_starter_settings({"trace_count": payload.trace_count})
+    saved = save_starter_settings(payload.model_dump(exclude_none=True))
     return {"settings": saved, "bounds": {"trace_count": TRACE_COUNT_RANGE}}
 
 
@@ -1534,11 +1540,11 @@ def _normalize_engine_name(name: str) -> str:
 
 @router.post("/document-parsing/install")
 async def start_document_parsing_install(payload: DocumentParsingInstall):
-    """Kick off a one-click ``pip install`` of an optional engine's package(s).
+    """Return offline Docker/source/wheel guidance; never install into a live server.
 
-    Returns ``{ok, message}`` immediately; progress is polled via the shared job
-    status endpoint. Only one job runs at a time (process-wide singleton). The
-    engine must be in the install allow-list (``ENGINE_PIP_SPECS``)."""
+    Keeps the existing ``{ok, message}`` response and engine allow-list for
+    compatibility. Model downloads use their separate background-job endpoint.
+    """
     _require_settings_admin()
     from deeptutor.services.parsing.engines._install import (
         ENGINE_PIP_SPECS,
