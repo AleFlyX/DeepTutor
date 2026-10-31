@@ -5,7 +5,7 @@ import path from "node:path";
 
 import { resolveResponseLanguage } from "../context/app-shell-storage";
 import { APP_LANGUAGES, isAppLanguage, normalizeLanguage } from "../i18n/languages";
-import { getLocale } from "../lib/datetime";
+import { formatDate, formatTime, getLocale } from "../lib/datetime";
 
 test("the locale registry accepts every supported language", () => {
   for (const { code } of APP_LANGUAGES) assert.equal(isAppLanguage(code), true);
@@ -60,4 +60,16 @@ test("legacy settings inherit the interface language when response language is m
   assert.equal(resolveResponseLanguage(null, "fr"), "fr");
   assert.equal(resolveResponseLanguage(null, "uk"), "uk");
   assert.equal(resolveResponseLanguage(null, "vi"), "vi");
+});
+
+
+test("Portuguese dates and times use Brazilian conventions", () => {
+  const date = new Date("2026-03-05T14:05:00Z");
+  assert.equal(getLocale("pt"), "pt-BR");
+  assert.equal(formatDate(date, "pt", {
+    year: "numeric", month: "long", day: "numeric", timeZone: "UTC",
+  }), "5 de março de 2026");
+  assert.equal(formatTime(date, "pt", {
+    hour: "2-digit", minute: "2-digit", timeZone: "UTC",
+  }), "14:05");
 });
