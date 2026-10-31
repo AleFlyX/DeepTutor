@@ -5,8 +5,10 @@ import http from 'node:http';
 import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { localURL, externalURL, validateConfig } from '../src/config.mjs';
-import { canonicalManifest, verifyManifest } from '../src/bundles.mjs';
+import { canonicalManifest, verifyManifest, installBundle, sha256 } from '../src/bundles.mjs';
+import { runtimeLayout, systemTar } from '../src/platform.mjs';
 import { ProcessGroup, availablePort, probe, waitReady } from '../src/processes.mjs';
 import { SourceRuntime, stageBundledWeb } from '../src/runtime.mjs';
 
@@ -22,12 +24,12 @@ test('only explicit loopback origins are accepted for attachment', () => {
 test('source data cannot share the checkout', () => {
   const config = { schemaVersion: 1, mode: 'source', sourcePath: '/tmp/core', pythonPath: '/python', nodePath: '/node', runtimeHome: '/tmp/core/data' };
   assert.throws(() => validateConfig(config));
-  assert.equal(validateConfig({ ...config, runtimeHome: '/tmp/data' }).runtimeHome, '/tmp/data');
+  assert.equal(validateConfig({ ...config, runtimeHome: '/tmp/data' }).runtimeHome, path.resolve('/tmp/data'));
 });
 
 test('update signatures bind version, checksum and architecture', () => {
   const { privateKey, publicKey } = generateKeyPairSync('ed25519');
-  const manifest = { formatVersion: 1, protocolVersion: 1, platform: 'darwin', arch: 'arm64', runtimeId: '1.7.0-test-arm64', archive: 'core.tar.gz', sha256: 'a'.repeat(64) };
+  const manifest = { formatVersion: 1, protocolVersion: 1, platform: process.platform, arch: 'arm64', runtimeId: '1.7.0-test-arm64', archive: 'core.tar.gz', sha256: 'a'.repeat(64) };
   manifest.signature = sign(null, Buffer.from(canonicalManifest(manifest)), privateKey).toString('base64');
   assert.equal(verifyManifest(manifest, publicKey, 'arm64'), manifest);
   assert.throws(() => verifyManifest({ ...manifest, sha256: 'b'.repeat(64) }, publicKey, 'arm64'));
@@ -43,6 +45,33 @@ test('occupied ports are left alone and an available port is chosen', async t =>
   const occupied = server.address().port;
   assert.notEqual(await availablePort(occupied), occupied);
   assert.equal(await probe(`http://127.0.0.1:${occupied}`), true);
+});
+
+test('a signed bundle installs from and into paths containing spaces and Chinese characters', async t => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'DeepTutor 安装 test '));
+  t.after(() => rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 }));
+  const source = path.join(root, 'source');
+  const seed = path.join(root, 'seed');
+  await mkdir(seed, { recursive: true });
+  const layout = runtimeLayout();
+  for (const relative of [layout.python, layout.node, 'core/deeptutor_cli/main.py', 'web/server.js']) {
+    const file = path.join(source, relative);
+    await mkdir(path.dirname(file), { recursive: true });
+    await writeFile(file, 'test runtime file');
+  }
+  // Keep tar's arguments ASCII; the regression is in the installer's paths.
+  execFileSync(systemTar(), ['-czf', '../seed/core.tar.gz', '.'], { cwd: source });
+  const { privateKey, publicKey } = generateKeyPairSync('ed25519');
+  const manifest = {
+    formatVersion: 1, protocolVersion: 1, platform: process.platform, arch: process.arch,
+    runtimeId: 'test-unicode', archive: 'core.tar.gz', sha256: await sha256(path.join(seed, 'core.tar.gz')),
+  };
+  manifest.signature = sign(null, Buffer.from(canonicalManifest(manifest)), privateKey).toString('base64');
+  const manifestFile = path.join(seed, 'runtime.json');
+  await writeFile(manifestFile, JSON.stringify(manifest));
+  const installed = await installBundle(manifestFile, path.join(root, '用户 data'), publicKey);
+  assert.equal(await readFile(path.join(installed.destination, layout.python), 'utf8'), 'test runtime file');
+  assert.deepEqual((await installBundle(manifestFile, path.join(root, '用户 data'), publicKey)).manifest, manifest);
 });
 
 test('stopping attach mode never stops the attached server', async t => {

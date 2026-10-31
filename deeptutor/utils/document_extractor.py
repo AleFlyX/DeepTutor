@@ -39,6 +39,7 @@ from deeptutor.utils.document_images import (
     extract_pdf_images,
     extract_pptx_rich,
     image_index_from_name,
+    ordered_pptx_slide_members,
     render_docx_text,
 )
 from deeptutor.utils.file_types import FileTypeRouter
@@ -1221,11 +1222,23 @@ def _extract_xlsx_ooxml(data: bytes, filename: str) -> str:
             for row in root.iter():
                 if _local_name(row.tag) != "row":
                     continue
-                cells = [
-                    _xlsx_cell_text(cell, shared_strings)
-                    for cell in row
-                    if _local_name(cell.tag) == "c"
-                ]
+                cells: list[str] = []
+                for cell in row:
+                    if _local_name(cell.tag) != "c":
+                        continue
+                    reference = re.fullmatch(r"([A-Za-z]{1,3})[1-9]\d*", cell.get("r", ""))
+                    column = 0
+                    if reference:
+                        for letter in reference.group(1).upper():
+                            column = column * 26 + ord(letter) - ord("A") + 1
+                    text = _xlsx_cell_text(cell, shared_strings)
+                    # XFD is the final Excel column. Invalid/missing references
+                    # keep the legacy sequential fallback without huge padding.
+                    if 1 <= column <= 16384:
+                        cells.extend([""] * max(0, column - len(cells)))
+                        cells[column - 1] = text
+                    else:
+                        cells.append(text)
                 row_text = "\t".join(cells)
                 if row_text.strip():
                     rows.append(row_text)
@@ -1237,12 +1250,7 @@ def _extract_xlsx_ooxml(data: bytes, filename: str) -> str:
 
 def _extract_pptx_ooxml(data: bytes, filename: str) -> str:
     with _open_ooxml(data, filename) as zf:
-        slide_members = sorted(
-            (name for name in zf.namelist() if re.match(r"ppt/slides/slide\d+\.xml$", name)),
-            key=lambda name: [
-                int(part) if part.isdigit() else part for part in re.split(r"(\d+)", name)
-            ],
-        )
+        slide_members = ordered_pptx_slide_members(zf)
         slides: list[str] = []
         for index, member in enumerate(slide_members, 1):
             root = _parse_xml_member(zf, member, filename)
