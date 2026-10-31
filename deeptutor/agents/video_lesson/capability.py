@@ -31,6 +31,7 @@ class VideoLessonCapability(TurnCapability):
             write_page,
         )
         from deeptutor.services.llm.config import get_llm_config
+        from deeptutor.services.model_selection.task_agent import task_model_agent
         from deeptutor.services.path_service import get_path_service
 
         llm_config = get_llm_config()
@@ -49,6 +50,15 @@ class VideoLessonCapability(TurnCapability):
         )
         writer.set_trace_callback(self._build_trace_bridge(stream, i18n))
         writer.start(user_input=context.user_message, history=history)
+        # Fixes edit a lesson that already exists; the fast task model does them in a
+        # fraction of the main model's time. Without one, the main writer fixes too.
+        fixer = (
+            task_model_agent(lambda **kw: LessonWriterAgent(language=context.language, **kw))
+            or writer
+        )
+        if fixer is not writer:
+            fixer.set_trace_callback(self._build_trace_bridge(stream, i18n))
+            fixer.share_conversation(writer)
 
         # npm install (first use only) overlaps the first, much longer, LLM call.
         runtime_ready = asyncio.create_task(ensure_runtime())
@@ -67,7 +77,7 @@ class VideoLessonCapability(TurnCapability):
                         source=self.name,
                         stage="code_generation",
                     )
-                    draft = await writer.write(attempt=attempt)
+                    draft = await (writer if attempt == 1 else fixer).write(attempt=attempt)
                 timings["code_generation"] += round(time.perf_counter() - started, 3)
                 if not draft.code:
                     attempts.append(
