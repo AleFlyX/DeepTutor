@@ -1361,6 +1361,40 @@ export interface paths {
     readonly patch?: never;
     readonly trace?: never;
   };
+  readonly "/api/creations/drafts/{draft_id}": {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    /** Get Creation Draft */
+    readonly get: operations["get_creation_draft_api_creations_drafts__draft_id__get"];
+    readonly put?: never;
+    readonly post?: never;
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly "/api/creations/drafts/{draft_id}/approve": {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    readonly get?: never;
+    readonly put?: never;
+    /** Approve Creation Draft */
+    readonly post: operations["approve_creation_draft_api_creations_drafts__draft_id__approve_post"];
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
   readonly "/api/dashboard/{entry_id}": {
     readonly parameters: {
       readonly query?: never;
@@ -11990,6 +12024,20 @@ export interface components {
       /** Snapshot Digest */
       readonly snapshot_digest: string;
     };
+    /**
+     * ApproveCreationRequest
+     * @description Editable fields accepted by the explicit draft-approval step.
+     */
+    readonly ApproveCreationRequest: {
+      /** Content */
+      readonly content?: string | null;
+      /** Description */
+      readonly description?: string | null;
+      /** Name */
+      readonly name?: string | null;
+      /** Tags */
+      readonly tags?: readonly string[] | null;
+    };
     /** AssetAddRequest */
     readonly AssetAddRequest: {
       /** Knowledge Bases */
@@ -17526,6 +17574,11 @@ export interface components {
       /** Content */
       readonly content: string;
       /**
+       * Create Target
+       * @default null
+       */
+      readonly create_target: string | null;
+      /**
        * Followup Question Context
        * @default null
        */
@@ -18583,6 +18636,8 @@ export type SchemaAnswerImageUpload =
 export type SchemaAnswerRequest = components["schemas"]["AnswerRequest"];
 export type SchemaApplyOpsRequest = components["schemas"]["ApplyOpsRequest"];
 export type SchemaApprovalRequest = components["schemas"]["ApprovalRequest"];
+export type SchemaApproveCreationRequest =
+  components["schemas"]["ApproveCreationRequest"];
 export type SchemaAssetAddRequest = components["schemas"]["AssetAddRequest"];
 export type SchemaAssetSpec = components["schemas"]["AssetSpec"];
 export type SchemaAuditRequest = components["schemas"]["AuditRequest"];
@@ -22224,6 +22279,84 @@ export interface operations {
         readonly "application/json": {
           readonly [key: string]: unknown;
         };
+      };
+    };
+    readonly responses: {
+      /** @description Successful Response */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly "application/json": {
+            readonly [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      readonly 422: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  readonly get_creation_draft_api_creations_drafts__draft_id__get: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: {
+        readonly Authorization?: string | null;
+      };
+      readonly path: {
+        readonly draft_id: string;
+      };
+      readonly cookie?: {
+        readonly dt_token?: string | null;
+      };
+    };
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description Successful Response */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly "application/json": {
+            readonly [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      readonly 422: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  readonly approve_creation_draft_api_creations_drafts__draft_id__approve_post: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: {
+        readonly Authorization?: string | null;
+      };
+      readonly path: {
+        readonly draft_id: string;
+      };
+      readonly cookie?: {
+        readonly dt_token?: string | null;
+      };
+    };
+    readonly requestBody: {
+      readonly content: {
+        readonly "application/json": components["schemas"]["ApproveCreationRequest"];
       };
     };
     readonly responses: {

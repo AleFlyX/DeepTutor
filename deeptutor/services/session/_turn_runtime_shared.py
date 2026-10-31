@@ -883,6 +883,11 @@ def _request_snapshot_metadata(
     note_generation = _note_generation(payload.get("note_generation"))
     if note_generation:
         snapshot["noteGeneration"] = note_generation
+    # The create-mode lead chip, so a regenerate/resend keeps authoring the
+    # same kind of draft instead of silently dropping back to plain chat.
+    create_target = str(payload.get("create_target") or "")
+    if create_target:
+        snapshot["createTarget"] = create_target
     if llm_selection:
         snapshot["llmSelection"] = llm_selection
     metadata: dict[str, Any] = {"request_snapshot": snapshot}
