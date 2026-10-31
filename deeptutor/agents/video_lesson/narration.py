@@ -116,7 +116,13 @@ async def _ffmpeg(args: list[str], data: bytes) -> bytes:
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )  # nosec B603 - fixed argv
-    out, err = await proc.communicate(data)
+    try:
+        out, err = await asyncio.wait_for(proc.communicate(data), timeout=60)
+    except (TimeoutError, asyncio.CancelledError):
+        if proc.returncode is None:
+            proc.kill()
+        await proc.wait()
+        raise
     if proc.returncode != 0 or not out:
         raise RuntimeError(f"ffmpeg failed: {err.decode(errors='ignore')[:200]}")
     return out
@@ -130,15 +136,33 @@ async def speak_with_settings(text: str) -> Clip:
     caption offset, and the joined clip is re-encoded as the mp3 the player expects.
     """
     from deeptutor.services.voice import synthesize_speech
+    from deeptutor.services.voice.audio import _parse_pcm_content_type
 
     pcm = bytearray()
     captions: list[tuple[int, str]] = []
     for sentence in (s.strip() for s in _SENTENCE_END.split(text)):
         if not sentence:
             continue
-        audio, _ = await synthesize_speech(sentence, strip_markdown=False)
+        audio, content_type = await synthesize_speech(sentence, strip_markdown=False)
+        pcm_format = _parse_pcm_content_type(content_type)
+        input_args = []
+        if pcm_format is not None:
+            rate, channels = pcm_format
+            input_args = ["-f", "s16le", "-ar", str(rate), "-ac", str(channels)]
         decoded = await _ffmpeg(
-            ["-i", "pipe:0", "-f", "s16le", "-ar", str(_PCM_RATE), "-ac", "1", "pipe:1"], audio
+            [
+                *input_args,
+                "-i",
+                "pipe:0",
+                "-f",
+                "s16le",
+                "-ar",
+                str(_PCM_RATE),
+                "-ac",
+                "1",
+                "pipe:1",
+            ],
+            audio,
         )
         captions.append((round(len(pcm) / _PCM_BYTES_PER_SECOND * FPS), sentence))
         pcm += decoded + _SENTENCE_GAP

@@ -88,3 +88,56 @@ def test_settings_tts_failure_falls_back_to_edge(monkeypatch) -> None:
 def test_edge_settings_leave_narration_to_edge(monkeypatch) -> None:
     _tts(monkeypatch, provider_name="edge", voice="en-US-AvaNeural")
     assert narration._settings_provider() is None
+
+
+def test_settings_pcm_preserves_input_rate_and_channels(monkeypatch):
+    from deeptutor.agents.video_lesson import narration
+
+    calls = []
+
+    async def synthesize(*args, **kwargs):
+        return b"\0" * 3200, "audio/pcm;rate=16000;channels=2"
+
+    async def convert(args, data):
+        calls.append(args)
+        return b"\0" * 4800
+
+    monkeypatch.setattr("deeptutor.services.voice.synthesize_speech", synthesize)
+    monkeypatch.setattr(narration, "_ffmpeg", convert)
+    asyncio.run(narration.speak_with_settings("Hello"))
+    assert calls[0][:8] == ["-f", "s16le", "-ar", "16000", "-ac", "2", "-i", "pipe:0"]
+
+
+def test_ffmpeg_is_killed_and_reaped_when_cancelled(monkeypatch):
+    from deeptutor.agents.video_lesson import narration
+
+    class Process:
+        returncode = None
+        killed = waited = False
+
+        async def communicate(self, data):
+            raise asyncio.CancelledError
+
+        def kill(self):
+            self.killed = True
+
+        async def wait(self):
+            self.waited = True
+
+    proc = Process()
+
+    async def create(*args, **kwargs):
+        return proc
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", create)
+
+    async def check():
+        try:
+            await narration._ffmpeg([], b"audio")
+        except asyncio.CancelledError:
+            pass
+        else:
+            raise AssertionError("cancellation was swallowed")
+
+    asyncio.run(check())
+    assert proc.killed and proc.waited
