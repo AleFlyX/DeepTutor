@@ -7309,5 +7309,6 @@
   "After restarting, refresh parser availability here. This does not install packages or apply pending settings.": "Après le redémarrage, actualisez ici la disponibilité du parseur. Cela n’installe aucun paquet et n’applique pas les paramètres en attente.",
   "Checking availability…": "Vérification de la disponibilité…",
   "Availability refreshed. This parser is still unavailable; check the installation and startup logs, then retry.": "Disponibilité actualisée. Ce parseur reste indisponible ; vérifiez l’installation et les journaux de démarrage, puis réessayez.",
-  "language.portuguese": "Portugais"
+  "language.portuguese": "Portugais",
+  "language.japanese": "Japonais"
 }

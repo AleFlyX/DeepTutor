@@ -6141,7 +6141,8 @@
               "uk",
               "pl",
               "pt",
-              "vi"
+              "vi",
+              "ja"
             ],
             "title": "Language",
             "type": "string"
@@ -13400,7 +13401,8 @@
                   "uk",
                   "pl",
                   "pt",
-                  "vi"
+                  "vi",
+                  "ja"
                 ],
                 "type": "string"
               },

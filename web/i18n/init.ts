@@ -73,4 +73,9 @@ export async function ensureLanguage(language: AppLanguage) {
     const viApp = (await import("@/locales/vi/app.json")).default;
     i18n.addResourceBundle("vi", "app", viApp, true, true);
   }
+
+  if (language === "ja") {
+    const jaApp = (await import("@/locales/ja/app.json")).default;
+    i18n.addResourceBundle("ja", "app", jaApp, true, true);
+  }
 }

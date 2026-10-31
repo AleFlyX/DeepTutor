@@ -237,6 +237,15 @@ class TurnRequest(BaseModel):
     def _validate_reply_language_override(cls, value: str | None) -> str | None:
         return validate_reply_language_override(value)
 
+    @field_validator("answer_by", mode="before")
+    @classmethod
+    def _blank_answer_by_hands_back(cls, value: Any) -> Any:
+        # Clients restate ``answer_by`` every turn and send "" to hand the
+        # thread back to DeepTutor; the field stays set, so that still clears it.
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
+
     @model_validator(mode="before")
     @classmethod
     def _translate_legacy_runtime_config(cls, value: Any) -> Any:

@@ -24,6 +24,8 @@ test("the locale registry accepts every supported language", () => {
   assert.equal(normalizeLanguage("Vietnamese"), "vi");
   assert.equal(normalizeLanguage("Tiếng Việt"), "vi");
   assert.equal(getLocale("vi"), "vi-VN");
+  assert.equal(normalizeLanguage("ja-JP"), "ja");
+  assert.equal(normalizeLanguage("Japanese"), "ja");
 });
 
 test("response language remains independent from the interface language", () => {

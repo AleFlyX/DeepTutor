@@ -6426,5 +6426,6 @@
   "After restarting, refresh parser availability here. This does not install packages or apply pending settings.": "Po ponownym uruchomieniu odśwież tutaj dostępność parsera. Nie instaluje to pakietów ani nie stosuje oczekujących ustawień.",
   "Checking availability…": "Sprawdzanie dostępności…",
   "Availability refreshed. This parser is still unavailable; check the installation and startup logs, then retry.": "Dostępność odświeżona. Ten parser nadal jest niedostępny; sprawdź instalację i dzienniki uruchamiania, a następnie ponów próbę.",
-  "language.portuguese": "Portugalski"
+  "language.portuguese": "Portugalski",
+  "language.japanese": "Japoński"
 }

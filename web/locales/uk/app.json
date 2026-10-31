@@ -6426,5 +6426,6 @@
   "After restarting, refresh parser availability here. This does not install packages or apply pending settings.": "Після перезапуску оновіть тут доступність парсера. Це не встановлює пакети й не застосовує відкладені налаштування.",
   "Checking availability…": "Перевірка доступності…",
   "Availability refreshed. This parser is still unavailable; check the installation and startup logs, then retry.": "Доступність оновлено. Цей парсер досі недоступний; перевірте встановлення та журнали запуску й повторіть спробу.",
-  "language.portuguese": "Португальська"
+  "language.portuguese": "Португальська",
+  "language.japanese": "Японська"
 }

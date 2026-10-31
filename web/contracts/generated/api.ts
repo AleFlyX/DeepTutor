@@ -14532,7 +14532,8 @@ export interface components {
        * Language
        * @enum {string}
        */
-      readonly language: "en" | "zh" | "fr" | "de" | "uk" | "pl" | "pt" | "vi";
+      readonly language:
+        "en" | "zh" | "fr" | "de" | "uk" | "pl" | "pt" | "vi" | "ja";
     };
     /** LearnerOverrideRequest */
     readonly LearnerOverrideRequest: {
@@ -17943,7 +17944,7 @@ export interface components {
       readonly content_line_spacing: "compact" | "normal" | "relaxed";
       /** Language */
       readonly language?:
-        ("en" | "zh" | "fr" | "de" | "uk" | "pl" | "pt" | "vi") | null;
+        ("en" | "zh" | "fr" | "de" | "uk" | "pl" | "pt" | "vi" | "ja") | null;
       /** Response Language */
       readonly response_language?:
         | (
