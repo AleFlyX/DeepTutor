@@ -6354,5 +6354,8 @@
   "apps": "ứng dụng",
   "Review what your tutor remembers about you.": "Xem lại những gì gia sư ghi nhớ về bạn.",
   "Your conversations, agents, notebooks, and questions in one place — enter from here.": "Trò chuyện, tác nhân, sổ tay và câu hỏi ở cùng một nơi — bắt đầu từ đây.",
-  "language.vietnamese": "Tiếng Việt"
+  "language.vietnamese": "Tiếng Việt",
+  "Composer": "Ô soạn tin nhắn",
+  "Suggest my next message": "Gợi ý tin nhắn tiếp theo của tôi",
+  "After each reply, the input box shows a guess at what you might type next; Tab accepts it. Turn this off when practicing in chat — the likeliest next message to a question is its answer.": "Sau mỗi câu trả lời, ô nhập liệu hiển thị dự đoán về nội dung bạn có thể nhập tiếp theo; nhấn Tab để chấp nhận. Hãy tắt tính năng này khi luyện tập trong cuộc trò chuyện — tin nhắn tiếp theo có khả năng cao nhất sau một câu hỏi chính là câu trả lời cho câu hỏi đó."
 }

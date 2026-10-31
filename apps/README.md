@@ -7,12 +7,13 @@ same `web/` interface.
 
 | Folder     | Client                  | Platforms          | Status                     |
 | ---------- | ----------------------- | ------------------ | -------------------------- |
-| `desktop/` | Open DeepTutor (Electron) | macOS (Apple Silicon) | Preview, built on every release |
+| `desktop/` | Open DeepTutor (Electron) | MacOS (Apple Silicon, Intel), Windows (x64) | Preview, built on every release |
 
-Desktop platforms share `desktop/`; Windows and Linux builds belong there
-rather than in new folders. Mobile clients cannot run the Python core locally,
+Desktop platforms share `desktop/`; each build target has its own folder in
+`desktop/platforms/`, so a Linux build belongs there rather than in a new app. Mobile clients cannot run the Python core locally,
 so they will live in their own folders as remote clients.
 
-Every app is versioned with the core it ships and labels itself
-`Open DeepTutor <Platform> v<version>`, matching the web UI's
+Every app is versioned with the core it ships and names itself in full, e.g.
+`Open DeepTutor for MacOS with Apple Silicon v<version>` or
+`Open DeepTutor for Windows v<version>`, next to the web UI's
 `Open DeepTutor Web v<version>`.
