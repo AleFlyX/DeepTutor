@@ -1279,6 +1279,8 @@ We want DeepTutor to keep iterating and improving — and ultimately to become a
 
 We hope DeepTutor becomes a gift for the community. 🎁
 
+See the [development-branch contributor list](CONTRIBUTORS.md) for recently integrated contributions.
+
 <a href="https://github.com/HKUDS/DeepTutor/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=HKUDS/DeepTutor&max=999" alt="Contributors" />
 </a>
