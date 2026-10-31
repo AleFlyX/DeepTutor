@@ -1044,6 +1044,39 @@ The repo ships a root [`SKILL.md`](SKILL.md) — a compact handover doc for the 
 </details>
 
 <details>
+<summary><b>Opt-in visual review for Manim animations</b></summary>
+
+Set `enable_visual_review=true` to inspect rendered frames for overlap, readability,
+and framing, then feed detected issues into the existing code repair loop:
+
+```bash
+deeptutor run math_animator "Animate a sine wave" --config enable_visual_review=true
+deeptutor run visualize "Animate a sine wave" \
+  --config render_mode=manim_video --config enable_visual_review=true
+```
+
+The option defaults to `false`. It also works with `output_mode=image` for
+`math_animator` and `render_mode=manim_image` for `visualize`. Other visualizers,
+including the general `auto` loop, ignore it. Manim's optional dependencies are
+still required.
+
+For SDK turns, pass `config={"enable_visual_review": True}` in the `TurnRequest`
+sent to `DeepTutorApp.start_turn()`. API clients use the same `config` object with
+JSON `true`. For book animation blocks, set
+`params={"enable_visual_review": True}` on the animation `Block`.
+
+Review adds vision model calls and may add repair calls and re-renders, increasing
+cost and latency. It uses the existing limit of four retries, with a 120-second
+review timeout and a 180-second repair timeout. If no frames are available or the
+configured review model cannot inspect images, review is skipped with a summary.
+An unsuccessful review after all retries returns the best available render and its
+failed review result; a review timeout follows the existing render error/retry path.
+Capability results expose `render.visual_review`; book blocks retain the same
+review data in `metadata.visual_review` (`null` when review did not run).
+
+</details>
+
+<details>
 <summary><b>Command reference</b></summary>
 
 The table covers the full installation and optional add-ons; commands and capabilities require their modules to be enabled. Core provides `chat` and `ask_questions`.
