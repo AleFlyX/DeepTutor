@@ -29,13 +29,39 @@ test("clientEditionLabel names the web client by default", () => {
   );
 });
 
-test("clientEditionLabel recognises the macOS desktop shell", () => {
+const SHELL = "Mozilla/5.0 Chrome/140.0 Electron/45.1.0 OpenDeepTutor/1.7.1";
+
+test("clientEditionLabel names each desktop edition", () => {
   assert.equal(
-    clientEditionLabel(
-      "1.7.0",
-      "Mozilla/5.0 Chrome/140.0 Electron/45.1.0 OpenDeepTutor/1.7.0 (macOS)",
-    ),
-    "Open DeepTutor MacOS v1.7.0",
+    clientEditionLabel("1.7.1", `${SHELL} (macOS; arm64)`),
+    "Open DeepTutor for MacOS with Apple Silicon v1.7.1",
+  );
+  assert.equal(
+    clientEditionLabel("1.7.1", `${SHELL} (macOS; x64)`),
+    "Open DeepTutor for MacOS with Intel Silicon v1.7.1",
+  );
+  assert.equal(
+    clientEditionLabel("1.7.1", `${SHELL} (Windows; x64)`),
+    "Open DeepTutor for Windows v1.7.1",
+  );
+});
+
+test("clientEditionLabel has short forms for tight spaces", () => {
+  assert.equal(
+    clientEditionLabel("1.7.1", `${SHELL} (macOS; arm64)`, "short"),
+    "MacOS (Apple Silicon) v1.7.1",
+  );
+  assert.equal(
+    clientEditionLabel("1.7.1", `${SHELL} (macOS; x64)`, "short"),
+    "MacOS (Intel) v1.7.1",
+  );
+  assert.equal(clientEditionLabel("1.7.1", "Mozilla/5.0", "short"), "Web v1.7.1");
+});
+
+test("clientEditionLabel still recognises 1.7.0 shells", () => {
+  assert.equal(
+    clientEditionLabel("1.7.0", `${SHELL} (macOS)`),
+    "Open DeepTutor for MacOS v1.7.0",
   );
 });
 
