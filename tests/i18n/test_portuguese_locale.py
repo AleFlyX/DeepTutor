@@ -97,7 +97,7 @@ def test_web_locale_keeps_interpolation_placeholders() -> None:
 
 
 def test_every_locale_can_name_portuguese() -> None:
-    for locale in ("en", "zh", "fr", "de", "uk", "pl", "pt"):
+    for locale in ("en", "zh", "fr", "de", "uk", "pl", "pt", "vi"):
         assert "language.portuguese" in _catalog(locale)
 
 

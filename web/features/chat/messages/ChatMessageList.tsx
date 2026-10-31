@@ -41,6 +41,7 @@ import { useTranslation } from "react-i18next";
 import type { SelectedHistorySession } from "@/components/chat/HistorySessionPicker";
 import type { SelectedQuestionEntry } from "@/components/chat/QuestionBankPicker";
 import { ActivityFold, FoldCaret } from "@/components/activity";
+import { LearningText } from "@/components/common/LearningText";
 import AssistantResponse from "@/components/common/AssistantResponse";
 import {
   InlineFileCardProvider,
@@ -77,6 +78,8 @@ import { extractVisualizeResult } from "@/lib/visualize-types";
 import type { StreamEvent } from "@/features/chat/model/protocol";
 import { hasVisibleMarkdownContent } from "@/lib/markdown-display";
 import type { SelectedBookReference } from "@/lib/book-references";
+import type { SessionSummary } from "@/lib/session-api";
+import MessageThreadMarker from "./MessageThreadMarker";
 import { buildVisiblePath, type SiblingInfo } from "@/lib/message-branches";
 import { turnAnchorKey } from "@/lib/chat-outline";
 import { readingPassageHref } from "@/lib/reading-citations";
@@ -412,7 +415,7 @@ function SentMidTurn({ messages }: { messages: string[] }) {
           key={index}
           className="max-w-[85%] whitespace-pre-wrap rounded-2xl bg-[var(--secondary)] px-3.5 py-2 text-[13.5px] leading-relaxed text-[var(--foreground)]"
         >
-          {text}
+          <LearningText size={13.5}>{text}</LearningText>
         </div>
       ))}
     </div>
@@ -2012,7 +2015,7 @@ export const UserMessage = memo(function UserMessage({
                 {quoteText(a)}
               </div>
             ))}
-            <div className="whitespace-pre-wrap">{msg.content}</div>
+            <div className="whitespace-pre-wrap"><LearningText size={14}>{msg.content}</LearningText></div>
           </div>
         )}
         {/* Recovery records are local to this browser. Keep their actions
@@ -2142,6 +2145,10 @@ export const ChatMessageList = memo(function ChatMessageList({
   onReleaseMessageTrace,
   assistantActions,
   compactActions = false,
+  threadsByMessageId,
+  onOpenThread,
+  onDeleteThread,
+  onDetachThread,
 }: {
   messages: ChatMessageItem[];
   isStreaming: boolean;
@@ -2218,8 +2225,22 @@ export const ChatMessageList = memo(function ChatMessageList({
   /** A narrow side surface keeps only copy, regenerate and its own actions:
    *  read-aloud, delete and the usage line belong to the full chat. */
   compactActions?: boolean;
+  /** Little Tutor threads opened from a message, keyed by that message id
+   *  (``String(message.id)`` so SQLite and PocketBase ids group alike).
+   *  Omitted where the surface has no message-level thread entry point. */
+  threadsByMessageId?: ReadonlyMap<string, SessionSummary[]>;
+  onOpenThread?: (thread: SessionSummary) => void;
+  onDeleteThread?: (thread: SessionSummary) => Promise<void>;
+  /** Detach a thread from this message without deleting its conversation. */
+  onDetachThread?: (thread: SessionSummary) => Promise<void>;
 }) {
   const { t } = useTranslation();
+  // One lookup for both bubbles; the map is memoized by the chat page, so a
+  // message without threads costs a miss and no render branch.
+  const threadsForMessage = (messageId?: number) =>
+    messageId != null && threadsByMessageId
+      ? threadsByMessageId.get(String(messageId))
+      : undefined;
   // Visible path: when no branching has happened the result is identical
   // to the input. After an edit, sibling branches are filtered out so the
   // UI shows exactly one continuous thread, with arrow nav exposed on the
@@ -2481,6 +2502,18 @@ export const ChatMessageList = memo(function ChatMessageList({
                   ) : null}
                 </div>
               ) : null}
+              {(() => {
+                const threads = threadsForMessage(msg.id);
+                return threads?.length && onOpenThread && onDeleteThread ? (
+                  <MessageThreadMarker
+                    threads={threads}
+                    align="right"
+                    onOpen={onOpenThread}
+                    onDelete={onDeleteThread}
+                    onDetach={onDetachThread}
+                  />
+                ) : null;
+              })()}
             </div>
           );
         }
@@ -2674,6 +2707,18 @@ export const ChatMessageList = memo(function ChatMessageList({
                 )}
               </div>
             )}
+            {(() => {
+              const threads = threadsForMessage(msg.id);
+              return threads?.length && onOpenThread && onDeleteThread ? (
+                <MessageThreadMarker
+                  threads={threads}
+                  align="left"
+                  onOpen={onOpenThread}
+                  onDelete={onDeleteThread}
+                  onDetach={onDetachThread}
+                />
+              ) : null;
+            })()}
           </div>
         );
       })}

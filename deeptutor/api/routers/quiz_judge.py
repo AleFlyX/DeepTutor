@@ -82,6 +82,30 @@ _JUDGE_SYSTEM_PROMPTS = {
         "- Comente diretamente a resposta enviada pelo aluno — não dê uma explicação genérica.\n"
         "- Responda em português."
     ),
+    "vi": (
+        "Bạn là trợ giảng nghiêm túc nhưng luôn khích lệ, đang chấm câu trả lời của người học "
+        "cho một câu hỏi kiểm tra. Hãy dựa vào câu hỏi, đáp án tham khảo và phần giải thích "
+        "để đưa ra nhận xét sát với bài làm.\n\n"
+        "Yêu cầu:\n"
+        "- Mở đầu bằng một dòng nêu kết luận: ✅ Đúng / ⚠️ Đúng một phần / ❌ Sai, "
+        "kèm lý do chính.\n"
+        "- Sau đó nêu: người học đã làm đúng gì, chỗ nào sai hoặc còn thiếu, và cách sửa.\n"
+        "- Nếu có nhiều đáp án hợp lý, hãy ghi nhận những gì người học đã làm tốt.\n"
+        "- Nhận xét trực tiếp vào bài làm này, không giảng lý thuyết chung chung.\n"
+        "- Trả lời bằng tiếng Việt."
+    ),
+    "fr": (
+        "Tu es un assistant pédagogique rigoureux et encourageant qui corrige la réponse "
+        "d’un apprenant à un quiz. Appuie-toi sur la question, la réponse de référence et "
+        "l’explication pour fournir une évaluation ciblée.\n\n"
+        "Exigences :\n"
+        "- Commence par une ligne indiquant le verdict : ✅ Correct / ⚠️ Partiellement correct / "
+        "❌ Incorrect, avec la raison principale.\n"
+        "- Liste ensuite : ce que l’apprenant a juste, ce qui est faux ou manquant, et comment corriger.\n"
+        "- Si plusieurs réponses raisonnables existent, reconnais ce que l’apprenant a bien fait.\n"
+        "- Adresse-toi directement à la réponse de l’apprenant, sans discours générique.\n"
+        "- Réponds en français et tutoie l’apprenant."
+    ),
 }
 
 # The set of languages the judge can speak IS the set of system prompts it has.
@@ -136,6 +160,38 @@ def _build_judge_user_prompt(
             )
             parts.append(f"{count_text}，请结合图片中的文字/公式/草图一并判定。")
         parts.append("请针对该学习者的具体作答给出 AI 评判。")
+    elif language == "fr":
+        parts = [
+            f"Type de question : {question_type or 'inconnu'}",
+            f"Question :\n{question}",
+        ]
+        if options_block:
+            parts.append(f"Options :\n{options_block}")
+        if correct_answer:
+            parts.append(f"Réponse de référence :\n{correct_answer}")
+        if explanation:
+            parts.append(f"Explication de référence :\n{explanation}")
+        parts.append(
+            "Réponse de l’apprenant :\n"
+            + (
+                user_answer.strip()
+                if user_answer and user_answer.strip()
+                else "(seule une image a été soumise, sans réponse écrite)"
+            )
+        )
+        if has_image:
+            if image_count > 1:
+                parts.append(
+                    f"L’apprenant a joint {image_count} images à sa réponse. "
+                    "Lis leur texte, leurs formules et leurs croquis, et prends-les en compte "
+                    "dans l’évaluation."
+                )
+            else:
+                parts.append(
+                    "L’apprenant a joint une image à sa réponse. Lis son texte, ses formules "
+                    "et ses croquis, et prends-la en compte dans l’évaluation."
+                )
+        parts.append("Produis une évaluation qui porte sur la réponse précise de cet apprenant.")
     else:
         parts = [
             f"Question type: {question_type or 'unknown'}",
@@ -263,7 +319,7 @@ async def websocket_quiz_judge(websocket: WebSocket):
             ] | null,
             "user_answer_image": str | null,  # legacy single-image form
             "image_filename": str | null,     # legacy filename for the above
-            "language": "zh" | "en" | "de" | "uk",
+            "language": "zh" | "en" | "de" | "uk" | "vi",
         }
 
     Server → Client (streaming):

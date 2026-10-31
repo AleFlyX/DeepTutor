@@ -21,3 +21,14 @@ test('placeholders are filled and unknown ones are left visible', () => {
   assert.match(translate('en', 'workerExited', { code: 3 }), /\(3\)/);
   assert.match(translate('de', 'aboutDetail', { core: '1.7.0' }), /Kern 1\.7\.0\nBuild \{runtime\}/);
 });
+
+
+test('Portuguese shell follows the selected locale and retains formatted values', () => {
+  assert.equal(resolveLanguage('pt-BR'), 'pt');
+  assert.equal(translate('pt', 'retry'), 'Tentar novamente');
+  assert.match(translate('pt', 'workerExited', { code: 3 }), /\(3\)/);
+  for (const [key, value] of Object.entries(MESSAGES.en)) {
+    const placeholders = (text) => [...text.matchAll(/\{[^}]+\}/g)].map(([token]) => token).sort();
+    assert.deepEqual(placeholders(MESSAGES.pt[key]), placeholders(value), key);
+  }
+});

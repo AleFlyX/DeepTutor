@@ -119,5 +119,20 @@
   "<h2>...</h2>": "<h2>...</h2>",
   "esc": "esc",
   "{{count}} items_one": "{{count}} item",
-  "{{seconds}} s": "{{seconds}} s"
+  "{{seconds}} s": "{{seconds}} s",
+  "Claude Code": "Claude Code",
+  "Codex": "Codex",
+  "Grok CLI": "Grok CLI",
+  "Antigravity CLI": "Antigravity CLI",
+  "Kimi CLI": "Kimi CLI",
+  "opencode": "opencode",
+  "MiMo Code": "MiMo Code",
+  "Hermes Agent": "Hermes Agent",
+  "OpenClaw": "OpenClaw",
+  "DeepSeek Harness": "DeepSeek Harness",
+  "personas": "personas",
+  "language.vietnamese": "Tiếng Việt",
+  "Docker": "Docker",
+  "Normal": "Normal",
+  "language.turkish": "Türkçe"
 }
