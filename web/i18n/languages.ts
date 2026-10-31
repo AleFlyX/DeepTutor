@@ -6,6 +6,7 @@ export const APP_LANGUAGES = [
   { code: "de", labelKey: "language.german" },
   { code: "uk", labelKey: "language.ukrainian" },
   { code: "pl", labelKey: "language.polish" },
+  { code: "vi", labelKey: "language.vietnamese" },
 ] as const;
 
 export type AppLanguage = (typeof APP_LANGUAGES)[number]["code"];
@@ -27,5 +28,25 @@ export function normalizeLanguage(value: unknown): AppLanguage {
   if (base === "de" || code === "german" || code === "deutsch") return "de";
   if (base === "uk" || base === "ua" || code === "ukrainian") return "uk";
   if (base === "pl" || code === "polish" || code === "polski") return "pl";
+  if (base === "vi" || code === "vietnamese" || code === "tiếng việt") return "vi";
   return "en";
 }
+
+/** Model output can use more languages than the app UI locale supports. */
+export type ResponseLanguage =
+  | "en"
+  | "zh"
+  | "zh-tw"
+  | "ja"
+  | "ko"
+  | "es"
+  | "fr"
+  | "de"
+  | "ru"
+  | "pt"
+  | "it"
+  | "ar"
+  | "pl"
+  | "uk"
+  | "ms"
+  | "vi";

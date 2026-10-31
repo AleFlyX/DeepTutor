@@ -1,4 +1,5 @@
 const $ = id => document.getElementById(id);
+document.documentElement.dataset.platform = window.desktop.platform;
 const step = $('step');
 let shownStep = '';
 let swapTimer;
