@@ -12,7 +12,7 @@ The 1.6.15 full package includes the Web app and CLI. In 1.7.0, **`deeptutor` is
 
 ```bash
 mkdir -p my-deeptutor && cd my-deeptutor
-python -m pip install "deeptutor[full]==1.7.0"
+python -m pip install "deeptutor[full]==1.7.4"
 deeptutor init     # prompts for ports + LLM provider + optional embedding/search
 deeptutor start    # starts backend + frontend; keep the terminal open
 ```
@@ -34,9 +34,9 @@ After `deeptutor start`, open the frontend URL printed in the terminal — by de
 For the 1.7.0 wheel family, choose the required installation profile in a separate wheel environment:
 
 ```bash
-python -m pip install "deeptutor[full]==1.7.0"  # Web + CLI + feature modules
+python -m pip install "deeptutor[full]==1.7.4"  # Web + CLI + feature modules
 # Or core only:
-python -m pip install "deeptutor==1.7.0"
+python -m pip install "deeptutor==1.7.4"
 ```
 
 When migrating an old `deeptutor-cli` install, stop DeepTutor, back up its runtime home, and uninstall the old alias **before** installing the new family: `python -m pip uninstall deeptutor-cli`. Its legacy wheel owns files that the new core needs. Preserve `DEEPTUTOR_HOME`, then check `python -m pip check` and `deeptutor module list` before restarting. Upgrading bare core alone does not retain the full application profile.

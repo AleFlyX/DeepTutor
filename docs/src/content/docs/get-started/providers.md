@@ -1,5 +1,6 @@
 ---
 title: Provider Configuration
+description: Configure LLM, embedding, search, speech, and generation providers — supported vendors, default endpoints, and how the model catalog resolves profiles.
 quadrant: how-to
 ---
 

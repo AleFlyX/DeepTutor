@@ -6,7 +6,7 @@ quadrant: reference
 
 Partner channels 是同一个 Partner brain 外面的投递适配器。它不会创建第二套 agent runtime：一条 IM 入站事件会变成作用域内的 chat turn，最终回复再通过 channel 发回去。
 
-大多数配置建议在 Web UI 完成：**Partners -> 你的 partner -> Channels** 会从 `/api/v1/channels/schema/schema` 渲染实时 schema，自动 mask secret 字段，轮询 `/channels/status`，并允许你 reload channels，而不需要手写 YAML。
+大多数配置建议在 Web UI 完成：**Partners -> 你的 partner -> Channels** 会从 `/api/partners/channels/schema` 渲染实时 schema，自动 mask secret 字段，轮询 `/channels/status`，并允许你 reload channels，而不需要手写 YAML。
 
 ![伙伴渠道配置](/screenshots/dev/partners-channels.png)
 
@@ -110,7 +110,7 @@ Docker 或生产部署要持久化整个 `data/partners/`。丢失 channel state
 
 ## 各渠道字段
 
-下面是每张渠道卡片上的字段。卡片由 `GET /api/v1/partners/channels/schema` 渲染。共用开关仍在上面的矩阵里。
+下面是每张渠道卡片上的字段。卡片由 `GET /api/partners/channels/schema` 渲染。共用开关仍在上面的矩阵里。
 
 <a id="dingtalk"></a>
 

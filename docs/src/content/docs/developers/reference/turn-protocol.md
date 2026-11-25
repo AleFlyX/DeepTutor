@@ -16,7 +16,7 @@ Commands and events are the models in `deeptutor/api/contracts/turn_protocol.py`
 
 | `type` | Required fields |
 | --- | --- |
-| `start_turn` or `message` | The turn request: `content`, and optional `capability`, `session_id`, `tools`, `knowledge_bases`, `language`, `config`, references, and `attachments`. `skills` is ignored; `read_skill` exposes visible skills. |
+| `start_turn` or `message` | The turn request: `content`, and optional `capability`, `session_id`, `tools`, `knowledge_bases`, `language`, `config`, references, and `attachments`. `skills` narrows the turn: the selection is intersected with the workspace allowlist, so `read_skill` sees only those. Omit it to inherit the workspace's visible set. |
 | `subscribe_turn` | `turn_id`, optional `after_seq` |
 | `subscribe_session` | `session_id`, optional `after_seq` |
 | `resume_from` | `turn_id`, optional `seq` |

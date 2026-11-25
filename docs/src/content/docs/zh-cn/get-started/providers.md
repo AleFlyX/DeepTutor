@@ -1,5 +1,6 @@
 ---
 title: Provider 配置
+description: 配置 LLM、embedding、搜索、语音与生成类 provider——支持的服务商、默认端点，以及模型目录如何解析配置文件。
 quadrant: how-to
 ---
 
