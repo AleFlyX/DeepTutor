@@ -1,0 +1,795 @@
+<!DOCTYPE html><html lang="en" dir="ltr" data-theme="dark" data-has-toc data-has-sidebar class="astro-bguv2lll"> <head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Provider Configuration | DeepTutor</title><link rel="canonical" href="https://aleflyx.github.io/DeepTutor/branch-docs-2942-governance/get-started/providers/"/><link rel="alternate" hreflang="en" href="https://aleflyx.github.io/DeepTutor/branch-docs-2942-governance/get-started/providers/"/><link rel="alternate" hreflang="zh-CN" href="https://aleflyx.github.io/DeepTutor/branch-docs-2942-governance/zh-cn/get-started/providers/"/><link rel="alternate" hreflang="x-default" href="https://aleflyx.github.io/DeepTutor/branch-docs-2942-governance/get-started/providers/"/><link rel="sitemap" href="/DeepTutor/branch-docs-2942-governance/sitemap-index.xml"/><link rel="shortcut icon" href="/DeepTutor/branch-docs-2942-governance/brand/favicon-32x32.png" type="image/png"/><meta name="generator" content="Astro v6.3.7"/><meta name="generator" content="Starlight v0.39.2"/><meta property="og:title" content="Provider Configuration"/><meta property="og:type" content="article"/><meta property="og:url" content="https://aleflyx.github.io/DeepTutor/branch-docs-2942-governance/get-started/providers/"/><meta property="og:locale" content="en"/><meta property="og:description" content="Configure LLM, task, embedding, search, voice, and multimodal provider profiles in DeepTutor."/><meta property="og:site_name" content="DeepTutor"/><meta name="twitter:card" content="summary_large_image"/><meta name="description" content="Configure LLM, task, embedding, search, voice, and multimodal provider profiles in DeepTutor."/><meta name="robots" content="noindex, nofollow"/><script>
+	window.StarlightThemeProvider = (() => {
+		const storedTheme =
+			typeof localStorage !== 'undefined' && localStorage.getItem('starlight-theme');
+		const theme =
+			storedTheme ||
+			(window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+		document.documentElement.dataset.theme = theme === 'light' ? 'light' : 'dark';
+		return {
+			updatePickers(theme = storedTheme || 'auto') {
+				document.querySelectorAll('starlight-theme-select').forEach((picker) => {
+					const select = picker.querySelector('select');
+					if (select) select.value = theme;
+					/** @type {HTMLTemplateElement | null} */
+					const tmpl = document.querySelector(`#theme-icons`);
+					const newIcon = tmpl && tmpl.content.querySelector('.' + theme);
+					if (newIcon) {
+						const oldIcon = picker.querySelector('svg.label-icon');
+						if (oldIcon) {
+							oldIcon.replaceChildren(...newIcon.cloneNode(true).childNodes);
+						}
+					}
+				});
+			},
+		};
+	})();
+</script><template id="theme-icons"><svg aria-hidden="true" class="light astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M5 12a1 1 0 0 0-1-1H3a1 1 0 0 0 0 2h1a1 1 0 0 0 1-1Zm.64 5-.71.71a1 1 0 0 0 0 1.41 1 1 0 0 0 1.41 0l.71-.71A1 1 0 0 0 5.64 17ZM12 5a1 1 0 0 0 1-1V3a1 1 0 0 0-2 0v1a1 1 0 0 0 1 1Zm5.66 2.34a1 1 0 0 0 .7-.29l.71-.71a1 1 0 1 0-1.41-1.41l-.66.71a1 1 0 0 0 0 1.41 1 1 0 0 0 .66.29Zm-12-.29a1 1 0 0 0 1.41 0 1 1 0 0 0 0-1.41l-.71-.71a1.004 1.004 0 1 0-1.43 1.41l.73.71ZM21 11h-1a1 1 0 0 0 0 2h1a1 1 0 0 0 0-2Zm-2.64 6A1 1 0 0 0 17 18.36l.71.71a1 1 0 0 0 1.41 0 1 1 0 0 0 0-1.41l-.76-.66ZM12 6.5a5.5 5.5 0 1 0 5.5 5.5A5.51 5.51 0 0 0 12 6.5Zm0 9a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Zm0 3.5a1 1 0 0 0-1 1v1a1 1 0 0 0 2 0v-1a1 1 0 0 0-1-1Z"/></svg><svg aria-hidden="true" class="dark astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21.64 13a1 1 0 0 0-1.05-.14 8.049 8.049 0 0 1-3.37.73 8.15 8.15 0 0 1-8.14-8.1 8.59 8.59 0 0 1 .25-2A1 1 0 0 0 8 2.36a10.14 10.14 0 1 0 14 11.69 1 1 0 0 0-.36-1.05Zm-9.5 6.69A8.14 8.14 0 0 1 7.08 5.22v.27a10.15 10.15 0 0 0 10.14 10.14 9.784 9.784 0 0 0 2.1-.22 8.11 8.11 0 0 1-7.18 4.32v-.04Z"/></svg><svg aria-hidden="true" class="auto astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21 14h-1V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7H3a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-2a1 1 0 0 0-1-1ZM6 7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H6V7Zm14 10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-1h16v1Z"/></svg></template><link rel="stylesheet" href="/DeepTutor/branch-docs-2942-governance/_astro/print.DNXP8c50.css" media="print"><link rel="stylesheet" href="/DeepTutor/branch-docs-2942-governance/_astro/common.QNO0dvaU.css">
+<link rel="stylesheet" href="/DeepTutor/branch-docs-2942-governance/_astro/Code.3GXCdK6h.css"><script type="module" src="/DeepTutor/branch-docs-2942-governance/_astro/page.B_tncCx8.js"></script></head> <body class="astro-bguv2lll"> <a href="#_top" class="astro-7q3lir66">Skip to content</a> <div class="page sl-flex astro-vrdttmbt"> <header class="header astro-vrdttmbt"><div class="header astro-kmkmnagf"> <div class="title-wrapper sl-flex astro-kmkmnagf"> <div class="dt-brand sl-flex astro-idrpryed"> <a href="https://deeptutor.info" class="site-title sl-flex astro-idrpryed" aria-label="DeepTutor"> <svg class="site-title-home astro-idrpryed" viewBox="0 0 24 24" fill="none" aria-hidden="true"> <defs class="astro-idrpryed"> <linearGradient id="dt-home-grad" gradientUnits="userSpaceOnUse" x1="3" y1="4" x2="21" y2="20" class="astro-idrpryed"> <stop offset="0" stop-color="#8CBBE0" class="astro-idrpryed"></stop> <stop offset="1" stop-color="#EBBE98" class="astro-idrpryed"></stop> </linearGradient> </defs> <path d="M3 11 L11.2 4.4 Q12 3.7 12.8 4.4 L21 11 M5.6 9.6 L5.6 19 Q5.6 20 6.6 20 L17.4 20 Q18.4 20 18.4 19 L18.4 9.6 M9.8 20 L9.8 15.6 Q9.8 13.6 12 13.6 Q14.2 13.6 14.2 15.6 L14.2 20" stroke="url(#dt-home-grad)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="astro-idrpryed"></path> </svg> <img class="site-title-mark astro-idrpryed" alt="" aria-hidden="true" src="/DeepTutor/branch-docs-2942-governance/_astro/logo.zvT5ce1i.png" width="512" height="512"> <img class="site-title-wordmark astro-idrpryed" src="/DeepTutor/branch-docs-2942-governance/brand/color-word.png" alt="DeepTutor"> </a> <a class="dt-eduhub astro-idrpryed" href="https://eduhub.deeptutor.info" target="_blank" rel="noopener">EduHub</a> </div> </div> <div class="sl-flex print:hidden astro-kmkmnagf"> <site-search class="astro-kmkmnagf astro-v37mnknz" data-translations="{&quot;placeholder&quot;:&quot;Search&quot;}"> <button data-open-modal disabled aria-label="Search" aria-keyshortcuts="Control+K" class="astro-v37mnknz"> <svg aria-hidden="true" class="astro-v37mnknz astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21.71 20.29 18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a.999.999 0 0 0 1.42 0 1 1 0 0 0 0-1.39ZM11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14Z"/></svg> <span class="sl-hidden md:sl-block astro-v37mnknz" aria-hidden="true">Search</span> <kbd class="sl-hidden md:sl-flex astro-v37mnknz" style="display: none;"> <kbd class="astro-v37mnknz">Ctrl</kbd><kbd class="astro-v37mnknz">K</kbd> </kbd> </button> <dialog style="padding:0" aria-label="Search" class="astro-v37mnknz"> <div class="dialog-frame sl-flex astro-v37mnknz">  <button data-close-modal class="sl-flex md:sl-hidden astro-v37mnknz"> Cancel </button> <div class="search-container astro-v37mnknz"> <div id="starlight__search" class="astro-v37mnknz"></div> </div> </div> </dialog> </site-search>  <script>
+	(() => {
+		const openBtn = document.querySelector('button[data-open-modal]');
+		const shortcut = openBtn?.querySelector('kbd');
+		if (!openBtn || !(shortcut instanceof HTMLElement)) return;
+		const platformKey = shortcut.querySelector('kbd');
+		if (platformKey && /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform)) {
+			platformKey.textContent = '⌘';
+			openBtn.setAttribute('aria-keyshortcuts', 'Meta+K');
+		}
+		shortcut.style.display = '';
+	})();
+</script> <script type="module" src="/DeepTutor/branch-docs-2942-governance/_astro/Search.astro_astro_type_script_index_0_lang.DygvDClQ.js"></script>  </div> <div class="sl-hidden md:sl-flex print:hidden right-group astro-kmkmnagf"> <div class="sl-flex social-icons astro-kmkmnagf"> <div class="dt-actions astro-dv46nlzh"> <a class="dt-report astro-dv46nlzh" href="https://github.com/HKUDS/DeepTutor/issues/new?template=docs.yml&amp;page=https%3A%2F%2Faleflyx.github.io%2FDeepTutor%2Fbranch-docs-2942-governance%2Fget-started%2Fproviders%2F" target="_blank" rel="noopener" title="Report a docs issue on this page"> <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="astro-dv46nlzh"> <circle cx="12" cy="12" r="10" class="astro-dv46nlzh"></circle> <line x1="12" y1="8" x2="12" y2="12" class="astro-dv46nlzh"></line> <line x1="12" y1="16" x2="12.01" y2="16" class="astro-dv46nlzh"></line> </svg> <span class="astro-dv46nlzh">Report issue</span> </a> <div class="dt-socials sl-flex astro-dv46nlzh"> <a href="https://github.com/HKUDS/DeepTutor" target="_blank" rel="noopener" aria-label="GitHub" title="GitHub" class="astro-dv46nlzh"> <svg class="dt-ico-gh astro-dv46nlzh" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"> <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z" class="astro-dv46nlzh"></path> </svg> </a> <a href="https://discord.gg/eRsjPgMU4t" target="_blank" rel="noopener" aria-label="Discord" title="Discord" class="astro-dv46nlzh"> <svg class="dt-ico-dc astro-dv46nlzh" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"> <path d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.34-.35-.76-.54-1.09-.01-.02-.04-.03-.07-.03-1.5.26-2.93.71-4.27 1.33-.01 0-.02.01-.03.02-2.72 4.07-3.47 8.03-3.1 11.95 0 .02.01.04.03.05 1.8 1.32 3.53 2.12 5.24 2.65.03.01.06 0 .07-.02.4-.55.76-1.13 1.07-1.74.02-.04 0-.08-.04-.09-.57-.22-1.11-.48-1.64-.78-.04-.02-.04-.08-.01-.11.11-.08.22-.17.33-.25.02-.02.05-.02.07-.01 3.44 1.57 7.15 1.57 10.55 0 .02-.01.05-.01.07.01.11.09.22.17.33.26.04.03.04.09-.01.11-.52.31-1.07.56-1.64.78-.04.01-.05.06-.04.09.32.61.68 1.19 1.07 1.74.03.01.06.02.09.01 1.72-.53 3.45-1.33 5.25-2.65.02-.01.03-.03.03-.05.44-4.53-.73-8.46-3.1-11.95-.01-.01-.02-.02-.04-.02zM8.52 14.91c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12 0 1.17-.84 2.12-1.89 2.12zm6.97 0c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12 0 1.17-.83 2.12-1.89 2.12z" class="astro-dv46nlzh"></path> </svg> </a> <a href="https://github.com/HKUDS/DeepTutor/issues/78" target="_blank" rel="noopener" aria-label="WeChat community" title="WeChat community" class="astro-dv46nlzh"> <svg class="dt-ico-wc astro-dv46nlzh" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"> <path d="M8.69 4C4.55 4 1.2 6.68 1.2 10c0 1.86 1.04 3.51 2.69 4.61l-.7 2.4 2.79-1.5c.83.3 1.74.49 2.7.49.34 0 .67-.02 1-.06-.13-.46-.21-.94-.21-1.43 0-3.07 2.97-5.5 6.7-5.5.33 0 .67.02 1 .07C16.39 6.32 12.86 4 8.69 4ZM6.18 8.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm5 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm5 1c-3.3 0-6 2.24-6 5s2.7 5 6 5c.74 0 1.45-.12 2.1-.34L20.2 20l-.7-2.05c1.07-.95 1.7-2.15 1.7-3.45 0-2.76-2.7-5-6-5Zm-2 4a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Zm4 0a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" class="astro-dv46nlzh"></path> </svg> </a> </div> </div> <script>(function(){const base = "/DeepTutor/branch-docs-2942-governance";
+
+  (() => {
+    if (window.__dtLocaleSwitcherPatched) return;
+    window.__dtLocaleSwitcherPatched = true;
+
+    const basePrefix = (base || "").replace(/\/$/, "");
+    const zhPrefix = "/zh-cn";
+    const stripBase = (path) => {
+      if (basePrefix && (path === basePrefix || path.startsWith(`${basePrefix}/`))) {
+        return path.slice(basePrefix.length) || "/";
+      }
+      return path;
+    };
+    const addBase = (path) => (basePrefix ? `${basePrefix}${path}` : path);
+    const isZhPath = (path) => {
+      const rel = stripBase(path);
+      return rel === zhPrefix || rel.startsWith(`${zhPrefix}/`);
+    };
+    const toEnglishPath = (path) => {
+      const rel = stripBase(path);
+      if (rel === zhPrefix || rel === `${zhPrefix}/`) return addBase("/");
+      return addBase(isZhPath(path) ? rel.slice(zhPrefix.length) || "/" : rel);
+    };
+    const toChinesePath = (path) => {
+      const rel = stripBase(path);
+      if (rel === zhPrefix || rel.startsWith(`${zhPrefix}/`)) return addBase(rel);
+      return addBase(rel === "/" ? `${zhPrefix}/` : `${zhPrefix}${rel}`);
+    };
+    const withCurrentSuffix = (path) =>
+      `${path}${window.location.search}${window.location.hash}`;
+
+    const langKey = "dt-lang";
+    const readLangPreference = () => {
+      try {
+        const v = localStorage.getItem(langKey);
+        return v === "zh" || v === "en" ? v : null;
+      } catch {
+        return null;
+      }
+    };
+
+    // Auto-detect — on first visit with no stored choice, redirect English
+    // routes to /zh-cn/ for zh browsers without overriding an explicit /zh-cn/
+    // URL. Once the user picks a language, that preference always wins.
+    (() => {
+      const current = window.location.pathname;
+      const stored = readLangPreference();
+      if (stored === "zh" && !isZhPath(current)) {
+        window.location.replace(withCurrentSuffix(toChinesePath(current)));
+      } else if (stored === "en" && isZhPath(current)) {
+        window.location.replace(withCurrentSuffix(toEnglishPath(current)));
+      } else if (
+        !stored &&
+        !isZhPath(current) &&
+        (navigator.language || "").toLowerCase().startsWith("zh")
+      ) {
+        window.location.replace(withCurrentSuffix(toChinesePath(current)));
+      }
+    })();
+
+    const syncLanguageSelects = () => {
+      const current = window.location.pathname;
+      const englishPath = toEnglishPath(current);
+      const chinesePath = toChinesePath(current);
+      document.querySelectorAll("starlight-lang-select select").forEach((select) => {
+        Array.from(select.options).forEach((option) => {
+          const label = option.textContent?.trim();
+          if (label === "English") option.value = englishPath;
+          if (label === "简体中文") option.value = chinesePath;
+        });
+        select.value = isZhPath(current) ? chinesePath : englishPath;
+      });
+    };
+
+    document.addEventListener(
+      "change",
+      (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLSelectElement)) return;
+        if (!target.closest("starlight-lang-select")) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        const nextPath = target.value;
+        try {
+          localStorage.setItem(langKey, isZhPath(nextPath) ? "zh" : "en");
+        } catch {}
+        if (nextPath && nextPath !== window.location.pathname) {
+          window.location.assign(withCurrentSuffix(nextPath));
+        }
+      },
+      true,
+    );
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", syncLanguageSelects);
+    } else {
+      syncLanguageSelects();
+    }
+    window.addEventListener("pageshow", syncLanguageSelects);
+  })();
+})();</script> </div> <starlight-theme-select>  <label style="--sl-select-width: 6.25em" class="astro-4yphtoen"> <span class="sr-only astro-4yphtoen">Select theme</span> <svg aria-hidden="true" class="icon label-icon astro-4yphtoen astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21 14h-1V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7H3a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-2a1 1 0 0 0-1-1ZM6 7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H6V7Zm14 10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-1h16v1Z"/></svg> <select autocomplete="off" class="astro-4yphtoen"> <option value="dark" class="astro-4yphtoen">Dark</option><option value="light" class="astro-4yphtoen">Light</option><option value="auto" selected class="astro-4yphtoen">Auto</option> </select> <svg aria-hidden="true" class="icon caret astro-4yphtoen astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M17 9.17a1 1 0 0 0-1.41 0L12 12.71 8.46 9.17a1 1 0 1 0-1.41 1.42l4.24 4.24a1.002 1.002 0 0 0 1.42 0L17 10.59a1.002 1.002 0 0 0 0-1.42Z"/></svg> </label> </starlight-theme-select>  <script>
+	StarlightThemeProvider.updatePickers();
+</script> <script type="module">const r="starlight-theme",o=e=>e==="auto"||e==="dark"||e==="light"?e:"auto",c=()=>o(typeof localStorage<"u"&&localStorage.getItem(r));function n(e){typeof localStorage<"u"&&localStorage.setItem(r,e==="light"||e==="dark"?e:"")}const l=()=>matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";function t(e){StarlightThemeProvider.updatePickers(e),document.documentElement.dataset.theme=e==="auto"?l():e,n(e)}matchMedia("(prefers-color-scheme: light)").addEventListener("change",()=>{c()==="auto"&&t("auto")});class s extends HTMLElement{constructor(){super(),t(c()),this.querySelector("select")?.addEventListener("change",a=>{a.currentTarget instanceof HTMLSelectElement&&t(o(a.currentTarget.value))})}}customElements.define("starlight-theme-select",s);</script> <starlight-lang-select><label style="--sl-select-width: 7em" class="astro-4yphtoen"> <span class="sr-only astro-4yphtoen">Select language</span> <svg aria-hidden="true" class="icon label-icon astro-4yphtoen astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path fill-rule="evenodd" d="M8.516 3a.94.94 0 0 0-.941.94v1.15H2.94a.94.94 0 1 0 0 1.882h7.362a7.422 7.422 0 0 1-1.787 3.958 7.42 7.42 0 0 1-1.422-2.425.94.94 0 1 0-1.774.627 9.303 9.303 0 0 0 1.785 3.043 7.422 7.422 0 0 1-4.164 1.278.94.94 0 1 0 0 1.881 9.303 9.303 0 0 0 5.575-1.855 9.303 9.303 0 0 0 4.11 1.74l-.763 1.525a.968.968 0 0 0-.016.034l-1.385 2.77a.94.94 0 1 0 1.683.841l1.133-2.267h5.806l1.134 2.267a.94.94 0 0 0 1.683-.841l-1.385-2.769a.95.95 0 0 0-.018-.036l-3.476-6.951a.94.94 0 0 0-1.682 0l-1.82 3.639a7.423 7.423 0 0 1-3.593-1.256 9.303 9.303 0 0 0 2.27-5.203h1.894a.94.94 0 0 0 0-1.881H9.456V3.94A.94.94 0 0 0 8.516 3Zm6.426 11.794a1.068 1.068 0 0 1-.02.039l-.703 1.407h3.924l-1.962-3.924-1.24 2.478Z" clip-rule="evenodd"/></svg> <select autocomplete="off" class="astro-4yphtoen"> <option value="/DeepTutor/branch-docs-2942-governance/get-started/providers/" class="astro-4yphtoen">English</option><option value="/DeepTutor/branch-docs-2942-governance/zh-cn/get-started/providers/" class="astro-4yphtoen">简体中文</option> </select> <svg aria-hidden="true" class="icon caret astro-4yphtoen astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M17 9.17a1 1 0 0 0-1.41 0L12 12.71 8.46 9.17a1 1 0 1 0-1.41 1.42l4.24 4.24a1.002 1.002 0 0 0 1.42 0L17 10.59a1.002 1.002 0 0 0 0-1.42Z"/></svg> </label></starlight-lang-select><script type="module">class s extends HTMLElement{constructor(){super();const e=this.querySelector("select");e&&(e.addEventListener("change",t=>{t.currentTarget instanceof HTMLSelectElement&&(window.location.pathname=t.currentTarget.value)}),window.addEventListener("pageshow",t=>{if(!t.persisted)return;const n=e.querySelector("option[selected]")?.index;n!==e.selectedIndex&&(e.selectedIndex=n??0)}))}}customElements.define("starlight-lang-select",s);</script> </div> </div></header> <nav class="sidebar print:hidden astro-vrdttmbt" aria-label="Main"> <starlight-menu-button class="print:hidden astro-jif73yzw"> <button aria-expanded="false" aria-label="Menu" aria-controls="starlight__sidebar" class="sl-flex md:sl-hidden astro-jif73yzw"> <svg aria-hidden="true" class="open-menu astro-jif73yzw astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M3 8h18a1 1 0 1 0 0-2H3a1 1 0 0 0 0 2Zm18 8H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2Zm0-5H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2Z"/></svg> <svg aria-hidden="true" class="close-menu astro-jif73yzw astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="m13.41 12 6.3-6.29a1.004 1.004 0 1 0-1.42-1.42L12 10.59l-6.29-6.3a1.004 1.004 0 0 0-1.42 1.42l6.3 6.29-6.3 6.29a1 1 0 0 0 0 1.42.998.998 0 0 0 1.42 0l6.29-6.3 6.29 6.3a.999.999 0 0 0 1.42 0 1 1 0 0 0 0-1.42L13.41 12Z"/></svg> </button> </starlight-menu-button> <script type="module">class s extends HTMLElement{constructor(){super(),this.btn=this.querySelector("button"),this.btn.addEventListener("click",()=>this.toggleExpanded());const t=this.closest("nav");t&&t.addEventListener("keyup",e=>this.closeOnEscape(e))}setExpanded(t){this.setAttribute("aria-expanded",String(t)),document.body.toggleAttribute("data-mobile-menu-expanded",t)}toggleExpanded(){this.setExpanded(this.getAttribute("aria-expanded")!=="true")}closeOnEscape(t){t.code==="Escape"&&(this.setExpanded(!1),this.btn.focus())}}customElements.define("starlight-menu-button",s);</script>  <div id="starlight__sidebar" class="sidebar-pane astro-vrdttmbt"> <div class="sidebar-content sl-flex astro-vrdttmbt"> <sl-sidebar-state-persist data-hash="15sngvf" class="astro-kku4brbg"> <script aria-hidden="true">
+		(() => {
+			try {
+				if (!matchMedia('(min-width: 50em)').matches) return;
+				/** @type {HTMLElement | null} */
+				const target = document.querySelector('sl-sidebar-state-persist');
+				const state = JSON.parse(sessionStorage.getItem('sl-sidebar-state') || '0');
+				if (!target || !state || target.dataset.hash !== state.hash) return;
+				window._starlightScrollRestore = state.scroll;
+				customElements.define(
+					'sl-sidebar-restore',
+					class SidebarRestore extends HTMLElement {
+						connectedCallback() {
+							try {
+								const idx = parseInt(this.dataset.index || '');
+								const details = this.closest('details');
+								if (details && typeof state.open[idx] === 'boolean') details.open = state.open[idx];
+							} catch {}
+						}
+					}
+				);
+			} catch {}
+		})();
+	</script>  <ul class="top-level astro-3ii7xxms"> <li class="astro-3ii7xxms"> <details open class="astro-3ii7xxms"> <summary class="astro-3ii7xxms"> <span class="group-label astro-3ii7xxms"> <span class="large astro-3ii7xxms">Get started</span>  </span> <svg aria-hidden="true" class="caret astro-3ii7xxms astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg> </summary> <sl-sidebar-restore data-index="0"></sl-sidebar-restore> <ul class="astro-3ii7xxms"> <li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/welcome/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Welcome</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/get-started/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Install choices</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/get-started/desktop/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Desktop</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/get-started/docker/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Docker</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/get-started/providers/" aria-current="page" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Providers &amp; models</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/get-started/changelog/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Changelog</span>  </a> </li> </ul> </details> </li><li class="astro-3ii7xxms"> <details open class="astro-3ii7xxms"> <summary class="astro-3ii7xxms"> <span class="group-label astro-3ii7xxms"> <span class="large astro-3ii7xxms">Learn</span>  </span> <svg aria-hidden="true" class="caret astro-3ii7xxms astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg> </summary> <sl-sidebar-restore data-index="1"></sl-sidebar-restore> <ul class="astro-3ii7xxms"> <li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/learn/ask-with-a-source/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Study with your materials</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/learn/solve-a-photo/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Solve a photo</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/learn/practice-a-topic/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Practice a topic</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/learn/research-a-question/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Research a question</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/learn/make-a-figure/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Make a figure</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/learn/follow-a-path/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Follow a path</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/learning-workspace/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">A first study session</span>  </a> </li> </ul> </details> </li><li class="astro-3ii7xxms"> <details open class="astro-3ii7xxms"> <summary class="astro-3ii7xxms"> <span class="group-label astro-3ii7xxms"> <span class="large astro-3ii7xxms">Learning workspace</span>  </span> <svg aria-hidden="true" class="caret astro-3ii7xxms astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg> </summary> <sl-sidebar-restore data-index="2"></sl-sidebar-restore> <ul class="astro-3ii7xxms"> <li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/learning-workspace/workspaces/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Workspaces</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/learning-workspace/chat/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Chat</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/learning-workspace/vision-solver/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Vision Solver</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/learning-workspace/questions/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Questions &amp; practice</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/learning-workspace/mastery/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Mastery Path</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/learning-workspace/knowledge/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Knowledge</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/learning-workspace/books/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Books</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/learning-workspace/reading/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Immersive Reading</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/learning-workspace/research/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Research</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/learning-workspace/notebook/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Notebook</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/learning-workspace/favorites/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Favorites</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/learning-workspace/resources/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Resources</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/learning-workspace/task-board/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Task Board</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/learning-workspace/calendar/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Calendar</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/learning-workspace/agent-loop/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">How the agent loop works</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/learning-workspace/memory/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Memory</span>  </a> </li> </ul> </details> </li><li class="astro-3ii7xxms"> <details open class="astro-3ii7xxms"> <summary class="astro-3ii7xxms"> <span class="group-label astro-3ii7xxms"> <span class="large astro-3ii7xxms">Multimodal studio</span>  </span> <svg aria-hidden="true" class="caret astro-3ii7xxms astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg> </summary> <sl-sidebar-restore data-index="3"></sl-sidebar-restore> <ul class="astro-3ii7xxms"> <li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/multimodal-studio/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Which generator to use</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/multimodal-studio/visualize/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Visualize</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/multimodal-studio/math-animator/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Math Animator</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/multimodal-studio/video-lesson/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Video Lesson</span>  </a> </li> </ul> </details> </li><li class="astro-3ii7xxms"> <details open class="astro-3ii7xxms"> <summary class="astro-3ii7xxms"> <span class="group-label astro-3ii7xxms"> <span class="large astro-3ii7xxms">Customize</span>  </span> <svg aria-hidden="true" class="caret astro-3ii7xxms astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg> </summary> <sl-sidebar-restore data-index="4"></sl-sidebar-restore> <ul class="astro-3ii7xxms"> <li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/customize/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Overview</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/customize/personas/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Personas</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/customize/skills/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Skills</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/customize/mcp/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">MCP services</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/customize/cli-apps/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">CLI Apps</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/customize/eduhub/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">EduHub</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/customize/agents/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">My Agents</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/customize/rag/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">RAG integrations</span>  </a> </li> </ul> </details> </li><li class="astro-3ii7xxms"> <details open class="astro-3ii7xxms"> <summary class="astro-3ii7xxms"> <span class="group-label astro-3ii7xxms"> <span class="large astro-3ii7xxms">Channels</span>  </span> <svg aria-hidden="true" class="caret astro-3ii7xxms astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg> </summary> <sl-sidebar-restore data-index="5"></sl-sidebar-restore> <ul class="astro-3ii7xxms"> <li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/channels/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Create a partner</span>  </a> </li><li class="astro-3ii7xxms"> <details open class="astro-3ii7xxms"> <summary class="astro-3ii7xxms"> <span class="group-label astro-3ii7xxms"> <span class="large astro-3ii7xxms">Domestic IM</span>  </span> <svg aria-hidden="true" class="caret astro-3ii7xxms astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg> </summary> <sl-sidebar-restore data-index="6"></sl-sidebar-restore> <ul class="astro-3ii7xxms"> <li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/channels/domestic/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">How to choose</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/channels/domestic/weixin/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">WeChat</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/channels/domestic/wecom/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">WeCom</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/channels/domestic/qq/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">QQ / NapCat</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/channels/domestic/feishu/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Feishu / Lark</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/channels/domestic/dingtalk/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">DingTalk</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/channels/domestic/mochat/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Mochat</span>  </a> </li> </ul> </details> </li><li class="astro-3ii7xxms"> <details open class="astro-3ii7xxms"> <summary class="astro-3ii7xxms"> <span class="group-label astro-3ii7xxms"> <span class="large astro-3ii7xxms">International IM</span>  </span> <svg aria-hidden="true" class="caret astro-3ii7xxms astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg> </summary> <sl-sidebar-restore data-index="7"></sl-sidebar-restore> <ul class="astro-3ii7xxms"> <li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/channels/international/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">How to choose</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/channels/international/telegram/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Telegram</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/channels/international/discord/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Discord</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/channels/international/slack/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Slack</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/channels/international/whatsapp/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">WhatsApp</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/channels/international/matrix/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Matrix</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/channels/international/zulip/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Zulip</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/channels/international/mattermost/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Mattermost</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/channels/international/msteams/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Microsoft Teams</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/channels/international/email/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Email</span>  </a> </li> </ul> </details> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/channels/schema/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Channel schema</span>  </a> </li> </ul> </details> </li><li class="astro-3ii7xxms"> <details open class="astro-3ii7xxms"> <summary class="astro-3ii7xxms"> <span class="group-label astro-3ii7xxms"> <span class="large astro-3ii7xxms">Self-hosting</span>  </span> <svg aria-hidden="true" class="caret astro-3ii7xxms astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg> </summary> <sl-sidebar-restore data-index="8"></sl-sidebar-restore> <ul class="astro-3ii7xxms"> <li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/self-hosting/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Runtime home</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/self-hosting/pypi/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">PyPI</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/self-hosting/source/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">From source</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/self-hosting/docker/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Docker operations</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/self-hosting/cli-only/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">CLI only</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/self-hosting/multi-user/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Multi-user</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/self-hosting/oauth/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Codex sign-in</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/self-hosting/settings/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Settings</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/self-hosting/troubleshooting/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Troubleshooting</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/self-hosting/desktop/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Desktop editions</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/self-hosting/configuration/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Configuration files</span>  </a> </li> </ul> </details> </li><li class="astro-3ii7xxms"> <details open class="astro-3ii7xxms"> <summary class="astro-3ii7xxms"> <span class="group-label astro-3ii7xxms"> <span class="large astro-3ii7xxms">Developers</span>  </span> <svg aria-hidden="true" class="caret astro-3ii7xxms astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg> </summary> <sl-sidebar-restore data-index="9"></sl-sidebar-restore> <ul class="astro-3ii7xxms"> <li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/developers/architecture/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Architecture</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/developers/guides/cli/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">CLI overview</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/developers/guides/repl/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Interactive REPL</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/developers/guides/sdk/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Python SDK</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/developers/guides/agent-handoff/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Agent handoff</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/developers/guides/contributing/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Contributing</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/developers/reference/capabilities/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Capabilities</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/developers/reference/cli/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Command reference</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/developers/reference/turn-protocol/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Turn protocol</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/DeepTutor/branch-docs-2942-governance/developers/reference/http-api/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">HTTP API</span>  </a> </li> </ul> </details> </li> </ul>  <script aria-hidden="true">
+		(() => {
+			const scroller = document.getElementById('starlight__sidebar');
+			if (!window._starlightScrollRestore || !scroller) return;
+			scroller.scrollTop = window._starlightScrollRestore;
+			delete window._starlightScrollRestore;
+		})();
+	</script> </sl-sidebar-state-persist> <div class="md:sl-hidden"> <div class="mobile-preferences sl-flex astro-wu23bvmt"> <div class="social-icons astro-wu23bvmt"> <div class="dt-actions astro-dv46nlzh"> <a class="dt-report astro-dv46nlzh" href="https://github.com/HKUDS/DeepTutor/issues/new?template=docs.yml&amp;page=https%3A%2F%2Faleflyx.github.io%2FDeepTutor%2Fbranch-docs-2942-governance%2Fget-started%2Fproviders%2F" target="_blank" rel="noopener" title="Report a docs issue on this page"> <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="astro-dv46nlzh"> <circle cx="12" cy="12" r="10" class="astro-dv46nlzh"></circle> <line x1="12" y1="8" x2="12" y2="12" class="astro-dv46nlzh"></line> <line x1="12" y1="16" x2="12.01" y2="16" class="astro-dv46nlzh"></line> </svg> <span class="astro-dv46nlzh">Report issue</span> </a> <div class="dt-socials sl-flex astro-dv46nlzh"> <a href="https://github.com/HKUDS/DeepTutor" target="_blank" rel="noopener" aria-label="GitHub" title="GitHub" class="astro-dv46nlzh"> <svg class="dt-ico-gh astro-dv46nlzh" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"> <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z" class="astro-dv46nlzh"></path> </svg> </a> <a href="https://discord.gg/eRsjPgMU4t" target="_blank" rel="noopener" aria-label="Discord" title="Discord" class="astro-dv46nlzh"> <svg class="dt-ico-dc astro-dv46nlzh" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"> <path d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.34-.35-.76-.54-1.09-.01-.02-.04-.03-.07-.03-1.5.26-2.93.71-4.27 1.33-.01 0-.02.01-.03.02-2.72 4.07-3.47 8.03-3.1 11.95 0 .02.01.04.03.05 1.8 1.32 3.53 2.12 5.24 2.65.03.01.06 0 .07-.02.4-.55.76-1.13 1.07-1.74.02-.04 0-.08-.04-.09-.57-.22-1.11-.48-1.64-.78-.04-.02-.04-.08-.01-.11.11-.08.22-.17.33-.25.02-.02.05-.02.07-.01 3.44 1.57 7.15 1.57 10.55 0 .02-.01.05-.01.07.01.11.09.22.17.33.26.04.03.04.09-.01.11-.52.31-1.07.56-1.64.78-.04.01-.05.06-.04.09.32.61.68 1.19 1.07 1.74.03.01.06.02.09.01 1.72-.53 3.45-1.33 5.25-2.65.02-.01.03-.03.03-.05.44-4.53-.73-8.46-3.1-11.95-.01-.01-.02-.02-.04-.02zM8.52 14.91c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12 0 1.17-.84 2.12-1.89 2.12zm6.97 0c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12 0 1.17-.83 2.12-1.89 2.12z" class="astro-dv46nlzh"></path> </svg> </a> <a href="https://github.com/HKUDS/DeepTutor/issues/78" target="_blank" rel="noopener" aria-label="WeChat community" title="WeChat community" class="astro-dv46nlzh"> <svg class="dt-ico-wc astro-dv46nlzh" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"> <path d="M8.69 4C4.55 4 1.2 6.68 1.2 10c0 1.86 1.04 3.51 2.69 4.61l-.7 2.4 2.79-1.5c.83.3 1.74.49 2.7.49.34 0 .67-.02 1-.06-.13-.46-.21-.94-.21-1.43 0-3.07 2.97-5.5 6.7-5.5.33 0 .67.02 1 .07C16.39 6.32 12.86 4 8.69 4ZM6.18 8.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm5 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm5 1c-3.3 0-6 2.24-6 5s2.7 5 6 5c.74 0 1.45-.12 2.1-.34L20.2 20l-.7-2.05c1.07-.95 1.7-2.15 1.7-3.45 0-2.76-2.7-5-6-5Zm-2 4a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Zm4 0a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" class="astro-dv46nlzh"></path> </svg> </a> </div> </div> <script>(function(){const base = "/DeepTutor/branch-docs-2942-governance";
+
+  (() => {
+    if (window.__dtLocaleSwitcherPatched) return;
+    window.__dtLocaleSwitcherPatched = true;
+
+    const basePrefix = (base || "").replace(/\/$/, "");
+    const zhPrefix = "/zh-cn";
+    const stripBase = (path) => {
+      if (basePrefix && (path === basePrefix || path.startsWith(`${basePrefix}/`))) {
+        return path.slice(basePrefix.length) || "/";
+      }
+      return path;
+    };
+    const addBase = (path) => (basePrefix ? `${basePrefix}${path}` : path);
+    const isZhPath = (path) => {
+      const rel = stripBase(path);
+      return rel === zhPrefix || rel.startsWith(`${zhPrefix}/`);
+    };
+    const toEnglishPath = (path) => {
+      const rel = stripBase(path);
+      if (rel === zhPrefix || rel === `${zhPrefix}/`) return addBase("/");
+      return addBase(isZhPath(path) ? rel.slice(zhPrefix.length) || "/" : rel);
+    };
+    const toChinesePath = (path) => {
+      const rel = stripBase(path);
+      if (rel === zhPrefix || rel.startsWith(`${zhPrefix}/`)) return addBase(rel);
+      return addBase(rel === "/" ? `${zhPrefix}/` : `${zhPrefix}${rel}`);
+    };
+    const withCurrentSuffix = (path) =>
+      `${path}${window.location.search}${window.location.hash}`;
+
+    const langKey = "dt-lang";
+    const readLangPreference = () => {
+      try {
+        const v = localStorage.getItem(langKey);
+        return v === "zh" || v === "en" ? v : null;
+      } catch {
+        return null;
+      }
+    };
+
+    // Auto-detect — on first visit with no stored choice, redirect English
+    // routes to /zh-cn/ for zh browsers without overriding an explicit /zh-cn/
+    // URL. Once the user picks a language, that preference always wins.
+    (() => {
+      const current = window.location.pathname;
+      const stored = readLangPreference();
+      if (stored === "zh" && !isZhPath(current)) {
+        window.location.replace(withCurrentSuffix(toChinesePath(current)));
+      } else if (stored === "en" && isZhPath(current)) {
+        window.location.replace(withCurrentSuffix(toEnglishPath(current)));
+      } else if (
+        !stored &&
+        !isZhPath(current) &&
+        (navigator.language || "").toLowerCase().startsWith("zh")
+      ) {
+        window.location.replace(withCurrentSuffix(toChinesePath(current)));
+      }
+    })();
+
+    const syncLanguageSelects = () => {
+      const current = window.location.pathname;
+      const englishPath = toEnglishPath(current);
+      const chinesePath = toChinesePath(current);
+      document.querySelectorAll("starlight-lang-select select").forEach((select) => {
+        Array.from(select.options).forEach((option) => {
+          const label = option.textContent?.trim();
+          if (label === "English") option.value = englishPath;
+          if (label === "简体中文") option.value = chinesePath;
+        });
+        select.value = isZhPath(current) ? chinesePath : englishPath;
+      });
+    };
+
+    document.addEventListener(
+      "change",
+      (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLSelectElement)) return;
+        if (!target.closest("starlight-lang-select")) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        const nextPath = target.value;
+        try {
+          localStorage.setItem(langKey, isZhPath(nextPath) ? "zh" : "en");
+        } catch {}
+        if (nextPath && nextPath !== window.location.pathname) {
+          window.location.assign(withCurrentSuffix(nextPath));
+        }
+      },
+      true,
+    );
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", syncLanguageSelects);
+    } else {
+      syncLanguageSelects();
+    }
+    window.addEventListener("pageshow", syncLanguageSelects);
+  })();
+})();</script> </div> <starlight-theme-select>  <label style="--sl-select-width: 6.25em" class="astro-4yphtoen"> <span class="sr-only astro-4yphtoen">Select theme</span> <svg aria-hidden="true" class="icon label-icon astro-4yphtoen astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21 14h-1V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7H3a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-2a1 1 0 0 0-1-1ZM6 7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H6V7Zm14 10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-1h16v1Z"/></svg> <select autocomplete="off" class="astro-4yphtoen"> <option value="dark" class="astro-4yphtoen">Dark</option><option value="light" class="astro-4yphtoen">Light</option><option value="auto" selected class="astro-4yphtoen">Auto</option> </select> <svg aria-hidden="true" class="icon caret astro-4yphtoen astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M17 9.17a1 1 0 0 0-1.41 0L12 12.71 8.46 9.17a1 1 0 1 0-1.41 1.42l4.24 4.24a1.002 1.002 0 0 0 1.42 0L17 10.59a1.002 1.002 0 0 0 0-1.42Z"/></svg> </label> </starlight-theme-select>  <script>
+	StarlightThemeProvider.updatePickers();
+</script>  <starlight-lang-select><label style="--sl-select-width: 7em" class="astro-4yphtoen"> <span class="sr-only astro-4yphtoen">Select language</span> <svg aria-hidden="true" class="icon label-icon astro-4yphtoen astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path fill-rule="evenodd" d="M8.516 3a.94.94 0 0 0-.941.94v1.15H2.94a.94.94 0 1 0 0 1.882h7.362a7.422 7.422 0 0 1-1.787 3.958 7.42 7.42 0 0 1-1.422-2.425.94.94 0 1 0-1.774.627 9.303 9.303 0 0 0 1.785 3.043 7.422 7.422 0 0 1-4.164 1.278.94.94 0 1 0 0 1.881 9.303 9.303 0 0 0 5.575-1.855 9.303 9.303 0 0 0 4.11 1.74l-.763 1.525a.968.968 0 0 0-.016.034l-1.385 2.77a.94.94 0 1 0 1.683.841l1.133-2.267h5.806l1.134 2.267a.94.94 0 0 0 1.683-.841l-1.385-2.769a.95.95 0 0 0-.018-.036l-3.476-6.951a.94.94 0 0 0-1.682 0l-1.82 3.639a7.423 7.423 0 0 1-3.593-1.256 9.303 9.303 0 0 0 2.27-5.203h1.894a.94.94 0 0 0 0-1.881H9.456V3.94A.94.94 0 0 0 8.516 3Zm6.426 11.794a1.068 1.068 0 0 1-.02.039l-.703 1.407h3.924l-1.962-3.924-1.24 2.478Z" clip-rule="evenodd"/></svg> <select autocomplete="off" class="astro-4yphtoen"> <option value="/DeepTutor/branch-docs-2942-governance/get-started/providers/" class="astro-4yphtoen">English</option><option value="/DeepTutor/branch-docs-2942-governance/zh-cn/get-started/providers/" class="astro-4yphtoen">简体中文</option> </select> <svg aria-hidden="true" class="icon caret astro-4yphtoen astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M17 9.17a1 1 0 0 0-1.41 0L12 12.71 8.46 9.17a1 1 0 1 0-1.41 1.42l4.24 4.24a1.002 1.002 0 0 0 1.42 0L17 10.59a1.002 1.002 0 0 0 0-1.42Z"/></svg> </label></starlight-lang-select> </div> </div> </div> </div> </nav> <div class="main-frame astro-vrdttmbt">  <script type="module">const a=document.getElementById("starlight__sidebar"),n=a?.querySelector("sl-sidebar-state-persist"),o="sl-sidebar-state",i=()=>{let t=[];const e=n?.dataset.hash||"";try{const s=sessionStorage.getItem(o),r=JSON.parse(s||"{}");Array.isArray(r.open)&&r.hash===e&&(t=r.open)}catch{}return{hash:e,open:t,scroll:a?.scrollTop||0}},c=t=>{try{sessionStorage.setItem(o,JSON.stringify(t))}catch{}},d=()=>c(i()),l=(t,e)=>{const s=i();s.open[e]=t,c(s)};n?.addEventListener("click",t=>{if(!(t.target instanceof Element))return;const e=t.target.closest("summary")?.closest("details");if(!e)return;const s=e.querySelector("sl-sidebar-restore"),r=parseInt(s?.dataset.index||"");isNaN(r)||l(!e.open,r)});addEventListener("visibilitychange",()=>{document.visibilityState==="hidden"&&d()});addEventListener("pageHide",d);</script> <div class="lg:sl-flex astro-67yu43on"> <aside class="right-sidebar-container print:hidden astro-67yu43on"> <div class="right-sidebar astro-67yu43on"> <div class="lg:sl-hidden astro-pb3aqygn"><mobile-starlight-toc data-min-h="2" data-max-h="3" class="astro-doynk5tl"><nav aria-labelledby="starlight__on-this-page--mobile" class="astro-doynk5tl"><details id="starlight__mobile-toc" class="astro-doynk5tl"><summary id="starlight__on-this-page--mobile" class="sl-flex astro-doynk5tl"><span class="toggle sl-flex astro-doynk5tl">On this page<svg aria-hidden="true" class="caret astro-doynk5tl astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg></span><span class="display-current astro-doynk5tl"></span></summary><div class="dropdown astro-doynk5tl"><ul class="isMobile astro-gnoq344e" style="--depth: 0;"> <li class="astro-gnoq344e" style="--depth: 0;"> <a href="#_top" class="astro-gnoq344e" style="--depth: 0;"> <span class="astro-gnoq344e" style="--depth: 0;">Overview</span> </a>  </li><li class="astro-gnoq344e" style="--depth: 0;"> <a href="#configuration-surfaces-and-precedence" class="astro-gnoq344e" style="--depth: 0;"> <span class="astro-gnoq344e" style="--depth: 0;">Configuration surfaces and precedence</span> </a>  </li><li class="astro-gnoq344e" style="--depth: 0;"> <a href="#llm-providers" class="astro-gnoq344e" style="--depth: 0;"> <span class="astro-gnoq344e" style="--depth: 0;">LLM Providers</span> </a> <ul class="isMobile astro-gnoq344e" style="--depth: 1;"> <li class="astro-gnoq344e" style="--depth: 1;"> <a href="#configuration" class="astro-gnoq344e" style="--depth: 1;"> <span class="astro-gnoq344e" style="--depth: 1;">Configuration</span> </a>  </li> </ul> </li><li class="astro-gnoq344e" style="--depth: 0;"> <a href="#embedding-providers" class="astro-gnoq344e" style="--depth: 0;"> <span class="astro-gnoq344e" style="--depth: 0;">Embedding Providers</span> </a> <ul class="isMobile astro-gnoq344e" style="--depth: 1;"> <li class="astro-gnoq344e" style="--depth: 1;"> <a href="#configuration-1" class="astro-gnoq344e" style="--depth: 1;"> <span class="astro-gnoq344e" style="--depth: 1;">Configuration</span> </a>  </li> </ul> </li><li class="astro-gnoq344e" style="--depth: 0;"> <a href="#search-providers" class="astro-gnoq344e" style="--depth: 0;"> <span class="astro-gnoq344e" style="--depth: 0;">Search Providers</span> </a> <ul class="isMobile astro-gnoq344e" style="--depth: 1;"> <li class="astro-gnoq344e" style="--depth: 1;"> <a href="#configuration-2" class="astro-gnoq344e" style="--depth: 1;"> <span class="astro-gnoq344e" style="--depth: 1;">Configuration</span> </a>  </li> </ul> </li><li class="astro-gnoq344e" style="--depth: 0;"> <a href="#voice-and-generation-providers" class="astro-gnoq344e" style="--depth: 0;"> <span class="astro-gnoq344e" style="--depth: 0;">Voice and Generation Providers</span> </a>  </li><li class="astro-gnoq344e" style="--depth: 0;"> <a href="#local-models" class="astro-gnoq344e" style="--depth: 0;"> <span class="astro-gnoq344e" style="--depth: 0;">Local Models</span> </a> <ul class="isMobile astro-gnoq344e" style="--depth: 1;"> <li class="astro-gnoq344e" style="--depth: 1;"> <a href="#ollama" class="astro-gnoq344e" style="--depth: 1;"> <span class="astro-gnoq344e" style="--depth: 1;">Ollama</span> </a>  </li><li class="astro-gnoq344e" style="--depth: 1;"> <a href="#lm-studio" class="astro-gnoq344e" style="--depth: 1;"> <span class="astro-gnoq344e" style="--depth: 1;">LM Studio</span> </a>  </li><li class="astro-gnoq344e" style="--depth: 1;"> <a href="#vllm" class="astro-gnoq344e" style="--depth: 1;"> <span class="astro-gnoq344e" style="--depth: 1;">vLLM</span> </a>  </li><li class="astro-gnoq344e" style="--depth: 1;"> <a href="#llamacpp" class="astro-gnoq344e" style="--depth: 1;"> <span class="astro-gnoq344e" style="--depth: 1;">llama.cpp</span> </a>  </li><li class="astro-gnoq344e" style="--depth: 1;"> <a href="#lemonade" class="astro-gnoq344e" style="--depth: 1;"> <span class="astro-gnoq344e" style="--depth: 1;">Lemonade</span> </a>  </li> </ul> </li> </ul></div></details></nav></mobile-starlight-toc><script type="module" src="/DeepTutor/branch-docs-2942-governance/_astro/MobileTableOfContents.astro_astro_type_script_index_0_lang.hwBsy0Mo.js"></script></div><div class="right-sidebar-panel sl-hidden lg:sl-block astro-pb3aqygn"><div class="sl-container astro-pb3aqygn"><starlight-toc data-min-h="2" data-max-h="3"><nav aria-labelledby="starlight__on-this-page"><h2 id="starlight__on-this-page">On this page</h2><ul class="astro-gnoq344e" style="--depth: 0;"> <li class="astro-gnoq344e" style="--depth: 0;"> <a href="#_top" class="astro-gnoq344e" style="--depth: 0;"> <span class="astro-gnoq344e" style="--depth: 0;">Overview</span> </a>  </li><li class="astro-gnoq344e" style="--depth: 0;"> <a href="#configuration-surfaces-and-precedence" class="astro-gnoq344e" style="--depth: 0;"> <span class="astro-gnoq344e" style="--depth: 0;">Configuration surfaces and precedence</span> </a>  </li><li class="astro-gnoq344e" style="--depth: 0;"> <a href="#llm-providers" class="astro-gnoq344e" style="--depth: 0;"> <span class="astro-gnoq344e" style="--depth: 0;">LLM Providers</span> </a> <ul class="astro-gnoq344e" style="--depth: 1;"> <li class="astro-gnoq344e" style="--depth: 1;"> <a href="#configuration" class="astro-gnoq344e" style="--depth: 1;"> <span class="astro-gnoq344e" style="--depth: 1;">Configuration</span> </a>  </li> </ul> </li><li class="astro-gnoq344e" style="--depth: 0;"> <a href="#embedding-providers" class="astro-gnoq344e" style="--depth: 0;"> <span class="astro-gnoq344e" style="--depth: 0;">Embedding Providers</span> </a> <ul class="astro-gnoq344e" style="--depth: 1;"> <li class="astro-gnoq344e" style="--depth: 1;"> <a href="#configuration-1" class="astro-gnoq344e" style="--depth: 1;"> <span class="astro-gnoq344e" style="--depth: 1;">Configuration</span> </a>  </li> </ul> </li><li class="astro-gnoq344e" style="--depth: 0;"> <a href="#search-providers" class="astro-gnoq344e" style="--depth: 0;"> <span class="astro-gnoq344e" style="--depth: 0;">Search Providers</span> </a> <ul class="astro-gnoq344e" style="--depth: 1;"> <li class="astro-gnoq344e" style="--depth: 1;"> <a href="#configuration-2" class="astro-gnoq344e" style="--depth: 1;"> <span class="astro-gnoq344e" style="--depth: 1;">Configuration</span> </a>  </li> </ul> </li><li class="astro-gnoq344e" style="--depth: 0;"> <a href="#voice-and-generation-providers" class="astro-gnoq344e" style="--depth: 0;"> <span class="astro-gnoq344e" style="--depth: 0;">Voice and Generation Providers</span> </a>  </li><li class="astro-gnoq344e" style="--depth: 0;"> <a href="#local-models" class="astro-gnoq344e" style="--depth: 0;"> <span class="astro-gnoq344e" style="--depth: 0;">Local Models</span> </a> <ul class="astro-gnoq344e" style="--depth: 1;"> <li class="astro-gnoq344e" style="--depth: 1;"> <a href="#ollama" class="astro-gnoq344e" style="--depth: 1;"> <span class="astro-gnoq344e" style="--depth: 1;">Ollama</span> </a>  </li><li class="astro-gnoq344e" style="--depth: 1;"> <a href="#lm-studio" class="astro-gnoq344e" style="--depth: 1;"> <span class="astro-gnoq344e" style="--depth: 1;">LM Studio</span> </a>  </li><li class="astro-gnoq344e" style="--depth: 1;"> <a href="#vllm" class="astro-gnoq344e" style="--depth: 1;"> <span class="astro-gnoq344e" style="--depth: 1;">vLLM</span> </a>  </li><li class="astro-gnoq344e" style="--depth: 1;"> <a href="#llamacpp" class="astro-gnoq344e" style="--depth: 1;"> <span class="astro-gnoq344e" style="--depth: 1;">llama.cpp</span> </a>  </li><li class="astro-gnoq344e" style="--depth: 1;"> <a href="#lemonade" class="astro-gnoq344e" style="--depth: 1;"> <span class="astro-gnoq344e" style="--depth: 1;">Lemonade</span> </a>  </li> </ul> </li> </ul></nav></starlight-toc><script type="module" src="/DeepTutor/branch-docs-2942-governance/_astro/TableOfContents.astro_astro_type_script_index_0_lang.FuRcXuRY.js"></script></div></div> </div> </aside> <div class="main-pane astro-67yu43on">  <main data-pagefind-body class="astro-bguv2lll" lang="en" dir="ltr">    <div class="content-panel astro-7nkwcw3z"> <div class="sl-container astro-7nkwcw3z"> <h1 id="_top" class="astro-j6tvhyss">Provider Configuration</h1> </div> </div> <div class="content-panel astro-7nkwcw3z"> <div class="sl-container astro-7nkwcw3z"> <div class="sl-markdown-content"> <p>DeepTutor’s model catalog covers LLM, Task Models, Embedding, Search, Text-to-Speech, Speech-to-Text, Image Generation, and Video Generation. Configure provider profiles through <strong>Settings → Models &#x26; services</strong>, <code dir="auto">deeptutor init</code>, or <code dir="auto">data/user/settings/model_catalog.json</code>. Model profiles and selections are resolved from that catalog; legacy <code dir="auto">LLM_*</code>, <code dir="auto">EMBEDDING_*</code>, and <code dir="auto">SEARCH_*</code> environment recipes no longer configure them. Project-root <code dir="auto">.env</code> files are not auto-loaded.</p>
+<div class="sl-heading-wrapper level-h2"><h2 id="configuration-surfaces-and-precedence">Configuration surfaces and precedence</h2><a class="sl-anchor-link" href="#configuration-surfaces-and-precedence"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Configuration surfaces and precedence”</span></a></div>
+<p>Use <strong>Settings → Models &#x26; services</strong> for normal setup; it writes <code dir="auto">data/user/settings/model_catalog.json</code> and applies changes. <code dir="auto">deeptutor init</code> covers first-boot LLM, embedding, and search setup.</p>
+<p><strong>Providers.</strong> <strong>Settings → Providers</strong> links vendor credentials to supported profiles; unlinked services keep their own. GitHub Copilot uses device login with owner-private credentials.</p>
+<p><strong>Task Models.</strong> The <code dir="auto">task</code> service handles titles, suggestions, reading helpers, and Math Animator/Video Lesson repairs through profiles with per-task overrides.</p>
+<div class="sl-heading-wrapper level-h2"><h2 id="llm-providers">LLM Providers</h2><a class="sl-anchor-link" href="#llm-providers"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “LLM Providers”</span></a></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th align="left">Provider</th><th align="left">Binding</th><th align="left">Default Base URL</th></tr></thead><tbody><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/aihubmix-color.svg" alt="" width="16" height="16"> AiHubMix</td><td align="left"><code dir="auto">aihubmix</code></td><td align="left"><code dir="auto">https://aihubmix.com/v1</code></td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/anthropic.svg" alt="" width="16" height="16"> Anthropic</td><td align="left"><code dir="auto">anthropic</code></td><td align="left"><code dir="auto">https://api.anthropic.com/v1</code></td></tr><tr><td align="left">API Route</td><td align="left"><code dir="auto">api_route</code></td><td align="left"><code dir="auto">https://global.api-route.com/v1</code></td></tr><tr><td align="left">Atlas Cloud</td><td align="left"><code dir="auto">atlascloud</code></td><td align="left"><code dir="auto">https://api.atlascloud.ai/v1</code></td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/azure-color.svg" alt="" width="16" height="16"> Azure OpenAI</td><td align="left"><code dir="auto">azure_openai</code></td><td align="left">—</td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/bytedance-color.svg" alt="" width="16" height="16"> BytePlus</td><td align="left"><code dir="auto">byteplus</code></td><td align="left"><code dir="auto">https://ark.ap-southeast.bytepluses.com/api/v3</code></td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/bytedance-color.svg" alt="" width="16" height="16"> BytePlus Coding Plan</td><td align="left"><code dir="auto">byteplus_coding_plan</code></td><td align="left"><code dir="auto">https://ark.ap-southeast.bytepluses.com/api/coding/v3</code></td></tr><tr><td align="left">Cheaper Inference</td><td align="left"><code dir="auto">cheaperinference</code></td><td align="left"><code dir="auto">https://api.cheaperinference.com/v1</code></td></tr><tr><td align="left">Custom (OpenAI-compat)</td><td align="left"><code dir="auto">custom</code></td><td align="left">—</td></tr><tr><td align="left">CodeBuddy / WorkBuddy</td><td align="left"><code dir="auto">codebuddy</code></td><td align="left">— (SDK sign-in)</td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/qwen-color.svg" alt="" width="16" height="16"> DashScope (Qwen)</td><td align="left"><code dir="auto">dashscope</code></td><td align="left"><code dir="auto">https://dashscope.aliyuncs.com/compatible-mode/v1</code></td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/deepseek-color.svg" alt="" width="16" height="16"> DeepSeek</td><td align="left"><code dir="auto">deepseek</code></td><td align="left"><code dir="auto">https://api.deepseek.com</code></td></tr><tr><td align="left">Eden AI</td><td align="left"><code dir="auto">edenai</code></td><td align="left"><code dir="auto">https://api.edenai.run/v3</code></td></tr><tr><td align="left">FutureInfra</td><td align="left"><code dir="auto">futureinfra</code></td><td align="left"><code dir="auto">https://futureinfra.ai/v1/ai</code></td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/gemini-color.svg" alt="" width="16" height="16"> Gemini</td><td align="left"><code dir="auto">gemini</code></td><td align="left"><code dir="auto">https://generativelanguage.googleapis.com/v1beta/openai/</code></td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/githubcopilot.svg" alt="" width="16" height="16"> GitHub Copilot</td><td align="left"><code dir="auto">github_copilot</code></td><td align="left"><code dir="auto">https://api.githubcopilot.com</code></td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/groq.svg" alt="" width="16" height="16"> Groq</td><td align="left"><code dir="auto">groq</code></td><td align="left"><code dir="auto">https://api.groq.com/openai/v1</code></td></tr><tr><td align="left">Lemonade</td><td align="left"><code dir="auto">lemonade</code></td><td align="left"><code dir="auto">http://localhost:13305/api/v1</code></td></tr><tr><td align="left">llama.cpp</td><td align="left"><code dir="auto">llama_cpp</code></td><td align="left"><code dir="auto">http://localhost:8080/v1</code></td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/lmstudio.svg" alt="" width="16" height="16"> LM Studio</td><td align="left"><code dir="auto">lm_studio</code></td><td align="left"><code dir="auto">http://localhost:1234/v1</code></td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/minimax-color.svg" alt="" width="16" height="16"> MiniMax</td><td align="left"><code dir="auto">minimax</code></td><td align="left"><code dir="auto">https://api.minimax.io/v1</code></td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/mistral-color.svg" alt="" width="16" height="16"> Mistral</td><td align="left"><code dir="auto">mistral</code></td><td align="left"><code dir="auto">https://api.mistral.ai/v1</code></td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/moonshot.svg" alt="" width="16" height="16"> Moonshot (Kimi)</td><td align="left"><code dir="auto">moonshot</code></td><td align="left"><code dir="auto">https://api.moonshot.cn/v1</code></td></tr><tr><td align="left">Novita AI</td><td align="left"><code dir="auto">novita</code></td><td align="left"><code dir="auto">https://api.novita.ai/openai</code></td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/ollama.svg" alt="" width="16" height="16"> Ollama</td><td align="left"><code dir="auto">ollama</code></td><td align="left"><code dir="auto">http://localhost:11434/v1</code></td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/nvidia-color.svg" alt="" width="16" height="16"> NVIDIA NIM</td><td align="left"><code dir="auto">nvidia_nim</code></td><td align="left"><code dir="auto">https://integrate.api.nvidia.com/v1</code></td></tr><tr><td align="left">onomeo</td><td align="left"><code dir="auto">onomeo</code></td><td align="left"><code dir="auto">https://onomeo.com/v1</code></td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/openai.svg" alt="" width="16" height="16"> OpenAI</td><td align="left"><code dir="auto">openai</code></td><td align="left"><code dir="auto">https://api.openai.com/v1</code></td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/openai.svg" alt="" width="16" height="16"> OpenAI Codex</td><td align="left"><code dir="auto">openai_codex</code></td><td align="left"><code dir="auto">https://chatgpt.com/backend-api</code></td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/openrouter.svg" alt="" width="16" height="16"> OpenRouter</td><td align="left"><code dir="auto">openrouter</code></td><td align="left"><code dir="auto">https://openrouter.ai/api/v1</code></td></tr><tr><td align="left">Opper</td><td align="left"><code dir="auto">opper</code></td><td align="left"><code dir="auto">https://api.opper.ai/v3/compat</code></td></tr><tr><td align="left">OpenVINO Model Server</td><td align="left"><code dir="auto">ovms</code></td><td align="left"><code dir="auto">http://localhost:8000/v3</code></td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/baiducloud-color.svg" alt="" width="16" height="16"> Qianfan (Ernie)</td><td align="left"><code dir="auto">qianfan</code></td><td align="left"><code dir="auto">https://qianfan.baidubce.com/v2</code></td></tr><tr><td align="left">Requesty</td><td align="left"><code dir="auto">requesty</code></td><td align="left"><code dir="auto">https://router.requesty.ai/v1</code></td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/siliconcloud-color.svg" alt="" width="16" height="16"> SiliconFlow</td><td align="left"><code dir="auto">siliconflow</code></td><td align="left"><code dir="auto">https://api.siliconflow.cn/v1</code></td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/stepfun-color.svg" alt="" width="16" height="16"> Step Fun</td><td align="left"><code dir="auto">stepfun</code></td><td align="left"><code dir="auto">https://api.stepfun.com/v1</code></td></tr><tr><td align="left">Standard Compute</td><td align="left"><code dir="auto">standardcompute</code></td><td align="left"><code dir="auto">https://api.stdcmpt.com/v1</code></td></tr><tr><td align="left">Unifically</td><td align="left"><code dir="auto">unifically</code></td><td align="left"><code dir="auto">https://api.unifically.com/v1</code></td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/vllm-color.svg" alt="" width="16" height="16"> vLLM</td><td align="left"><code dir="auto">vllm</code></td><td align="left">— (configure explicitly)</td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/volcengine-color.svg" alt="" width="16" height="16"> VolcEngine</td><td align="left"><code dir="auto">volcengine</code></td><td align="left"><code dir="auto">https://ark.cn-beijing.volces.com/api/v3</code></td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/volcengine-color.svg" alt="" width="16" height="16"> VolcEngine Coding Plan</td><td align="left"><code dir="auto">volcengine_coding_plan</code></td><td align="left"><code dir="auto">https://ark.cn-beijing.volces.com/api/coding/v3</code></td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/xiaomimimo.svg" alt="" width="16" height="16"> Xiaomi MIMO</td><td align="left"><code dir="auto">xiaomi_mimo</code></td><td align="left"><code dir="auto">https://api.xiaomimimo.com/v1</code></td></tr><tr><td align="left">xAI (Grok)</td><td align="left"><code dir="auto">xai</code></td><td align="left"><code dir="auto">https://api.x.ai/v1</code></td></tr><tr><td align="left">Y-API</td><td align="left"><code dir="auto">y_api</code></td><td align="left"><code dir="auto">https://api.y-api.bestvirtualgoods.com/v1</code></td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/zhipu-color.svg" alt="" width="16" height="16"> Zhipu AI (GLM)</td><td align="left"><code dir="auto">zhipu</code></td><td align="left"><code dir="auto">https://open.bigmodel.cn/api/paas/v4</code></td></tr></tbody></table>
+<div class="sl-heading-wrapper level-h3"><h3 id="configuration">Configuration</h3><a class="sl-anchor-link" href="#configuration"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Configuration”</span></a></div>
+<div class="expressive-code"><link rel="stylesheet" href="/DeepTutor/branch-docs-2942-governance/_astro/ec.v4551.css"><script type="module" src="/DeepTutor/branch-docs-2942-governance/_astro/ec.0vx5m.js"></script><figure class="frame not-content"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">Settings → Language models</span></div></div><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">Provider: OpenAI</span></div></div><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">Model: gpt-4o-mini</span></div></div><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">API key: sk-xxx</span></div></div><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">Base URL: https://api.openai.com/v1</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="Settings → Language modelsProvider: OpenAIModel: gpt-4o-miniAPI key: sk-xxxBase URL: https://api.openai.com/v1"><div></div></button></div></figure></div>
+<aside aria-label="Tip" class="starlight-aside starlight-aside--tip"><p class="starlight-aside__title" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="starlight-aside__icon"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.43909 8.85483L1.44039 8.85354L4.96668 5.33815C5.30653 4.99386 5.7685 4.79662 6.2524 4.78972L6.26553 4.78963L12.9014 4.78962L13.8479 3.84308C16.9187 0.772319 20.0546 0.770617 21.4678 0.975145C21.8617 1.02914 22.2271 1.21053 22.5083 1.4917C22.7894 1.77284 22.9708 2.13821 23.0248 2.53199C23.2294 3.94517 23.2278 7.08119 20.1569 10.1521L19.2107 11.0983V17.7338L19.2106 17.7469C19.2037 18.2308 19.0067 18.6933 18.6624 19.0331L15.1456 22.5608C14.9095 22.7966 14.6137 22.964 14.29 23.0449C13.9663 23.1259 13.6267 23.1174 13.3074 23.0204C12.9881 22.9235 12.7011 22.7417 12.4771 22.4944C12.2533 22.2473 12.1006 21.9441 12.0355 21.6171L11.1783 17.3417L6.65869 12.822L4.34847 12.3589L2.38351 11.965C2.05664 11.8998 1.75272 11.747 1.50564 11.5232C1.25835 11.2992 1.07653 11.0122 0.979561 10.6929C0.882595 10.3736 0.874125 10.034 0.955057 9.7103C1.03599 9.38659 1.20328 9.09092 1.43909 8.85483ZM6.8186 10.8724L2.94619 10.096L6.32006 6.73268H10.9583L6.8186 10.8724ZM15.2219 5.21703C17.681 2.75787 20.0783 2.75376 21.1124 2.8876C21.2462 3.92172 21.2421 6.31895 18.783 8.77812L12.0728 15.4883L8.51172 11.9272L15.2219 5.21703ZM13.9042 21.0538L13.1279 17.1811L17.2676 13.0414V17.68L13.9042 21.0538Z"></path><path d="M9.31827 18.3446C9.45046 17.8529 9.17864 17.3369 8.68945 17.1724C8.56178 17.1294 8.43145 17.1145 8.30512 17.1243C8.10513 17.1398 7.91519 17.2172 7.76181 17.3434C7.62613 17.455 7.51905 17.6048 7.45893 17.7835C6.97634 19.2186 5.77062 19.9878 4.52406 20.4029C4.08525 20.549 3.6605 20.644 3.29471 20.7053C3.35607 20.3395 3.45098 19.9148 3.59711 19.476C4.01221 18.2294 4.78141 17.0237 6.21648 16.5411C6.39528 16.481 6.54504 16.3739 6.65665 16.2382C6.85126 16.0016 6.92988 15.678 6.84417 15.3647C6.83922 15.3466 6.83373 15.3286 6.82767 15.3106C6.74106 15.053 6.55701 14.8557 6.33037 14.7459C6.10949 14.6389 5.84816 14.615 5.59715 14.6994C5.47743 14.7397 5.36103 14.7831 5.24786 14.8294C3.22626 15.6569 2.2347 17.4173 1.75357 18.8621C1.49662 19.6337 1.36993 20.3554 1.30679 20.8818C1.27505 21.1464 1.25893 21.3654 1.25072 21.5213C1.24662 21.5993 1.24448 21.6618 1.24337 21.7066L1.243 21.7226L1.24235 21.7605L1.2422 21.7771L1.24217 21.7827L1.24217 21.7856C1.24217 22.3221 1.67703 22.7579 2.2137 22.7579L2.2155 22.7579L2.22337 22.7578L2.23956 22.7577C2.25293 22.7575 2.27096 22.7572 2.29338 22.7567C2.33821 22.7555 2.40073 22.7534 2.47876 22.7493C2.63466 22.7411 2.85361 22.725 3.11822 22.6932C3.64462 22.6301 4.36636 22.5034 5.13797 22.2464C6.58274 21.7653 8.3431 20.7738 9.17063 18.7522C9.21696 18.639 9.26037 18.5226 9.30064 18.4029C9.30716 18.3835 9.31304 18.364 9.31827 18.3446Z"></path></svg>Tip</p><div class="starlight-aside__content"><p>Choose a provider-supported <strong>API format</strong> per LLM or Task profile. <strong>Auto</strong> routes automatically. Default URLs follow the selected format; custom URLs stay unchanged. Credential edits trigger model discovery; select matching models for bulk import. Per-model controls override detected capabilities.</p></div></aside>
+<div class="sl-heading-wrapper level-h2"><h2 id="embedding-providers">Embedding Providers</h2><a class="sl-anchor-link" href="#embedding-providers"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Embedding Providers”</span></a></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th align="left">Provider</th><th align="left">Binding</th><th align="left">Model Example</th><th align="center">Default Dim</th></tr></thead><tbody><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/openai.svg" alt="" width="16" height="16"> OpenAI</td><td align="left"><code dir="auto">openai</code></td><td align="left"><code dir="auto">text-embedding-3-large</code></td><td align="center">3072</td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/gemini-color.svg" alt="" width="16" height="16"> Gemini</td><td align="left"><code dir="auto">gemini</code></td><td align="left"><code dir="auto">gemini-embedding-2</code></td><td align="center">3072</td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/azure-color.svg" alt="" width="16" height="16"> Azure OpenAI</td><td align="left"><code dir="auto">azure_openai</code></td><td align="left">deployment name</td><td align="center">—</td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/cohere-color.svg" alt="" width="16" height="16"> Cohere</td><td align="left"><code dir="auto">cohere</code></td><td align="left"><code dir="auto">embed-v4.0</code></td><td align="center">1024</td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/jina.svg" alt="" width="16" height="16"> Jina</td><td align="left"><code dir="auto">jina</code></td><td align="left"><code dir="auto">jina-embeddings-v3</code></td><td align="center">1024</td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/mistral-color.svg" alt="" width="16" height="16"> Mistral</td><td align="left"><code dir="auto">mistral</code></td><td align="left"><code dir="auto">mistral-embed</code></td><td align="center">1024</td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/ollama.svg" alt="" width="16" height="16"> Ollama</td><td align="left"><code dir="auto">ollama</code></td><td align="left"><code dir="auto">nomic-embed-text</code></td><td align="center">768</td></tr><tr><td align="left">Lemonade Server</td><td align="left"><code dir="auto">lemonade</code></td><td align="left">Any local embedding model</td><td align="center">—</td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/vllm-color.svg" alt="" width="16" height="16"> vLLM / LM Studio</td><td align="left"><code dir="auto">vllm</code></td><td align="left">Any embedding model</td><td align="center">—</td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/siliconcloud-color.svg" alt="" width="16" height="16"> SiliconFlow</td><td align="left"><code dir="auto">siliconflow</code></td><td align="left"><code dir="auto">Qwen/Qwen3-Embedding-8B</code></td><td align="center">4096</td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/qwen-color.svg" alt="" width="16" height="16"> Aliyun DashScope</td><td align="left"><code dir="auto">aliyun</code></td><td align="left"><code dir="auto">qwen3-vl-embedding</code></td><td align="center">2560</td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/openrouter.svg" alt="" width="16" height="16"> OpenRouter</td><td align="left"><code dir="auto">openrouter</code></td><td align="left">provider-dependent</td><td align="center">—</td></tr><tr><td align="left">Opper</td><td align="left"><code dir="auto">opper</code></td><td align="left"><code dir="auto">openai/text-embedding-3-large</code></td><td align="center">3072</td></tr><tr><td align="left">Any OpenAI-compatible</td><td align="left"><code dir="auto">custom</code></td><td align="left">—</td><td align="center">—</td></tr><tr><td align="left">NVIDIA NIM</td><td align="left"><code dir="auto">nvidia_nim</code></td><td align="left"><code dir="auto">nvidia/nemotron-3.5-embed-8b</code></td><td align="center">4096</td></tr><tr><td align="left">Custom OpenAI SDK</td><td align="left"><code dir="auto">custom_openai_sdk</code></td><td align="left">—</td><td align="center">—</td></tr></tbody></table>
+<div class="sl-heading-wrapper level-h3"><h3 id="configuration-1">Configuration</h3><a class="sl-anchor-link" href="#configuration-1"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Configuration”</span></a></div>
+<p>The embedding profile’s <strong>Base URL</strong> resolves to the full embedding endpoint; recognized provider roots are normalized automatically.</p>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">Settings → Embedding models</span></div></div><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">Provider: OpenAI</span></div></div><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">Model: text-embedding-3-large</span></div></div><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">API key: sk-xxx</span></div></div><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">Base URL: https://api.openai.com/v1/embeddings</span></div></div><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">Dimension: 3072</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="Settings → Embedding modelsProvider: OpenAIModel: text-embedding-3-largeAPI key: sk-xxxBase URL: https://api.openai.com/v1/embeddingsDimension: 3072"><div></div></button></div></figure></div>
+<aside aria-label="Caution" class="starlight-aside starlight-aside--caution"><p class="starlight-aside__title" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="starlight-aside__icon"><path d="M12 16C11.8022 16 11.6089 16.0587 11.4444 16.1686C11.28 16.2784 11.1518 16.4346 11.0761 16.6173C11.0004 16.8001 10.9806 17.0011 11.0192 17.1951C11.0578 17.3891 11.153 17.5673 11.2929 17.7071C11.4327 17.847 11.6109 17.9422 11.8049 17.9808C11.9989 18.0194 12.2 17.9996 12.3827 17.9239C12.5654 17.8482 12.7216 17.72 12.8315 17.5556C12.9413 17.3911 13 17.1978 13 17C13 16.7348 12.8946 16.4805 12.7071 16.2929C12.5196 16.1054 12.2652 16 12 16ZM22.67 17.47L14.62 3.47003C14.3598 3.00354 13.9798 2.61498 13.5192 2.3445C13.0586 2.07401 12.5341 1.9314 12 1.9314C11.4659 1.9314 10.9414 2.07401 10.4808 2.3445C10.0202 2.61498 9.64019 3.00354 9.38 3.47003L1.38 17.47C1.11079 17.924 0.966141 18.441 0.960643 18.9688C0.955144 19.4966 1.089 20.0166 1.34868 20.4761C1.60837 20.9356 1.9847 21.3185 2.43968 21.5861C2.89466 21.8536 3.41218 21.9964 3.94 22H20.06C20.5921 22.0053 21.1159 21.8689 21.5779 21.6049C22.0399 21.341 22.4234 20.9589 22.689 20.4978C22.9546 20.0368 23.0928 19.5134 23.0895 18.9814C23.0862 18.4493 22.9414 17.9277 22.67 17.47ZM20.94 19.47C20.8523 19.626 20.7245 19.7556 20.5697 19.8453C20.4149 19.935 20.2389 19.9815 20.06 19.98H3.94C3.76111 19.9815 3.5851 19.935 3.43032 19.8453C3.27553 19.7556 3.14765 19.626 3.06 19.47C2.97223 19.318 2.92602 19.1456 2.92602 18.97C2.92602 18.7945 2.97223 18.622 3.06 18.47L11.06 4.47003C11.1439 4.30623 11.2714 4.16876 11.4284 4.07277C11.5855 3.97678 11.766 3.92599 11.95 3.92599C12.134 3.92599 12.3145 3.97678 12.4716 4.07277C12.6286 4.16876 12.7561 4.30623 12.84 4.47003L20.89 18.47C20.9892 18.6199 21.0462 18.7937 21.055 18.9732C21.0638 19.1527 21.0241 19.3312 20.94 19.49V19.47ZM12 8.00003C11.7348 8.00003 11.4804 8.10538 11.2929 8.29292C11.1054 8.48046 11 8.73481 11 9.00003V13C11 13.2652 11.1054 13.5196 11.2929 13.7071C11.4804 13.8947 11.7348 14 12 14C12.2652 14 12.5196 13.8947 12.7071 13.7071C12.8946 13.5196 13 13.2652 13 13V9.00003C13 8.73481 12.8946 8.48046 12.7071 8.29292C12.5196 8.10538 12.2652 8.00003 12 8.00003Z"></path></svg>Caution</p><div class="starlight-aside__content"><p>Changing the embedding model after creating a knowledge base will cause a mismatch. DeepTutor detects this and warns you — rebuild the knowledge base if you switch models.</p></div></aside>
+<div class="sl-heading-wrapper level-h2"><h2 id="search-providers">Search Providers</h2><a class="sl-anchor-link" href="#search-providers"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Search Providers”</span></a></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th align="left">Provider</th><th align="left">Required profile field</th><th align="left">Notes</th></tr></thead><tbody><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/brave.svg" alt="" width="16" height="16"> Brave</td><td align="left">API key</td><td align="left">Free tier available</td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/tavily-color.svg" alt="" width="16" height="16"> Tavily</td><td align="left">API key</td><td align="left"></td></tr><tr><td align="left">Serper</td><td align="left">API key</td><td align="left"></td></tr><tr><td align="left">Serply</td><td align="left">API key</td><td align="left">Google SERP; News &#x26; Scholar modes</td></tr><tr><td align="left">SearchApi</td><td align="left">API key</td><td align="left">Web, News &#x26; Scholar</td></tr><tr><td align="left">DeepSeek</td><td align="left">API key</td><td align="left">Standalone SERP</td></tr><tr><td align="left">SpecStream</td><td align="left">API key</td><td align="left">Search with answers</td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/jina.svg" alt="" width="16" height="16"> Jina</td><td align="left">API key</td><td align="left"></td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/searxng.svg" alt="" width="16" height="16"> SearXNG</td><td align="left">Base URL</td><td align="left">Self-hosted, no API key needed</td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/duckduckgo.svg" alt="" width="16" height="16"> DuckDuckGo</td><td align="left">None</td><td align="left">No API key needed</td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/perplexity-color.svg" alt="" width="16" height="16"> Perplexity</td><td align="left">API key</td><td align="left">Returns an answer</td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/volcengine-color.svg" alt="" width="16" height="16"> Doubao</td><td align="left">API key</td><td align="left">Returns an answer, not only links</td></tr><tr><td align="left">Bocha</td><td align="left">API key</td><td align="left">China-hosted</td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/zhipu-color.svg" alt="" width="16" height="16"> Zhipu</td><td align="left">API key</td><td align="left">China-hosted</td></tr><tr><td align="left">Firecrawl</td><td align="left">API key</td><td align="left">Adds page extraction</td></tr><tr><td align="left"><img src="/DeepTutor/branch-docs-2942-governance/provider-icons/baiducloud-color.svg" alt="" width="16" height="16"> Baidu Qianfan</td><td align="left">API key</td><td align="left">China-hosted</td></tr><tr><td align="left">Aliyun IQS</td><td align="left">API key</td><td align="left">China-hosted</td></tr><tr><td align="left">You.com</td><td align="left">API key</td><td align="left">Returns an answer</td></tr><tr><td align="left">Google Browser Scraper</td><td align="left">Base URL</td><td align="left">Scrapes Google via a local browser</td></tr><tr><td align="left">None</td><td align="left">None</td><td align="left">Explicitly disables web search</td></tr></tbody></table>
+<div class="sl-heading-wrapper level-h3"><h3 id="configuration-2">Configuration</h3><a class="sl-anchor-link" href="#configuration-2"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Configuration”</span></a></div>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">Settings → Search</span></div></div><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">Provider: Brave</span></div></div><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">API key: your-api-key</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="Settings → SearchProvider: BraveAPI key: your-api-key"><div></div></button></div></figure></div>
+<p>The <code dir="auto">web_search</code> tool is enabled by default. With no search profile configured, it uses credential-free DuckDuckGo; add a profile only when you want another provider, or select <code dir="auto">none</code> to disable web search explicitly. Older <code dir="auto">exa</code>, <code dir="auto">baidu</code>, and <code dir="auto">openrouter</code> values remain deprecated compatibility choices.</p>
+<div class="sl-heading-wrapper level-h2"><h2 id="voice-and-generation-providers">Voice and Generation Providers</h2><a class="sl-anchor-link" href="#voice-and-generation-providers"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Voice and Generation Providers”</span></a></div>
+<p>The Voice and Multimodal generation pages carry four services beyond LLM, embedding, and search. They are configured the same way — a provider connection plus a catalog of model ids — and each unlocks a specific surface.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th align="left">Service</th><th align="left">Providers</th><th align="left">What it unlocks</th></tr></thead><tbody><tr><td align="left"><strong>Text-to-Speech</strong></td><td align="left"><code dir="auto">openai</code>, <code dir="auto">azure_openai</code>, <code dir="auto">gemini</code>, <code dir="auto">groq</code>, <code dir="auto">siliconflow</code>, <code dir="auto">openrouter</code>, <code dir="auto">vllm</code>, <code dir="auto">dashscope</code>, <code dir="auto">volcengine_speech</code>, <code dir="auto">minimax</code>, <code dir="auto">xiaomi_mimo</code>, <code dir="auto">custom</code></td><td align="left">Reply and reading-material read-aloud.</td></tr><tr><td align="left"><strong>Speech-to-Text</strong></td><td align="left"><code dir="auto">openai</code>, <code dir="auto">azure_openai</code>, <code dir="auto">groq</code>, <code dir="auto">siliconflow</code>, <code dir="auto">openrouter</code>, <code dir="auto">vllm</code>, <code dir="auto">dashscope</code>, <code dir="auto">volcengine_speech</code>, <code dir="auto">custom</code></td><td align="left">The composer microphone.</td></tr><tr><td align="left"><strong>Image Generation</strong></td><td align="left"><code dir="auto">openai</code>, <code dir="auto">azure_openai</code>, <code dir="auto">volcengine</code>, <code dir="auto">siliconflow</code>, <code dir="auto">openrouter</code>, <code dir="auto">dashscope</code>, <code dir="auto">custom</code>, <code dir="auto">custom_chat</code></td><td align="left">The <code dir="auto">imagegen</code> chat tool.</td></tr><tr><td align="left"><strong>Video Generation</strong></td><td align="left"><code dir="auto">volcengine</code>, <code dir="auto">dashscope</code>, <code dir="auto">custom</code></td><td align="left">The <code dir="auto">videogen</code> chat tool.</td></tr></tbody></table>
+<p>Image and video generation are <strong>tools, not modes</strong>: once a model is configured, ask for a picture in plain language and the agent calls the tool, then previews the result inline with a downloadable file. Video generation runs as an asynchronous job, so the turn reports progress rather than blocking.</p>
+<aside aria-label="Caution" class="starlight-aside starlight-aside--caution"><p class="starlight-aside__title" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="starlight-aside__icon"><path d="M12 16C11.8022 16 11.6089 16.0587 11.4444 16.1686C11.28 16.2784 11.1518 16.4346 11.0761 16.6173C11.0004 16.8001 10.9806 17.0011 11.0192 17.1951C11.0578 17.3891 11.153 17.5673 11.2929 17.7071C11.4327 17.847 11.6109 17.9422 11.8049 17.9808C11.9989 18.0194 12.2 17.9996 12.3827 17.9239C12.5654 17.8482 12.7216 17.72 12.8315 17.5556C12.9413 17.3911 13 17.1978 13 17C13 16.7348 12.8946 16.4805 12.7071 16.2929C12.5196 16.1054 12.2652 16 12 16ZM22.67 17.47L14.62 3.47003C14.3598 3.00354 13.9798 2.61498 13.5192 2.3445C13.0586 2.07401 12.5341 1.9314 12 1.9314C11.4659 1.9314 10.9414 2.07401 10.4808 2.3445C10.0202 2.61498 9.64019 3.00354 9.38 3.47003L1.38 17.47C1.11079 17.924 0.966141 18.441 0.960643 18.9688C0.955144 19.4966 1.089 20.0166 1.34868 20.4761C1.60837 20.9356 1.9847 21.3185 2.43968 21.5861C2.89466 21.8536 3.41218 21.9964 3.94 22H20.06C20.5921 22.0053 21.1159 21.8689 21.5779 21.6049C22.0399 21.341 22.4234 20.9589 22.689 20.4978C22.9546 20.0368 23.0928 19.5134 23.0895 18.9814C23.0862 18.4493 22.9414 17.9277 22.67 17.47ZM20.94 19.47C20.8523 19.626 20.7245 19.7556 20.5697 19.8453C20.4149 19.935 20.2389 19.9815 20.06 19.98H3.94C3.76111 19.9815 3.5851 19.935 3.43032 19.8453C3.27553 19.7556 3.14765 19.626 3.06 19.47C2.97223 19.318 2.92602 19.1456 2.92602 18.97C2.92602 18.7945 2.97223 18.622 3.06 18.47L11.06 4.47003C11.1439 4.30623 11.2714 4.16876 11.4284 4.07277C11.5855 3.97678 11.766 3.92599 11.95 3.92599C12.134 3.92599 12.3145 3.97678 12.4716 4.07277C12.6286 4.16876 12.7561 4.30623 12.84 4.47003L20.89 18.47C20.9892 18.6199 21.0462 18.7937 21.055 18.9732C21.0638 19.1527 21.0241 19.3312 20.94 19.49V19.47ZM12 8.00003C11.7348 8.00003 11.4804 8.10538 11.2929 8.29292C11.1054 8.48046 11 8.73481 11 9.00003V13C11 13.2652 11.1054 13.5196 11.2929 13.7071C11.4804 13.8947 11.7348 14 12 14C12.2652 14 12.5196 13.8947 12.7071 13.7071C12.8946 13.5196 13 13.2652 13 13V9.00003C13 8.73481 12.8946 8.48046 12.7071 8.29292C12.5196 8.10538 12.2652 8.00003 12 8.00003Z"></path></svg>Caution</p><div class="starlight-aside__content"><p><code dir="auto">custom_chat</code> exists for providers that expose image generation through their <em>chat</em> endpoint rather than a dedicated <code dir="auto">images/generations</code> one. If the wrong profile type is selected, a working key may still produce no image.</p></div></aside>
+<div class="sl-heading-wrapper level-h2"><h2 id="local-models">Local Models</h2><a class="sl-anchor-link" href="#local-models"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Local Models”</span></a></div>
+<p>DeepTutor works with locally-hosted models through several providers. In Docker, <code dir="auto">localhost</code> means the container itself; use <code dir="auto">host.docker.internal</code> or the pattern in the <a href="/DeepTutor/branch-docs-2942-governance/get-started/docker/#connecting-to-a-local-llm-ollama--lm-studio--llamacpp--vllm">Docker guide</a> when the model server runs on the host.</p>
+<div class="sl-heading-wrapper level-h3"><h3 id="ollama">Ollama</h3><a class="sl-anchor-link" href="#ollama"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Ollama”</span></a></div>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">LLM profile: Ollama | llama3.1 | http://localhost:11434/v1</span></div></div><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">Embedding profile: Ollama | nomic-embed-text | http://localhost:11434/api/embed | 768</span></div></div><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">API key: leave blank</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="LLM profile: Ollama | llama3.1 | http://localhost:11434/v1Embedding profile: Ollama | nomic-embed-text | http://localhost:11434/api/embed | 768API key: leave blank"><div></div></button></div></figure></div>
+<div class="sl-heading-wrapper level-h3"><h3 id="lm-studio">LM Studio</h3><a class="sl-anchor-link" href="#lm-studio"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “LM Studio”</span></a></div>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">Provider: LM Studio</span></div></div><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">Model: your-model-name</span></div></div><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">Base URL: http://localhost:1234/v1</span></div></div><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">API key: leave blank</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="Provider: LM StudioModel: your-model-nameBase URL: http://localhost:1234/v1API key: leave blank"><div></div></button></div></figure></div>
+<div class="sl-heading-wrapper level-h3"><h3 id="vllm">vLLM</h3><a class="sl-anchor-link" href="#vllm"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “vLLM”</span></a></div>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">Provider: vLLM</span></div></div><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">Model: your-model-name</span></div></div><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">Base URL: http://localhost:8000/v1</span></div></div><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">API key: leave blank unless the server requires one</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="Provider: vLLMModel: your-model-nameBase URL: http://localhost:8000/v1API key: leave blank unless the server requires one"><div></div></button></div></figure></div>
+<div class="sl-heading-wrapper level-h3"><h3 id="llamacpp">llama.cpp</h3><a class="sl-anchor-link" href="#llamacpp"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “llama.cpp”</span></a></div>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">Provider: llama.cpp</span></div></div><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">Model: your-model-name</span></div></div><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">Base URL: http://localhost:8080/v1</span></div></div><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">API key: leave blank</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="Provider: llama.cppModel: your-model-nameBase URL: http://localhost:8080/v1API key: leave blank"><div></div></button></div></figure></div>
+<div class="sl-heading-wrapper level-h3"><h3 id="lemonade">Lemonade</h3><a class="sl-anchor-link" href="#lemonade"><span aria-hidden="true" class="sl-anchor-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path></svg></span><span class="sr-only" data-pagefind-ignore="">Section titled “Lemonade”</span></a></div>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre data-language="text"><code><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">Provider: Lemonade</span></div></div><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">Model: your-model-name</span></div></div><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">Base URL: http://localhost:13305/api/v1</span></div></div><div class="ec-line"><div class="code"><span style="--0:#d6deeb;--1:#403f53">API key: leave blank</span></div></div></code></pre><div class="copy"><div aria-live="polite"></div><button title="Copy to clipboard" data-copied="Copied!" data-code="Provider: LemonadeModel: your-model-nameBase URL: http://localhost:13305/api/v1API key: leave blank"><div></div></button></div></figure></div> </div> <footer class="sl-flex astro-3yyafb3n"> <div class="meta sl-flex astro-3yyafb3n">   </div> <div class="pagination-links print:hidden astro-u2l5gyhi" dir="ltr"> <a href="/DeepTutor/branch-docs-2942-governance/get-started/docker/" rel="prev" class="astro-u2l5gyhi"> <svg aria-hidden="true" class="astro-u2l5gyhi astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.5rem;"><path d="M17 11H9.41l3.3-3.29a1.004 1.004 0 1 0-1.42-1.42l-5 5a1 1 0 0 0-.21.33 1 1 0 0 0 0 .76 1 1 0 0 0 .21.33l5 5a1.002 1.002 0 0 0 1.639-.325 1 1 0 0 0-.219-1.095L9.41 13H17a1 1 0 0 0 0-2Z"/></svg> <span class="astro-u2l5gyhi"> Previous <br class="astro-u2l5gyhi"> <span class="link-title astro-u2l5gyhi">Docker</span> </span> </a> <a href="/DeepTutor/branch-docs-2942-governance/get-started/changelog/" rel="next" class="astro-u2l5gyhi"> <svg aria-hidden="true" class="astro-u2l5gyhi astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.5rem;"><path d="M17.92 11.62a1.001 1.001 0 0 0-.21-.33l-5-5a1.003 1.003 0 1 0-1.42 1.42l3.3 3.29H7a1 1 0 0 0 0 2h7.59l-3.3 3.29a1.002 1.002 0 0 0 .325 1.639 1 1 0 0 0 1.095-.219l5-5a1 1 0 0 0 .21-.33 1 1 0 0 0 0-.76Z"/></svg> <span class="astro-u2l5gyhi"> Next <br class="astro-u2l5gyhi"> <span class="link-title astro-u2l5gyhi">Changelog</span> </span> </a> </div>  </footer> </div> </div>  </main> </div> </div> </div> </div> </body></html>
